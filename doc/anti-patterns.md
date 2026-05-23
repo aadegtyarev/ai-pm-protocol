@@ -244,53 +244,66 @@ Format: `[review-override: <reason>]` на отдельной строке HEAD 
 
 ---
 
-## AP-15. UI-фичи без Stage A `ui-style-guide.md`
+## AP-15. UI-фичи без Stage A `ui-style-guide-*` foundation
 
 **Что нельзя:**
 
-- В Mode 1 (new-product) с UI-составляющей закрывать Stage A без `ui-style-guide.md`. Coder в Stage F будет изобретать визуальный язык на лету — палитру, типографику, spacing, anim'ации, accessibility выбор — без shared reference. Результат: непоследовательный UI, accessibility-долг, повторные переделки.
-- Реализовывать UI-фичу в Stage F без cross-ref'а в feature spec'е на `ui-style-guide.md` или existing design system продукта.
-- В Mode 2/3 фича вводит **новый UI-паттерн** (новый component, новая страница layout), который не описан в existing design system — без обновления design system'а через отдельный PR.
+- В Mode 1 (new-product) с UI / API составляющей закрывать Stage A без `ui-style-guide-base.md` + соответствующих `ui-style-guide-<kind>.md` файлов. Coder в Stage F будет изобретать визуальный / интерфейсный язык на лету — палитру, типографику, paddings, API conventions, error formats — без shared reference. Результат: непоследовательный UI / API, accessibility-долг, повторные переделки.
+- Реализовывать UI / API фичу в Stage F без cross-ref'а в feature spec'е на соответствующий `ui-style-guide-<kind>.md` или existing design system продукта.
+- В Mode 2/3 фича вводит **новый UI-паттерн или API convention**, не описанный в existing design system — без обновления design system'а через отдельный PR.
 
-**Почему:** на одном из ранних prod-run'ов template'а Stage A был закрыт без `ui-style-guide.md` (он не был в чек-листе). При начале первой UI-фичи AI попытался сделать визуальный дизайн без shared reference — палитра, шрифты, spacing «как у всех». Получился generic результат, не отражающий PM-vision. Plus accessibility / dark theme / responsive были treated как «доделаем потом» — задержали merge feature PR на сутки cleanup'а.
+**Почему:** на одном из ранних prod-run'ов template'а Stage A был закрыт без формализованного UI guide (он не был в чек-листе). При начале первой UI-фичи AI попытался сделать визуальный дизайн без shared reference — палитра, шрифты, spacing «как у всех». Получился generic результат, не отражающий PM-vision. Plus accessibility / dark theme / responsive были treated как «доделаем потом» — задержали merge feature PR на сутки cleanup'а.
+
+**Архитектура файлов — per-ui-form split.** `ui_kind` в `.bootstrap-state.md` определяет какие файлы пишутся:
+
+- `ui-style-guide-base.md` — **всегда обязателен** (8 фундаментальных принципов, brand voice, i18n, accessibility общая, frameworks-first, общий checklist)
+- `ui-style-guide-<kind>.md` — **per каждому значению в `ui_kind`** (multi-value поддерживается)
+
+Поддерживаемые kinds: `web` / `native-mobile` / `native-desktop` / `tui` / `cli` / `embedded` / `backend`.
+
+**Composition examples** (canonical source: `_templates/ui-style-guide-base.md.tmpl` § intro composition matrix; копия здесь для удобства AI при чтении AP — при изменениях обновлять оба места):
+
+| Тип продукта | `ui_kind` | Какие файлы пишутся |
+|---|---|---|
+| Full-stack web product | `web, backend` | base + web + backend |
+| Mobile app с собственным backend | `native-mobile, backend` | base + native-mobile + backend |
+| CLI tool с server-side | `cli, backend` | base + cli + backend |
+| Pure API product | `backend` | base + backend |
+| Local-only CLI | `cli` | base + cli |
+| Cross-platform с backend | `web, native-mobile, backend` | base + web + native-mobile + backend |
+
+**Backend rules применяются** к любому продукту с backend частью — даже если основной user-facing kind другой. Frontend UX начинается с backend design (latency / idempotency / structured errors / live delivery).
 
 **Mode-aware применение:**
 
-| Mode | ui-style-guide.md |
+| Mode | ui-style-guide-*.md |
 |---|---|
-| **Mode 1 (new-product) с UI** | **Обязательно** в Stage A. Без него Stage F UI-фичи **запрещено** начинать |
-| **Mode 1 (new-product) без UI** (CLI, backend-only, library) | N/A с reason в `.bootstrap-state.md` |
-| **Mode 2 (new-feature) в существующем продукте** | **Не создаём** с нуля. READ existing design system (Figma / Storybook / dedicated guide). Если в продукте нет формализованного guide — extract'им неформальный + предлагаем PM зафиксировать |
-| **Mode 3 (rework) с изменением UI** | READ existing + extend для нового UI-паттерна (отдельный PR в `docs/<doc>-update` ветке) |
-| **Lite-mode / bugfix** | N/A — не вводит новых UI-паттернов |
+| **Mode 1 (new-product) с UI / API** | **Обязательно** в Stage A: base + per каждому ui_kind. Без них Stage F фичи **запрещено** начинать |
+| **Mode 1 (new-product) без UI / API** (исключительно library / SDK без runtime) | N/A с reason в `.bootstrap-state.md`. Редкий кейс |
+| **Mode 2 (new-feature) в существующем продукте** | **Не создаём** с нуля. READ existing design system. Если в продукте нет формализованных guides — extract'им неформальные через separate `docs/ui-style-guide-extract` PR |
+| **Mode 3 (rework) с изменением UI / API** | READ existing + extend для нового паттерна (отдельный PR в `docs/<doc>-update` ветке) |
+| **Lite-mode / bugfix** | N/A — не вводит новых паттернов |
 
-**Что должно быть в ui-style-guide.md** (см. полный шаблон `_templates/ui-style-guide.md.tmpl`):
+**`ui_kind` определяется на Stage A после vision artifact'а**, не на Init — иногда форма продукта не известна без vision / market research. Default `tbd` в state file на момент Init, fill во время Stage A. Может evolve (additive): добавление нового ui_kind позже — update state + write новый файл.
 
-1. Vision + 6 фундаментальных принципов (понятность / отзывчивость / современный UX / адаптивность / доступность / brand voice)
-2. **Палитра — две темы** (светлая + тёмная), 7 семантических ролей × 2 = 14 токенов, WCAG AA контраст
-3. Принципы конвертации light → dark
-4. Типографика
-5. Spacing (8pt grid типично)
-6. Shapes (corner radius, borders)
-7. Shadows / elevation
-8. Iconography
-9. Animations (durations / easing / prefers-reduced-motion)
-10. Адаптивный дизайн (breakpoints + функциональная адаптация: таблицы → карточки на mobile)
-11. Отзывчивость UI и feedback (Web Workers для > 200ms операций, instant-apply settings, in-place feedback вместо toast)
-12. Понятность, copy, обработка ошибок (in-place errors, минимум tooltips, confirm только для критичных действий)
-13. Локализация всех UI-strings (i18n с дня 1, даже если v0 один язык)
-14. Accessibility — детальный WCAG AA чек-лист
-15. Theme switching mechanics (CSS variables, prefers-color-scheme + manual override)
-16. Принцип «готовые решения первичны» (frameworks-first, не переизобретать)
-17. Mandatory checklist для UI-фич (cross-ref'ится reviewer'ом в Step 7)
+**Что должно быть в каждом файле** (см. `_templates/ui-style-guide-<kind>.md.tmpl`):
+
+- **base** — 8 принципов, brand voice, i18n discipline, accessibility общая, frameworks-first, conflicts priority, общий checklist
+- **web** — палитра + 2 темы, типографика, spacing 8pt, shapes, shadows, icons, animations, breakpoints + functional reformat, responsiveness (Web Workers), instant-apply, in-place errors no-toast, WCAG AA detailed, theme switching, frameworks (Tailwind / Radix), web-specific checklist
+- **native-mobile** — platform conventions (HIG / Material 3), system colors + Material You, типографика (SF / Roboto), touch targets (44pt / 48dp), navigation patterns, system integration (haptic / share sheet / notifications), safe areas, gestures, accessibility (VoiceOver / TalkBack), frameworks (SwiftUI / Compose / Tauri), distribution (App Store / Play), mobile-specific checklist
+- **native-desktop** — window chrome (traffic lights / caption / CSD-SSD), menu bar (global / in-window), keyboard shortcuts (Cmd vs Ctrl), file dialogs, multi-window, theming с reactive switching, DPI / scaling, accessibility (VoiceOver / Narrator / Orca), system integration (notifications / tray / URL schemes), frameworks (SwiftUI / WinUI / GTK / Qt / Tauri), distribution (signing / notarization), desktop checklist
+- **tui** — Unicode box-drawing + ASCII fallback, color (256 / 24-bit / NO_COLOR), monospace typography, keybindings (vim / emacs / arrow), spinners + progress, realtime updates / partial redraw, accessibility (screen reader text mode), config XDG, frameworks (ratatui / Textual / Bubble Tea), compatibility matrix, TUI checklist
+- **cli** — command structure (verb / noun), flags (POSIX + universal), exit codes, stdout/stderr discipline, pipe-friendly when non-TTY, --json mode, color (NO_COLOR / isatty), help format + examples + man pages + completions, interactive prompts sparingly, progress, signals (SIGINT/SIGTERM/SIGPIPE), config + env vars, errors с typo suggestions, frameworks (clap / cobra / click), distribution, CLI checklist
+- **embedded** — platform groups (watch / panel / ring / e-ink / automotive / IoT / POS / MCU), constraints (display / memory / power / input modalities), minimal information density, large touch targets ≥ 9mm, hardware buttons multi-function, rotary / voice / gestures / haptic, OLED true black, accessibility (large text / haptic redundant), connectivity + sync, frameworks (LVGL / Slint / SwiftUI watchOS / Compose Wear), distribution + OTA, embedded checklist
+- **backend** — latency budgets + SLO, async 202 patterns, idempotency + idempotency-key, RFC 7807 errors, bulk operations, live delivery (WebSocket / SSE / webhooks / polling), cursor pagination, resource modeling по user mental model, auth (short access + refresh, scopes, rate limiting), caching contract (ETag), schema evolution (deprecation / sunset), observability outward (metrics / status page / health endpoints / structured logs), discoverability (OpenAPI / AsyncAPI / SDK / sandbox), security baseline (TLS / CORS / validation / no secrets in response), frameworks (Echo / Axum / FastAPI / Hono / Ktor), backend checklist
 
 **Как поступать вместо:**
 
-- В `bootstrap-state.md.tmpl` Stage A checklist добавлен `ui-style-guide` (Mode 1 с UI обязательно).
-- В `project-bootstrap.md` Stage A flow для Mode 1 — обязательный шаг создания ui-style-guide; для Mode 2/3 — READ existing.
-- В `feature-spec.md.tmpl` NFR — accessibility / responsive / theme support как mandatory чек-лист.
-- В `reviewer.md` — структурный consistency check (UI-фича без cross-ref на ui-style-guide.md → blocking finding).
-- В `development-protocol.md` § 11.0 (Stage F readiness) — добавлен `ui-style-guide.md` для Mode 1 с UI.
+- В `bootstrap-state.md.tmpl` Stage A checklist — `ui-style-guide-base.md` + `ui-style-guide-<kind>.md per каждому ui_kind`.
+- В `project-bootstrap.md` Stage A flow для Mode 1 — обязательный шаг: определение `ui_kind` после vision + write base + per-kind files; для Mode 2/3 — READ existing.
+- В `feature-spec.md.tmpl` NFR — соответствующий per-kind checklist (по форме UI которую фича touches).
+- В `reviewer.md` — структурный consistency check (UI / API фича без cross-ref на соответствующий ui-style-guide-<kind>.md → blocking finding).
+- В `development-protocol.md` § 11.0 (Stage F readiness) — `ui-style-guide-base.md` + per-kind для Mode 1.
 
 ---
 

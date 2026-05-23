@@ -31,6 +31,13 @@ project_capabilities:
   - uses-i18n: yes | no
   - multi-tenant: yes | no
   - public-web: yes | no
+  # ui_kind: формы UI продукта. Допустимые значения:
+  # web, native-mobile, native-desktop, tui, cli, embedded, backend.
+  # Multi-value для composite stacks ("web, backend"; "native-mobile, backend").
+  # Default `tbd` на Init; заполняется на Stage A после vision artifact'а,
+  # когда product shape clear. Additive evolution: добавление нового kind
+  # позже — update поля + write новый ui-style-guide-<kind>.md.
+  - ui_kind: tbd | <comma-separated list>
 ---
 
 # Bootstrap state
@@ -45,7 +52,8 @@ project_capabilities:
 - [ ] competitive-analysis (YYYY-MM-DD, или N/A с reason)
 - [ ] positioning (YYYY-MM-DD, или N/A с reason) — angle / differentiators живут здесь
 - [ ] brand-voice (YYYY-MM-DD, или N/A с reason)
-- [ ] ui-style-guide (YYYY-MM-DD) — **Mode 1 с UI:** обязательно (палитра / типографика / spacing / shapes / animations / responsive / accessibility / theme switching / i18n / 6 фундаментальных принципов). **Mode 2/3:** опираемся на existing design system продукта, новый артефакт не создаём. **Mode 1 без UI (CLI / backend-only):** N/A с reason. См. AP-15
+- [ ] ui-style-guide-base.md (YYYY-MM-DD) — **Mode 1:** обязательно (8 фундаментальных принципов, brand voice, i18n discipline, accessibility общая, frameworks-first, общий checklist). **Mode 2/3:** опираемся на existing design system продукта, новый артефакт не создаём.
+- [ ] ui-style-guide-<kind>.md per каждому `ui_kind` (YYYY-MM-DD) — для каждого значения в `project_capabilities.ui_kind` пишется соответствующий per-kind файл (web / native-mobile / native-desktop / tui / cli / embedded / backend). Например, для full-stack web project с `ui_kind: web, backend` — пишутся `ui-style-guide-web.md` И `ui-style-guide-backend.md`. См. AP-15.
 
 ## Stage B — Constraints
 
