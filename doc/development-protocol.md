@@ -559,11 +559,13 @@ PM не нужно держать в голове CWE-321 или OWASP A02. Init
 
 Серверная branch protection на private repo требует **GitHub Pro / Team / Enterprise**. На free plan API возвращает `403 Upgrade to GitHub Pro or make this repository public to enable this feature`. То же ограничение действует для rulesets API.
 
-В этом случае init-agent **обязан** включить клиентский эквивалент через pre-push git hook (входит в `install-git-hooks.sh` по умолчанию — hard block на push в `main` / `master`). AP-6 запрещает `--no-verify`-обход.
+**Детекция (init-agent на Stage E):** попробовать `gh api repos/<owner>/<repo>/branches/main/protection`; если ответ `403` с сообщением `Upgrade to GitHub Pro…` — мы в free + private. (Для других SCM — аналогичная проверка по их API; если серверная защита недоступна на текущем тарифе, логика та же.)
+
+В этом случае init-agent **обязан** включить клиентский эквивалент через pre-push git hook (входит в `install-git-hooks.sh` по умолчанию — hard block на push в `main` / `master`). § 14.7 запрещает `--no-verify`-обход.
 
 Минусы клиентской защиты — её **физически возможно** обойти (новый разработчик без hook'ов; намеренный обход). Поэтому для команды > 1 PM это **не замена** серверной branch protection, а только промежуточное решение. План перехода фиксируется в `.bootstrap-state.md` `Notes` секции:
 
-- Когда добавится платный тариф / public repo / org — переключиться на серверную branch protection через `gh api`.
+- Когда добавится платный тариф / public repo / org — переключиться на серверную branch protection через `gh api`. Клиентский pre-push hook **остаётся** как defense-in-depth, не удаляется.
 - До перехода — pre-push hook + reviewer-agent + ручная дисциплина.
 
 См. также `bootstrap-state.md` Stage E checklist (пункт «branch protection / pre-push hook»).
