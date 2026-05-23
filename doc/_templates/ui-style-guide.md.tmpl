@@ -14,8 +14,33 @@ last_review: YYYY-MM-DD
 
 **Mode-aware применение:**
 
-- **Mode 1 (new-product):** этот артефакт **обязателен** на Stage A. Без него Stage F UI-фичи начинать **запрещено** — coder будет изобретать визуальный язык на лету. См. AP-15 (если будет добавлен).
+- **Mode 1 (new-product):** этот артефакт **обязателен** на Stage A для продуктов с UI. Без него Stage F UI-фичи начинать **запрещено** — coder будет изобретать визуальный язык на лету. См. AP-15.
 - **Mode 2/3 (new-feature / rework в существующем продукте):** **не создаём** с нуля. Опираемся на **existing design system** продукта (Figma / dedicated style guide / Storybook). Если в продукте нет формализованного style guide — extract'им неформальный (через анализ существующего UI кода) и предлагаем PM зафиксировать.
+
+### Применимость по типу UI продукта
+
+Шаблон **универсальный** — продукт может быть не только веб-приложением. Адаптируем под форму продукта:
+
+| Тип продукта | Применимость разделов |
+|---|---|
+| **Web app / PWA / SPA** | Все разделы применимы, реализация через CSS variables / Web APIs / accessibility ARIA |
+| **Native mobile (iOS / Android)** | Все принципы применимы; реализация через platform APIs (SwiftUI / Compose / native accessibility). Responsive — другой смысл (one device class per app), но light/dark / accessibility / реактивность остаются. Theme switching через `UITraitCollection` / `Configuration.uiMode` |
+| **Native desktop (Electron / Tauri / native)** | Все применимо. Native UI toolkit для реализации. Theme switching через OS preferences |
+| **TUI (terminal user interface — ncurses, ratatui, blessed)** | Палитра ограничена (8-256 цветов), типографика monospace, нет shapes/shadows/animations. Применимы: 8 принципов, light/dark (через terminal theme), accessibility (screen reader для terminals существует), i18n, эффективность пути, реактивность |
+| **CLI (command-line, без интерактивного UI)** | Применимы: понятность (man page, error messages, --help), accessibility (subset — screen reader для stdout), i18n, эффективность пути (минимум флагов для типовых задач), реактивность не применима. Палитра / типография / shapes / animations / themes / responsive — не применимы |
+| **Backend-only / library** | UI-style-guide **не применим**. Помечаем в `.bootstrap-state.md` как `N/A: backend-only` |
+| **Embedded display (microcontroller LCD)** | Палитра минимальная (1-bit / 4-bit color), типографика fixed-bitmap, нет animations/shadows. Применимы: понятность, эффективность пути, i18n (если применимо), accessibility-baseline (high contrast) |
+
+Тип UI указывается в `.bootstrap-state.md` frontmatter (`ui-form: web | native-mobile | native-desktop | tui | cli | embedded | backend-only`). Разделы шаблона, не применимые к типу — помечаются `N/A` в product-specific документе с reason.
+
+### Принципы остаются, реализация адаптируется
+
+8 фундаментальных принципов (§ 1.1) **применимы к любому интерактивному UI**, кроме backend-only. Меняется **реализация**:
+
+- «Отзывчивость» в web — Web Worker для > 200ms; в native — background queue / GCD / Coroutines; в TUI — async task / spinner; в CLI — progress indicator на stderr.
+- «Адаптивность» в web — responsive breakpoints; в native mobile — Auto Layout / Constraints; в TUI — terminal resize handling; в CLI — flexible output width.
+- «Доступность» в web — ARIA / semantic HTML; в native — UIAccessibility / AccessibilityNodeInfo; в TUI — screen reader compatibility (NVDA Terminal, VoiceOver); в CLI — stderr separation от stdout, machine-readable output опция.
+- «Реактивность» в web — WebSocket / SSE; в native — sockets / push notifications; в TUI — message channels / select; в CLI — не применимо (one-shot execution).
 
 ---
 
@@ -23,16 +48,18 @@ last_review: YYYY-MM-DD
 
 > <PM-цитата о визуальном vision'е продукта: лаконичность / тон / эмоциональный регистр / что НЕ хотим>
 
-### 1.1. Шесть фундаментальных принципов
+### 1.1. Восемь фундаментальных принципов
 
-Каждое UI-решение проверяется по этим шести осям. Конфликт между принципами — обсуждается на feature-spec уровне; default — в порядке перечисления.
+Каждое UI-решение проверяется по этим восьми осям. Конфликт между принципами — обсуждается на feature-spec уровне; default — в порядке перечисления.
 
 1. **Понятность.** Название элемента / кнопки / поля само объясняет, что он делает. Если требуется подсказка — переписать само название. Подробнее § 11.
 2. **Отзывчивость.** UI никогда не замерзает. Любая операция > 200ms — фоновая с видимым прогрессом. Подробнее § 10.
-3. **Современный UX-паттерн.** Настройки применяются сразу (auto-apply), без явной кнопки «Сохранить» там, где это безопасно. Подробнее § 10.4.1.
-4. **Адаптивность.** Одинаково хорошо на смартфоне / планшете / desktop. Не только стилями — функционально. Подробнее § 9.
-5. **Доступность.** WCAG AA для обеих тем обязательно. Подробнее § 12.
-6. **Соответствие brand voice.** Текст в UI соответствует `doc/brand-voice.md`. Подробнее § 11.3.
+3. **Реактивность.** UI отражает изменения внешнего состояния автоматически — без manual refresh. Если данные изменились на сервере / другом устройстве / в фоновом процессе — экран показывает актуальное состояние через WebSocket / SSE / polling. Подробнее § 10.9.
+4. **Современный UX-паттерн.** Настройки применяются сразу (auto-apply), без явной кнопки «Сохранить» там, где это безопасно. Подробнее § 10.4.1.
+5. **Адаптивность.** Одинаково хорошо на смартфоне / планшете / desktop. Не только стилями — функционально. Подробнее § 9.
+6. **Доступность.** WCAG AA для обеих тем обязательно. Подробнее § 12.
+7. **Соответствие brand voice.** Текст в UI соответствует `doc/brand-voice.md`. Подробнее § 11.3.
+8. **Эффективность пути.** Главный сценарий выполняется минимальным количеством шагов (**2-4 клика норма**; 10+ для типовой задачи — проблема, требует переделки). Smart defaults, quick-actions на верхнем уровне, skip prompts для повторяющихся подтверждений. Красивый интерфейс с 10 кликами вместо 3 — это **плохой** UX. Подробнее § 9.7.
 
 ### 1.2. Стилистический touchstone
 
@@ -291,7 +318,49 @@ last_review: YYYY-MM-DD
 - Lazy loading: `loading="lazy"` для below-the-fold
 - Aspect ratio через CSS (`aspect-ratio: 16/9`) — нет layout shift
 
-### 9.6. Тестирование адаптивности
+### 9.7. Эффективность пути — минимум кликов на главную задачу
+
+**Принцип:** красивый интерфейс с 10 кликами на типовую задачу — это **плохой** UX, даже если визуально безупречен. Главные сценарии должны выполняться минимальным количеством шагов.
+
+**Целевые показатели (для consumer-product):**
+
+- Главный сценарий — **2-4 клика** норма
+- Альтернативный сценарий — **5-7 кликов** допустимо
+- 10+ кликов на типовую задачу — **проблема**, требует переделки flow
+
+### 9.7.1. Что включать в feature-spec NFR
+
+Каждая UI-фича в spec'е указывает **path-length expectation**:
+
+```
+Path length:
+- Главный сценарий (Happy path 1): N кликов / тапов
+- Альтернативный (Happy path 2): M кликов
+- Power-user shortcut (если есть): K кликов
+```
+
+Reviewer-agent в Step 7 проверяет: фактическая реализация ≤ заявленному. Превышение — `medium finding`.
+
+### 9.7.2. Техники сокращения пути
+
+- **Smart defaults** — большинство пользователей не меняют. Не заставляем кликать через wizard, если для 80% случаев одни и те же выборы.
+- **Quick-actions** на верхнем уровне (например, «принудительно отправить» — 1 клик из списка, не «открыть → меню → действия → отправить»).
+- **Inline editing** вместо «open → edit → save» — редактирование где видно, без перехода в отдельный экран (где безопасно).
+- **Bulk actions** — выбрал N элементов → один action на все, не N раз поодиночке.
+- **Skip prompts** — если пользователь сделал то же действие 5 раз и не отменил, перестать спрашивать confirmation на 6-й (paired с § 11.9 — confirm только для критических).
+- **Keyboard shortcuts** для частых actions у power-users (Cmd+Enter submit, Esc cancel, / focus search).
+- **One-step instead of wizard** — если можно одну форму, не делать 5-step wizard «для красоты».
+- **Не разбивать flow без причины** — если все поля связаны и пользователь их вводит в одной mental session, форма одна.
+
+### 9.7.3. Чего избегать
+
+- **Bury'ить** ключевую функцию в menu → submenu → tab → button (3+ навигационных перехода до action)
+- **Force re-entry** — пользователь ввёл данные, потом сессия истекла, переходит на login, теряет введённое
+- **Multi-step confirmation** для не-critical действий — «Удалить? → Точно? → Введите DELETE для подтверждения» для обычного удаления
+- **Modal in modal** — открыть форму → modal помощи → modal-confirm → modal-result
+- **Required clicks для информации** — раскрывать содержимое по клику, когда оно могло быть видно сразу (но без перегрузки экрана)
+
+### 9.8. Тестирование адаптивности
 
 **Mandatory checklist:**
 
@@ -376,7 +445,58 @@ In-place feedback в приоритете, toast — fallback (§ 11.7):
 - ❌ Cryptographic ops середине (state inconsistency)
 - ❌ Transactional commits
 
-### 10.8. Connection state
+### 10.9. Реактивность — живые обновления данных
+
+**Принцип:** UI отражает текущее состояние внешних данных **автоматически**, без manual refresh. Если данные изменились (другим пользователем / на другом устройстве / в фоновом процессе) — экран показывает актуальное состояние.
+
+**Реактивность ≠ отзывчивость:**
+
+- **Отзывчивость** — UI не замерзает при действиях пользователя (см. § 10).
+- **Реактивность** — UI обновляется при изменениях **извне** (не по действию пользователя).
+
+### 10.9.1. Сценарии где реактивность критична
+
+Product-specific, но типичные случаи:
+
+- Sender открыл ЛК на двух устройствах → на одном изменил настройку → другое автоматически отразило.
+- Sender ждёт верификацию email → как только сервер подтвердил, форма автоматически переходит на success state (без F5).
+- Sender видит статус сейфа «в очереди отправки» → когда фоновый job начал отправлять → статус автоматически меняется на «отправляется».
+- Sender добавил вложение → progress upload автоматически обновляется без polling каждые 5 секунд (push).
+- В collaborative-feature (если есть) — другой пользователь редактирует → ты видишь изменения в real-time.
+
+### 10.9.2. Технические реализации
+
+| Механизм | Когда применим |
+|---|---|
+| **WebSocket** | Real-time bidirectional updates (collaborative editing, chat, live dashboard). Дорого для server resources |
+| **Server-Sent Events (SSE)** | Server → client push (статусы фоновых jobs, notifications). Дешевле WebSocket, simpler |
+| **Long polling** | Когда SSE / WebSocket недоступны (legacy browsers, corporate proxies блокирующие persistent connections) |
+| **Short polling с экспоненциальным backoff** | Когда push-инфра не оправдана (низкая частота изменений) |
+| **Reactive state management** (RxJS / Svelte stores / React Query / SWR / TanStack Query) | Любой случай — фронтенд-side abstraction поверх transport'а |
+| **Optimistic UI** + server reconciliation | Когда задержка push'а критична (user видит свои изменения мгновенно, дальше merge с server-state) |
+
+### 10.9.3. Conflict resolution
+
+При двух одновременных изменениях (например, sender на двух устройствах):
+
+- **Last-write-wins** — простейший, но теряет данные. Допустим для idempotent settings (toggle).
+- **Operational transforms / CRDT** — для collaborative editing (overkill для большинства продуктов).
+- **Optimistic UI + show conflict** — пользователю показывают «эти данные изменились с момента, как ты открыл страницу. Принять / Отклонить?»
+- **Pessimistic locking** — для critical operations (например, изменение пароля).
+
+В feature-spec при описании async-fetчинга описывается выбранная стратегия.
+
+### 10.9.4. Что обязательно для каждой UI-фичи с реактивностью
+
+Feature-spec фиксирует:
+
+- **Источник обновлений** (server push / polling / другой триггер)
+- **Frequency** (мгновенно / каждые N секунд / по запросу)
+- **Conflict resolution** (если применимо)
+- **Reconnect handling** (что происходит при потере связи и восстановлении)
+- **Battery / network impact** (real-time push дороже для mobile)
+
+### 10.10. Connection state
 
 - `navigator.onLine` + `online` / `offline` events
 - **При offline — banner** вверху страницы (не toast), persistent
@@ -714,6 +834,7 @@ Feature spec должна содержать в NFR:
 - [ ] In-place feedback, не toast (где возможно)
 - [ ] Confirmation только для критических действий (по критерию «вредит ли это обязательствам»)
 - [ ] Instant-apply settings, не batch save (где безопасно)
+- [ ] Path-length фиксирован в NFR (главный сценарий, альтернативные, power-user shortcuts) — реализация ≤ заявленному (см. § 9.7)
 
 Reviewer-agent в Step 7 проверяет каждый пункт. Несоответствие — `blocking finding`.
 
