@@ -97,23 +97,52 @@ Scenario: <название>
 
 ---
 
-## Impact assessment (mode-aware, для AP-13)
+## Impact assessment (mode-aware, для AP-13 + AP-14)
 
-Frontmatter spec'а должен включать:
+Frontmatter spec'а должен включать **7 полей**: 3 операционных (AP-13) + 4 структурных (AP-14).
 
 ```yaml
-legal_impact: yes|no       # меняет ли фича ToS / Privacy / regulatory surface
-validation_required: yes|no # меняет ли фича ключевой journey / добавляет персону / меняет цену
-incident_impact: yes|no    # добавляет ли фича новый класс runtime-инцидентов
+# AP-13 — операционные / юридические / валидационные документы
+legal_impact: yes|no         # меняет ли фича ToS / Privacy / regulatory surface
+validation_required: yes|no  # меняет ли фича ключевой journey / добавляет персону / меняет цену
+incident_impact: yes|no      # добавляет ли фича новый класс runtime-инцидентов
+
+# AP-14 — структурные Stage A-C документы
+journey_impact: yes|no       # фича меняет существующий journey / вводит новый шаг / добавляет персону
+threat_impact: yes|no        # фича вводит новые векторы атак / меры защиты / меняет существующие T-/M-IDs
+scope_impact: yes|no         # фича переносит артефакты между фазами v0 / Этап 1 / Этап 1.5+ или меняет границы фаз
+topology_impact: yes|no      # фича вводит новый компонент / поток данных / зависимость / интеграцию
 ```
 
-**Если `legal_impact: yes`** — обновить `doc/legal-brief.md` через отдельный PR до начала coding'а.
+### Что делать при `yes` (matrix следствий)
 
-**Если `validation_required: yes`** — обновить `doc/customer-interview-script.md` с новыми вопросами под изменённый journey.
+| Флаг | Документ | Когда обновляем | Где зафиксировать |
+|---|---|---|---|
+| `legal_impact: yes` | `doc/legal-brief.md` | Отдельный PR до Step 4 (coding) | § Approval спеки |
+| `validation_required: yes` | `doc/customer-interview-script.md` | Отдельный PR до Step 4 | § Approval |
+| `incident_impact: yes` | `doc/incident-runbook-draft.md` | Отдельный PR до Step 4 | § Approval |
+| `journey_impact: yes` | `doc/user-journeys.md` | Отдельный PR **до merge feature spec** | § Approval |
+| `threat_impact: yes` | `doc/threat-model.md` | Отдельный PR **до merge feature spec** | § Approval |
+| `scope_impact: yes` | `doc/mvp-scope.md` | Отдельный PR **до merge feature spec** | § Approval |
+| `topology_impact: yes` | `doc/topology.md` | Отдельный PR **до merge feature spec** | § Approval |
 
-**Если `incident_impact: yes`** — добавить новый раздел в `doc/incident-runbook-draft.md` (или соответствующий финализированный runbook) с процедурой для нового класса инцидентов.
+### Ключевая разница AP-13 vs AP-14
 
-См. AP-13 в `.ai-pm/tooling/doc/anti-patterns.md`.
+- **AP-13 операционные документы** обновляются перед Step 4 (coding). Spec может merge'иться до их обновления — без них нельзя писать код, но можно фиксировать поведение.
+- **AP-14 структурные документы** обновляются **до merge feature spec'а**. Они — фундамент, на котором spec строится. Расхождение spec ↔ Stage A-C — архитектурный конфликт (см. AP-14 «Почему»). Reviewer-agent в Step 7 cross-check'ает наличие соответствующих PR'ов.
+
+### Структурный read-pass (обязательный шаг перед Step 1)
+
+Перед черновиком spec'а AI **обязан** выполнить:
+
+1. Прочитать `user-journeys.md`, `threat-model.md`, `mvp-scope.md`, `topology.md` (по `doc_root` из `.bootstrap-state.md`).
+2. Определить impact фичи на каждый из 4 документов.
+3. Объявить PM-у в чате результат: «эти документы потребуют обновления: [список], причина: [по каждому]».
+4. Получить подтверждение PM-а и зафиксировать в frontmatter spec'и.
+
+Этот шаг закрывает дефект AP-14 «Почему». См. `project-bootstrap.md` subagent — формализованная routine.
+
+См. AP-13 + AP-14 в `.ai-pm/tooling/doc/anti-patterns.md`.
 
 ---
 

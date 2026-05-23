@@ -143,6 +143,50 @@
 
 ---
 
+## AP-14. Пропуск структурного read-pass'а перед feature spec
+
+**Что нельзя:**
+
+- Драфтить feature spec без явного read-pass'а структурных Stage A-C документов (`user-journeys.md`, `threat-model.md`, `mvp-scope.md`, `topology.md`).
+- В Mode 2/3 фича вводит новый шаг journey'я / меняет вектор угроз / переносит артефакт между фазами scope'а / добавляет новый компонент в топологию — а feature spec этого не отражает.
+- Merge feature spec PR без соответствующих docs PR'ов на затронутые структурные документы.
+
+**Почему:** на одном из ранних prod-run'ов (2026-05-23) AI зафиксировал в feature spec архитектуру «один пароль у sender'а», но `threat-model.md` описывал «два пароля» (signup + парольная фраза). Конфликт обнаружили только при ручной сверке PM-ом — если бы PM не спросил «а в ранних документах ничего менять не надо?», фича была бы реализована вопреки threat-model, который — legal artifact для compliance / audit. Класс ошибок: AI не сверяет spec против Stage A-C, PM не открывает Stage A-C при review feature spec'а (по дизайну — Trust profile A не читает код **и не вычитывает foundational docs повторно**).
+
+AP-13 закрывает аналогичный пробел для **операционных / юридических / валидационных** документов (legal-brief, customer-interview-script, incident-runbook). AP-14 закрывает то же самое для **структурных** Stage A-C документов.
+
+**Mode-aware применение:**
+
+| Mode | journey-impact | threat-impact | scope-impact | topology-impact |
+|---|---|---|---|---|
+| **Mode 1 (new-product)** | автоматически (Stage A-C создаются вместе со Step 1) | автоматически | автоматически | автоматически |
+| **Mode 2 (new-feature)** | Условно (вводит новый шаг / новую персону) | Условно (вводит новые векторы / меры) | Условно (переносит артефакт между фазами / меняет границы v0) | Условно (вводит новый компонент / поток данных) |
+| **Mode 3 (rework-feature)** | Условно (rework меняет journey-flow) | Условно (rework меняет threat surface) | Условно (rework меняет scope) | Условно (rework меняет топологию) |
+| **Lite-mode / bugfix** | Нет | Нет (исключение: bug в security path) | Нет | Нет |
+
+**Решение mode-aware применимости** принимает AI при черновике feature-spec (Stage F Step 1 routine). AI обязан проверить каждый из 4 структурных документов на impact и зафиксировать результат в frontmatter spec'и:
+
+```yaml
+journey_impact: yes|no       # фича меняет существующий journey / вводит новый шаг / добавляет персону
+threat_impact: yes|no        # фича вводит новые векторы атак / меры защиты / меняет существующие T-/M-IDs
+scope_impact: yes|no         # фича переносит артефакты между фазами v0 / Этап 1 / Этап 1.5+ или меняет границы фаз
+topology_impact: yes|no      # фича вводит новый компонент / поток данных / зависимость / интеграцию
+```
+
+Для каждого `yes` AI обязан в § Approval спеки перечислить требуемые docs PR'ы (например, `docs/threat-model-<topic>`, `docs/user-journeys-<topic>`).
+
+**Как поступать вместо:**
+
+- В `feature-spec.md.tmpl` добавить 4 поля в Impact assessment (рядом с существующими `legal_impact` / `validation_required` / `incident_impact` из AP-13).
+- В `project-bootstrap.md` (subagent) при Stage F handoff обязательный шаг **«structural read-pass»** перед спецификацией: AI открывает 4 документа, формулирует ожидаемый impact, объявляет PM'у списком, ждёт подтверждения.
+- В `reviewer.md` (Step 7 subagent) добавить **structural consistency check** в чек-лист: если в spec'е `*_impact: yes`, reviewer убеждается, что соответствующий docs PR существует (merged или в той же PR-серии). Если не существует — finding'и `request-changes`.
+- В `development-protocol.md` § 11 (Stage F readiness) формализовать AP-14 как обязательный шаг перед Step 1.
+- (Опционально, отдельным PR) CI-job, валидирующая frontmatter feature-spec'и и наличие docs PR'ов.
+
+**Дополнительно — отличие от существующего лёгкого упоминания в lifecycle routing:** в `project-bootstrap.md` уже была фраза «Если фича требует новой persona/journey/threat — предложи отдельный PR docs/<topic>». Это **suggestion**, не **routine**. AP-14 превращает это в обязательный читаемый шаг с frontmatter-маркером, который reviewer-agent физически проверяет.
+
+---
+
 ## AP-12. Избыточные англицизмы в project artifacts
 
 **Что нельзя:**

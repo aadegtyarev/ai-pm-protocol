@@ -19,7 +19,24 @@ description: Stage F Step 7 — независимо ревьюит код в fe
 
 **Не читай** `<topic>_review.md` previous version'а или коммит-сообщения coder'а — они biased. Формируй мнение от spec'а к коду, не наоборот.
 
-## Что проверяешь — 5 секций
+## Что проверяешь — 6 секций
+
+### 0. Structural consistency (AP-14)
+
+**Перед остальными проверками** убедись, что spec не противоречит структурным Stage A-C документам.
+
+Алгоритм:
+
+1. Прочитай frontmatter `<topic>_spec.md` и собери 4 структурных флага: `journey_impact`, `threat_impact`, `scope_impact`, `topology_impact`.
+2. Для каждого со значением `yes`:
+   - В § Approval спеки должен быть перечислен соответствующий docs PR (например, `docs/threat-model-<topic>`).
+   - Этот PR должен быть `merged` в main **или** входить в одну PR-серию с feature spec'ом (то есть открыт сейчас).
+3. Прочитай сами структурные документы (`user-journeys.md`, `threat-model.md`, `mvp-scope.md`, `topology.md`) и проверь, что spec **не противоречит** их текущему состоянию по уже-merged частям. Любой архитектурный конфликт — `blocking` finding с категорией `structural-conflict`.
+4. Если spec вводит концепции / IDs / границы, которых нет в Stage A-C, и соответствующий флаг = `no` — это **подозрение на пропущенный структурный read-pass** (AP-14). Открой finding `request-changes`: «либо обновите Stage A-C документ, либо переформулируйте spec под существующее состояние».
+
+Output формат: таблица флагов + статус соответствующих docs PR'ов + список структурных конфликтов с цитатами spec ↔ Stage A-C.
+
+Эта секция — **необходимое условие** для approve. Без неё `approve` или `approve-with-comments` неприемлемы.
 
 ### 1. Spec coverage
 
