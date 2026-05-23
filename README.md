@@ -60,7 +60,7 @@ ai-pm-protocol/
 ├── .ai-pm/
 │   ├── .bootstrap-state.md           ← committed
 │   ├── version                       ← committed (template version pin)
-│   └── tooling/                      ← symlink на template clone (см. Setup ниже)
+│   └── tooling/                      ← submodule / symlink / vendor (см. Setup ниже)
 ├── CLAUDE.md, .claude/settings.json, .gitignore
 └── (rest of product code)
 ```
@@ -69,57 +69,78 @@ ai-pm-protocol/
 
 ## Setup для product repo
 
-Template **не копируется** в продукт. Вместо этого — клонируется отдельно и **подключается симлинком**. Это platform-independent (Windows / Linux / macOS) и trivially removable.
+Template **не копируется** в продукт. Поддерживаются три варианта подключения; bootstrap-agent определяет тип автоматически (submodule / symlink / vendor) и записывает в state.
 
-### Шаг 1. Клонируй template
+### Вариант A. Git submodule (рекомендуется)
 
-Где угодно — рядом с продуктом или внутри его подпапки. Примеры:
+Подходит для большинства случаев — version-pinned, voспроизводимо на CI / у других разработчиков, один clone тащит всё.
 
 ```bash
-# Вариант A: рядом с продуктом (рекомендуется)
-cd ~/dev
-git clone https://github.com/<...>/ai-pm-protocol.git
-cd my-product/  # уже существующий или свежий проект
-
-# Вариант B: внутри подпапки продукта
 cd ~/dev/my-product
-git clone https://github.com/<...>/ai-pm-protocol.git .ai-pm-protocol-clone
+git submodule add git@github.com:aadegtyarev/ai-pm-protocol.git .ai-pm/tooling
+git commit -m "chore: подключён ai-pm-protocol как submodule"
 ```
 
-### Шаг 2. Подключи через симлинк в `.ai-pm/tooling/`
+После clone'а продукта другие разработчики делают:
 
 ```bash
-cd ~/dev/my-product
+git clone --recurse-submodules <product-url>
+# или, если уже clone'нули без --recurse:
+git submodule update --init --recursive
+```
+
+Обновление template'а до новой версии:
+
+```bash
+cd .ai-pm/tooling
+git fetch && git checkout <tag-or-commit>
+cd ../..
+git add .ai-pm/tooling && git commit -m "chore: bump ai-pm-protocol до <ver>"
+```
+
+### Вариант B. Symlink
+
+Подходит, если разрабатываешь template и продукт параллельно — изменения в template сразу видны в продукте без commit'а / submodule update.
+
+```bash
+cd ~/dev
+git clone git@github.com:aadegtyarev/ai-pm-protocol.git
+cd my-product
 mkdir -p .ai-pm
-ln -s ../../ai-pm-protocol .ai-pm/tooling  # Вариант A: relative path к sibling clone
-# или
-ln -s .ai-pm-protocol-clone .ai-pm/tooling  # Вариант B: nested clone
+ln -s ../../ai-pm-protocol .ai-pm/tooling
+echo ".ai-pm/tooling/" >> .gitignore
 ```
 
 Windows: `mklink /D .ai-pm\tooling ..\..\ai-pm-protocol` (cmd) или `New-Item -ItemType SymbolicLink ...` (PowerShell).
 
-### Шаг 3. Добавь в `.gitignore`
+Минусы: каждый разработчик клонит template сам, CI требует отдельного шага клонирования template'а перед запуском линтеров.
+
+### Вариант C. Vendor (copy)
+
+Подходит для air-gapped окружений или когда нужно freeze состояние без зависимости от внешнего репо.
 
 ```bash
-echo ".ai-pm/tooling/" >> .gitignore
+cp -r ~/dev/ai-pm-protocol my-product/.ai-pm/tooling
+rm -rf my-product/.ai-pm/tooling/.git
+cd my-product && git add .ai-pm/tooling
 ```
 
-Так template **не commit'ится** в продукт-репо — каждый разработчик клонит template сам.
+Минусы: template дублируется в каждом продукте, обновление — ручной merge.
 
-### Шаг 4. Запусти `claude` в продукт-репо
+### Запуск bootstrap-agent
+
+После подключения template'а любым из вариантов:
+
+```bash
+cd my-product
+claude  # запустит bootstrap-agent при первой сессии
+```
 
 Bootstrap-agent **сам**:
 1. Скопирует bootstrap-state.md skeleton (с unfilled options) в `.ai-pm/`.
 2. Скопирует CLAUDE.md (root) и `.claude/settings.json`.
-3. Спросит Mode + Trust profile (Integration — детектируется automatically из tooling/ типа).
+3. Спросит Mode + Trust profile (integration mode — детектируется automatically).
 4. Поведёт через Stage A-E.
-
-### Альтернативы (если не хотите symlink)
-
-- **Submodule:** `git submodule add <template-url> .ai-pm/tooling`. Version-pinned, чище для team-проектов.
-- **Vendor:** `cp -r ai-pm-protocol .ai-pm/tooling && git add .ai-pm/tooling`. Full copy in repo.
-
-Bootstrap-agent detects тип автоматически (symlink vs submodule vs regular dir) и записывает в state.
 
 ## Как использовать (v0 vision)
 
