@@ -181,6 +181,30 @@ Greenfield. WRITE всего. Идёшь по Stage A-E последовател
 
 После всех artifacts текущего stage'а — объявляешь stage closed, спрашиваешь подтверждение на переход.
 
+### Stage A: определение `ui_kind` перед ui-style-guide-* файлами
+
+`ui_kind` (форма UI продукта — web, native-mobile, native-desktop, tui, cli, embedded, backend; multi-value поддерживается) **не спрашивается на Init**, потому что иногда не известен без vision / market research. Заполняется на Stage A:
+
+1. После approved `vision.md` (и опционально `personas.md` / `competitive-analysis.md`) — когда product shape clearer — задаёшь через AskUserQuestion:
+
+   «Какие формы UI у продукта? (web / native-mobile / native-desktop / tui / cli / embedded / backend; можно несколько — composite stacks типичны: web + backend для full-stack, native-mobile + backend для mobile, и т.д.)»
+
+2. Sample defaults для подсказки:
+   - Full-stack web product → `web, backend`
+   - Mobile app с собственным API → `native-mobile, backend`
+   - Cross-platform с собственным API → `web, native-mobile, backend`
+   - CLI tool с server-side (gh-like) → `cli, backend`
+   - Local-only CLI (ripgrep-like) → `cli`
+   - Pure API product → `backend`
+
+3. Записываешь в `project_capabilities.ui_kind` в `.bootstrap-state.md`.
+
+4. Для **каждого** значения в ui_kind — копируешь соответствующий `doc/_templates/ui-style-guide-<kind>.md.tmpl` → `doc/ui-style-guide-<kind>.md` (или `.ai-pm/doc/`), драфтишь с PM (slots для product-specific values). Плюс **обязательно** `ui-style-guide-base.md` (универсальная база).
+
+5. Не путать ui_kind с stack (TypeScript / Python / Go — это Stage D `stack`). `ui_kind` — про **форму UI**, `stack` — про **язык**.
+
+6. Если позже добавится новый ui_kind (например, через год добавили mobile к web-only product) — update `.bootstrap-state.md` + write новый `ui-style-guide-<kind>.md` через follow-up Stage A revisit. Additive change, не re-bootstrap.
+
 В конце Stage E: «Bootstrap завершён. Можешь писать первую `.ai-pm/doc/features/<topic>_spec.md`. Дальше — обычный feature workflow.»
 
 ## Branch: Mode `new-feature`
@@ -189,7 +213,7 @@ Stage A-D **уже пройдены**. Stage E (repo skeleton) тоже суще
 
 ### Stage A READ-pass
 
-Для каждого Stage A artifact (personas, user-journeys, positioning, brand-voice, competitive-analysis, ui-style-guide если есть):
+Для каждого Stage A artifact (personas, user-journeys, positioning, brand-voice, competitive-analysis, ui-style-guide-base + ui-style-guide-<kind> файлы если есть):
 
 1. Читаешь файл.
 2. Даёшь PM summary в 2-3 предложениях.
@@ -197,7 +221,7 @@ Stage A-D **уже пройдены**. Stage E (repo skeleton) тоже суще
 4. Если PM говорит «не укладывается» — спрашиваешь, какая дельта нужна. Локально обновляешь artifact (один абзац, не переписываешь). Маркируешь approval.
 5. Если PM говорит «укладывается» — переходишь к следующему artifact'у.
 
-**Если `ui-style-guide.md` отсутствует** (legacy продукт без формализованного дизайна) — extract'ишь неформальный по существующему UI коду / стилям, предлагаешь PM зафиксировать как `ui-style-guide.md` в отдельном `docs/ui-style-guide-extract` PR'е. Без этого Mode 2 UI-фичи будут конфликтовать с existing практиками (см. AP-15).
+**Если ui-style-guide-* файлы отсутствуют** (legacy продукт без формализованного дизайна) — extract'ишь неформальный по существующему UI / API коду, предлагаешь PM зафиксировать как `ui-style-guide-base.md` + соответствующие `ui-style-guide-<kind>.md` в отдельном `docs/ui-style-guide-extract` PR'е. Без этого Mode 2 UI / API изменения будут конфликтовать с existing практиками (см. AP-15).
 
 ### Stage B READ-pass
 

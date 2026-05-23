@@ -440,7 +440,7 @@ PM не нужно держать в голове CWE-321 или OWASP A02. Init
 
 **Foundational артефакты (deliverables Stage A-E):**
 
-- [ ] `vision.md` / `personas.md` / `user-journeys.md` / `competitive-analysis.md` / `positioning.md` / `brand-voice.md` / `ui-style-guide.md` (Stage A) — последний обязателен для Mode 1 с UI, см. AP-15
+- [ ] `vision.md` / `personas.md` / `user-journeys.md` / `competitive-analysis.md` / `positioning.md` / `brand-voice.md` / `ui-style-guide-base.md` + `ui-style-guide-<kind>.md` per каждому `ui_kind` (Stage A) — последние обязательны для Mode 1 с UI / API; per-kind split по форме UI (web / native-mobile / native-desktop / tui / cli / embedded / backend), см. AP-15
 - [ ] `strategic-frame.md` (включая SLO + метод валидации) / `threat-model.md` / `mvp-scope.md` (Stage B)
 - [ ] `legal-brief.md` (Mode 1 — обязательно; Mode 2/3 — условно по AP-13)
 - [ ] `customer-interview-script.md` (Mode 1 — обязательно; Mode 2/3 — условно по AP-13)
