@@ -537,7 +537,7 @@ Insert через trigger или application logic. Audit log immutable (тол�
 
 ### 9.4. Application-level encryption
 
-Для polish PII / financial / health data:
+Для чувствительных PII / financial / health data:
 
 ```
 Plaintext data → KDF/AEAD encrypt в app → ciphertext в БД
@@ -757,7 +757,7 @@ Tooling: PEV (PostgreSQL Explain Visualizer), Datadog DBM, pganalyze.
 - **Storage growth rate** (disk fill ETA)
 - **Vacuum / autovacuum activity** (table bloat)
 
-Standard solutions: Prometheus + postgres_exporter, Datadog DBM, AWS Performance Insights.
+Стандартные решения: Prometheus + postgres_exporter, Datadog DBM, AWS Performance Insights.
 
 ### 13.4. Query stats
 

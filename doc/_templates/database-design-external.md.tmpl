@@ -111,7 +111,7 @@ Should NOT exceed `max_connections - reserved` (usually 100-200 - 20 reserved fo
 | Use case | Type |
 |---|---|
 | Internal IDs | `bigserial` / `GENERATED ALWAYS AS IDENTITY` (PG 10+) |
-| Public IDs | `uuid` с default `uuidv7()` (PG 17+) или `gen_random_uuid()` для v4 |
+| Public IDs | `uuid` с default `uuidv7()` (native в PG 17+) или extension `pg_uuidv7` для PG ≤ 16 (см. § 13); `gen_random_uuid()` для v4 |
 | Money | `numeric(18,4)` |
 | Text | `text` (no length penalty vs varchar) |
 | Enum-like | `text` + CHECK constraint (avoid native ENUM type — миграции painful) |
@@ -246,6 +246,21 @@ Test migration on production-tier data clone:
 - Verify schema + data integrity
 - Estimate production downtime
 - If unacceptable — redesign (expand-contract см. base.md § 7)
+
+### 6.5. Online schema-change tools — для очень больших таблиц
+
+Когда даже `CREATE INDEX CONCURRENTLY` / `ALTER TABLE ADD CONSTRAINT NOT VALID` requires слишком много времени или blocks дольше acceptable downtime — используются специализированные online schema-change tools, которые работают через shadow table + trigger-based replication + atomic swap:
+
+| Tool | Подходит для | Comment |
+|---|---|---|
+| **`pg_repack`** | Online table reorganization (alternative `VACUUM FULL` / cluster) | Установлен как extension (см. § 13); shadow table + apply log + swap |
+| **`pgroll`** | Schema migrations с zero-downtime | Multi-version schema с auto rollback support; modern (2023+) |
+| **Reshape** (`fabianlindfors/reshape`) | Schema migrations через views layer | Old + new schema visible одновременно через views |
+| **`gh-ost`** (MySQL) | Online schema change for MySQL | GitHub original — для MySQL, не PostgreSQL; упоминаем для MySQL section § 14 |
+
+**Когда использовать:** обычно `CREATE INDEX CONCURRENTLY` достаточно. Online tools — для очень больших таблиц (> 100M rows) с continuous write load, где даже concurrent index build вызывает unacceptable replication lag / connection saturation. Это **escalation path**, не default.
+
+Cross-ref: AP-18 («Unsafe deploys / migrations») — online tools усиливают rollback safety; используются вместе с expand-contract, не вместо.
 
 ---
 
