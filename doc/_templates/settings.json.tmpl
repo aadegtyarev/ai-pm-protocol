@@ -1,0 +1,50 @@
+{
+  "_comment": "Skeleton для .claude/settings.json в product repo. Bootstrap-agent копирует и адаптирует на Stage E.",
+  "_what_this_does": [
+    "Layer 2 enforcement из 5-layer стратегии (см. README template'а).",
+    "PreToolUse hooks блокируют actions, нарушающие protocol.",
+    "Это hard enforcement: Claude НЕ может обойти через 'забыл'.",
+    "Soft enforcement через CLAUDE.md briefing — Layer 1."
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "_comment": "Блокирует Write/Edit в code paths, если нет соответствующего spec'а в текущей ветке.",
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".ai-pm/tooling/scripts/check-spec-precondition.sh"
+          }
+        ]
+      },
+      {
+        "_comment": "Блокирует прямые коммиты в main и --no-verify.",
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".ai-pm/tooling/scripts/check-git-safety.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "_comment": "После Write в .ai-pm/doc/features/ обновляет .ai-pm/.bootstrap-state.md timestamp.",
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".ai-pm/tooling/scripts/update-bootstrap-state.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "_notes_for_pm": [
+    "Если какой-то hook fail'ит на чём-то, что должно быть legit — НЕ отключай hook. Исправь spec, либо обсуди adjustment c PM.",
+    "Hook'и читают .ai-pm/.bootstrap-state.md для контекста (какой Mode, какой stage актуален).",
+    "Для disable конкретного hook временно — используй `--no-hook <name>` (CLI flag Claude Code), но это должно быть редким исключением с записью причины в `.ai-pm/doc/features/<topic>_review.md`."
+  ]
+}

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# .ai-pm/tooling/scripts/update-bootstrap-state.sh
+# Used as PostToolUse hook — после Write/Edit в .ai-pm/doc/features/ обновляет .ai-pm/.bootstrap-state.md timestamp.
+# Это создаёт audit trail активности для resume сессий.
+#
+# Input через env vars (Claude Code hook interface):
+#   CLAUDE_TOOL_NAME       — "Write" или "Edit"
+#   CLAUDE_TOOL_PARAM_FILE — путь к файлу
+
+set -e
+
+FILE="${CLAUDE_TOOL_PARAM_FILE:-}"
+STATE=".ai-pm/.bootstrap-state.md"
+
+# Только реагируем на изменения в .ai-pm/doc/
+if ! echo "$FILE" | grep -qE "^\.ai-pm/doc/"; then
+  exit 0
+fi
+
+if [ ! -f "$STATE" ]; then
+  exit 0  # state файла нет — не наша задача создавать
+fi
+
+# Обновляем 'Last update' timestamp в state file
+TIMESTAMP=$(date +%Y-%m-%d)
+
+# Если строка "Last update:" есть — заменяем; если нет — добавляем после "Started:" или "Mode:".
+if grep -q "^\*\*Last update:\*\*" "$STATE"; then
+  sed -i "s/^\*\*Last update:\*\*.*$/\*\*Last update:\*\* ${TIMESTAMP}/" "$STATE"
+else
+  # Append после первой строки с **
+  sed -i "/^\*\*Mode:\*\*/a\\
+\*\*Last update:\*\* ${TIMESTAMP}" "$STATE"
+fi
+
+# Логируем в notes section (опционально, для audit trail)
+# Можно добавить полный лог изменений per файл — это решение для конкретного проекта
+
+exit 0

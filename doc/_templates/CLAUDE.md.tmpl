@@ -1,0 +1,172 @@
+# <Project> — Claude Code briefing
+
+**Это authoritative briefing для каждой сессии Claude в этой репке.** Прочитай ПОЛНОСТЬЮ перед любой работой.
+
+Проект использует **ai-pm-protocol**. Полная документация — `{{doc_root}}/development-protocol.md` (project overlay) + `.ai-pm/tooling/development-protocol.md` (generic protocol).
+
+**Конвенция paths:** `{{doc_root}}` в этом briefing'е — placeholder, который bootstrap-agent заменил на `doc` (Mode 1 / greenfield) или `.ai-pm/doc` (Mode 2/3 с existing top-level `doc/`). Какое именно — см. `.ai-pm/.bootstrap-state.md` frontmatter `doc_root:`.
+
+---
+
+## Session start routine — что делать СРАЗУ
+
+**Шаг 1: Прочитай `.ai-pm/.bootstrap-state.md`.**
+
+- **Если файла нет** → invoke `project-bootstrap` subagent. Мы в самом начале (new-product Mode 1).
+- **Если Stage A-E не closed** (не все checkbox'ы) → invoke `project-bootstrap` subagent, скажи PM «Bootstrap не завершён, продолжаем со stage X». Не работай над фичами.
+- **Если Stage A-E closed** → продолжай шаг 2.
+
+**Шаг 2: Просканируй `{{doc_root}}/features/` на in-progress фичи.**
+
+Признаки in-progress:
+- `<topic>_spec.md` есть, `<topic>_plan.md` НЕТ → Step 1 done, ждём Step 2 (planner).
+- `<topic>_plan.md` есть, в spec/plan нет PM-marker `acceptance: ok` или `merged: yes` (в frontmatter) → Step 3-4-5 ongoing.
+- PR открыт, `<topic>_review.md` нет → Step 7 pending (invoke reviewer).
+- Spec.v<N> (N > 1) есть, но `<topic>_review.v<N>.md` нет → rework Step 7 pending.
+
+**Если найдена in-progress фича** → скажи PM: «Вижу in-progress фичу `<topic>`. State: <конкретно>. Resume — invoke <agent>? Или закончить иначе?»
+
+**Шаг 3: Слушай PM. Routing по keywords (см. ниже).**
+
+---
+
+## Keyword routing в чате PM
+
+Когда PM пишет что-то в чате — детектируй intent и предлагай (или invoke) соответствующего subagent'а:
+
+| PM пишет / keyword | Routing |
+|---|---|
+| «хочу добавить фичу X» / «новая фича» / «add feature» | Step 1: предложить draft `<topic>_spec.md` (сам draft'ишь или PM пишет) |
+| «исправь баг X» / «fix bug» / «починим» | Bug-fix variant — короткий spec с `lite-mode: bugfix`, потом обычный workflow Step 2-7 |
+| «переделать X» / «rework» / «переписать фичу X» | Mode 3 rework — invoke `project-bootstrap` для rework routing |
+| «продолжай работу над X» / «resume» | Найди state фичи X, invoke соответствующий step agent |
+| «выпустить релиз» / «release» / «релиз» | invoke `release-helper` |
+| «ревью PR» / «проверь код» / «review» | invoke `reviewer` для текущего feature-branch |
+| «план для X» / «как реализуем» / «plan» | (если spec X есть) invoke `planner` для Step 2 |
+| «обнови threat-model / personas / journeys» | Отдельный PR на foundational docs (branch `docs/<topic>`) — НЕ в feature branch |
+
+**Routing — это suggestion, не auto-invoke.** Объясни PM что предлагаешь и почему, спроси «делаем так?».
+
+---
+
+## Жёсткие правила без исключений
+
+- **Никакого кода без approved spec'а** (см. anti-pattern AP-4). Если spec'а нет — драфтим spec через Step 1 ПЕРЕД любым coding.
+- **Никакого упреждающего ADR** (AP-1). ADR пишется только в Step 2 plan'а, когда упёрся в архитектурный fork.
+- **Никаких direct-commits в `main`** (§ 13). Только feature/<topic> branch'и + PR + squash & merge.
+- **`--no-verify` запрещён** (AP-6). Если pre-commit hook fail'ит — fix корень, не обходи.
+- **Reviewer-agent (Step 7) обязателен** для каждого feature PR — mandatory all modes. PM не merge'ит без `<topic>_review.md`.
+- **PM никогда не читает код.** Не показывай diff'ы PM'у. Если нужно обсудить, что AI сделал — формулируй в spec terms (поведение / scenarios / architectural decisions), не в code terms (модули / функции).
+- **Языковая дисциплина: формальные части проекта пишутся на `primary_language` из `.bootstrap-state.md`** (AP-12). Это **строгое требование** для: артефактов в `doc/`, сообщений коммитов, описаний pull-request-ов, README, CHANGELOG, документации в репозитории. Адресовано всем пользователям AI в проекте — PM, разработчику, дизайнеру. **В чате допускается регрессия** (без боя — это ограничение модели, AI обучен на английском IT-материале). Для русскоязычных проектов: общие слова — по-русски (содержимое, доставка, угрозы, меры защиты, граница, рамки, льготный период, отметка присутствия, обязательный, проверка, нарушение, отговорки, и т.д.); англицизмы оставляем **только** для стандартных технических терминов из белого списка (MVP, KDF, AEAD, TLS, GDPR, AIFC, OWASP, и подобных стандартов индустрии). **Перед каждым коммитом doc-файла** AI обязан запустить grep самопроверку (см. AP-12). Точечная замена через sed запрещена (русская грамматика ломается — «запуск'а» не русский); только Edit / переписать раздел.
+
+---
+
+## Доступные subagents
+
+В `.ai-pm/tooling/agents/`:
+
+- **`project-bootstrap`** — Stage A-E setup + resume + lifecycle routing. Mode + integration + trust profile aware.
+- **`planner`** — Step 2 plan writer. Read-only по коду. Trust-profile-aware.
+- **`coder`** — Step 4 implementation. Tests-first. No silent deviation.
+- **`reviewer`** — Step 7 review. Mandatory all modes. Architectural-context + learning-oriented findings.
+- **`release-helper`** — release PR при накоплении merged feature-PR'ов. SemVer bump + CHANGELOG.
+
+Запуск: `claude --agent <name>`. Или ты в main session приглашаешь PM: «invoke <agent>?», ждёшь approval, и сам передаёшь управление (через Agent tool с appropriate subagent_type).
+
+---
+
+## Lifecycle scenarios — что делать
+
+### Scenario: New product (greenfield)
+
+- `.bootstrap-state.md` пустой / нет.
+- Routing: project-bootstrap → Stage A-E → handoff в Stage F.
+
+### Scenario: New feature в зрелом проекте
+
+- `.bootstrap-state.md` закрыт, Stage A-E done.
+- PM: «хочу добавить фичу X».
+- Routing: Step 1 spec для X (PM draft или ты draft → PM approve) → Step 2 planner → ...
+- Stage A-C read-pass — если фича требует новой persona / journey / threat surface → отдельный PR в `docs/<topic>` branch ДО feature branch.
+
+### Scenario: Bug fix в зрелом проекте
+
+- PM: «починим baг X».
+- Routing: lite-mode spec с `lite-mode: bugfix` в frontmatter → planner лёгкий → coder с failing test first → reviewer (terser).
+- НЕ lite-mode если bug в security path — full ceremony.
+
+### Scenario: Rework existing feature (Mode 3)
+
+- PM: «переработаем фичу X, меняется поведение».
+- Routing: project-bootstrap для rework setup → `<topic>_spec.v<N>.md` с Diff секцией → `_plan.v<N>.md` с Migration секцией → coder → mandatory reviewer.
+
+### Scenario: Resume interrupted session
+
+- На session start scan `{{doc_root}}/features/` обнаружил in-progress фичу.
+- Routing: предложи resume или закрыть.
+
+### Scenario: Multiple feature streams в parallel
+
+- Каждая фича — своя feature/<topic> branch.
+- State per feature через frontmatter в `_spec.md` / `_plan.md`.
+- При switch'е branches Claude re-reads CLAUDE.md и feature state.
+
+### Scenario: Release time
+
+- PM: «релиз?» или несколько fic merged в main без release.
+- Routing: invoke `release-helper`.
+
+---
+
+## Файловая структура (для ориентирования)
+
+```
+.ai-pm/
+├── doc/                       ← committed product content
+│   ├── personas.md, journeys, threat-model, scope, topology, ...
+│   ├── ai-linting-rules.md
+│   ├── architecture-decisions/
+│   └── features/
+│       ├── <topic>_spec.md, _plan.md, _review.md
+│       └── <topic>_spec.v2.md, _plan.v2.md, _review.v2.md (rework)
+├── .bootstrap-state.md         ← committed; session resume + lifecycle state
+├── version                     ← committed; template version pin
+└── tooling/                    ← integration mode-dependent (gitignore/submodule/vendor)
+    ├── agents/, _templates/, recipes-cache/, scripts/
+    └── development-protocol.md ← generic (template-level)
+```
+
+Product code — в стандартных директориях проекта (`apps/`, `packages/`, `src/`, etc.), **не в `.ai-pm/`**.
+
+---
+
+## Frontmatter convention для feature artifacts
+
+Каждый `<topic>_spec.md` имеет frontmatter:
+
+```yaml
+---
+topic: auth-signup
+mode: new-feature  # или: new-product (если первая фича) | rework-feature
+lite-mode: no  # или: yes, bugfix, small-fix — означает упрощённый workflow
+created: YYYY-MM-DD
+spec_approved: YYYY-MM-DD  # PM-marker; пусто пока не approved
+plan_approved: YYYY-MM-DD
+acceptance: pending | ok | failed
+merged: no | yes (PR-url)
+review_url: ...
+---
+```
+
+Bootstrap-agent + main session обновляют эти поля по мере прохождения Step'ов. Это даёт programmatic state без отдельного state-file per feature.
+
+---
+
+## Если ты в сомнении
+
+- Generic protocol — `.ai-pm/tooling/development-protocol.md`.
+- Project overlay — `{{doc_root}}/development-protocol.md`.
+- Anti-patterns — `.ai-pm/tooling/anti-patterns.md` + `{{doc_root}}/anti-patterns.md`.
+- В случае разрыва между generic и overlay — generic primat.
+
+**Если ты в сомнении, должен ли ты делать действие — спрашивай PM через AskUserQuestion. Лучше переспросить, чем нарушить протокол.**

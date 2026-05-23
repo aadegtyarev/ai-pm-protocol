@@ -1,0 +1,53 @@
+# Topology
+
+**Stage C artifact.** Высокоуровневая архитектура: какие сервисы, как они общаются, где deploy'ятся, какие данные где живут.
+
+Не путать с feature plan'ом: topology говорит о системе целиком, не о конкретной фиче.
+
+---
+
+## High-level diagram
+
+ASCII или ссылка на изображение. Должно помещаться в один экран.
+
+```
+[client] ---HTTPS---> [edge / CDN] ---> [api-server]
+                                            |
+                                            v
+                                       [db / cache]
+```
+
+## Сервисы
+
+Список логических сервисов с одним абзацем на каждый: что делает, зависимости, deployment unit.
+
+- **<service-1>:** <…>
+- **<service-2>:** <…>
+
+## Boundaries
+
+Где проходят границы доверия, языков, deployment'ов:
+
+- **B1:** <…> — <implications>
+
+## Data flows
+
+Где какие данные живут, куда копируются, как удаляются.
+
+- **<data type 1>:** <where stored / who reads / retention / encryption>
+
+## Deployment topology
+
+- **Environments:** <dev / staging / production>
+- **Regions:** <…>
+- **Failover / DR:** <…>
+
+## Non-goals (architectural)
+
+Что мы намеренно НЕ делаем архитектурно (например: «не делаем microservices до того, как boundary'и подтвердятся реальностью»).
+
+---
+
+## Соответствие positioning'у и threat-model'и
+
+Каждое архитектурное решение в этом документе должно либо поддерживать positioning-тезис, либо mitigate'ить threat из threat-model. Если решение не привязывается ни к чему — это signal: либо решение преждевременное, либо мы что-то упустили в Stage A/B.

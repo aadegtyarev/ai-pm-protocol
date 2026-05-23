@@ -1,0 +1,246 @@
+#!/usr/bin/env bash
+# .ai-pm/tooling/scripts/check-spec-discipline.sh
+# Реализует Spec/use-case linting catalogue из development-protocol.md § 9.
+#
+# Usage:
+#   ./check-spec-discipline.sh                  — полный pass по всем checks
+#   ./check-spec-discipline.sh --staged-only    — только staged файлы (для pre-commit)
+#   ./check-spec-discipline.sh --check <name>   — конкретный check
+#
+# Exit codes:
+#   0 — all checks passed
+#   1 — at least one check failed
+#   2 — invocation error
+
+set -e
+
+# DOC_ROOT — читается из .ai-pm/.bootstrap-state.md frontmatter поле `doc_root:`.
+# Default для new projects: doc (top-level).
+# Для retrofit projects с existing doc/: .ai-pm/doc.
+DOC_ROOT=$(awk -F': ' '/^doc_root:/ {print $2; exit}' .ai-pm/.bootstrap-state.md 2>/dev/null | tr -d ' ')
+DOC_ROOT="${DOC_ROOT:-doc}"
+
+FAILED=0
+WARNINGS=0
+
+log_fail() {
+  echo "FAIL: $1" >&2
+  FAILED=$((FAILED + 1))
+}
+
+log_warn() {
+  echo "WARN: $1" >&2
+  WARNINGS=$((WARNINGS + 1))
+}
+
+log_ok() {
+  echo "OK: $1"
+}
+
+# === Check 1: personas-exist ===
+check_personas_exist() {
+  local f="$DOC_ROOT/personas.md"
+  if [ ! -f "$f" ]; then
+    log_fail "personas-exist: $f не существует"
+    return
+  fi
+  # Проверка что не placeholder (нет `<…>` маркеров на > 50% строк)
+  local total=$(wc -l < "$f")
+  local placeholders=$(grep -c '<.*>' "$f" || true)
+  if [ "$total" -gt 0 ] && [ "$placeholders" -gt $((total / 2)) ]; then
+    log_fail "personas-exist: $f выглядит как placeholder (много <…> маркеров)"
+    return
+  fi
+  # Проверка наличия хотя бы одной persona (heuristic: header '## Persona')
+  if ! grep -q '^## Persona' "$f"; then
+    log_fail "personas-exist: $f не содержит ни одного '## Persona' header'а"
+    return
+  fi
+  log_ok "personas-exist"
+}
+
+# === Check 2: journeys-reference-personas ===
+check_journeys_reference_personas() {
+  local p="$DOC_ROOT/personas.md"
+  local j="$DOC_ROOT/user-journeys.md"
+  if [ ! -f "$j" ]; then
+    log_fail "journeys-reference-personas: $j не существует"
+    return
+  fi
+  # Extract persona names (heuristic: '## Persona X:' → X)
+  local personas=$(grep -oE '^## Persona [A-Z0-9]+' "$p" 2>/dev/null | awk '{print $3}' | tr -d ':' || true)
+  if [ -z "$personas" ]; then
+    log_warn "journeys-reference-personas: не удалось извлечь personas из $p (skip)"
+    return
+  fi
+  # Каждая persona должна упоминаться в journeys
+  for persona in $personas; do
+    if ! grep -q "Persona $persona" "$j"; then
+      log_fail "journeys-reference-personas: Persona $persona в $p, но не упомянута в $j"
+    fi
+  done
+  log_ok "journeys-reference-personas"
+}
+
+# === Check 3: mvp-scope-no-orphans ===
+check_mvp_scope_no_orphans() {
+  local scope="$DOC_ROOT/mvp-scope.md"
+  if [ ! -f "$scope" ]; then
+    log_warn "mvp-scope-no-orphans: $scope не существует (Stage B incomplete)"
+    return
+  fi
+  # Heuristic: F-IDs в формате `**F01:`, `**F02:` etc.
+  local fids=$(grep -oE '\*\*F[0-9]+:' "$scope" | tr -d '*:' || true)
+  for fid in $fids; do
+    # Ищем matching spec (любой файл, начинающийся на feature topic с F-ID)
+    if ! ls "$DOC_ROOT/features/"*"_spec.md" 2>/dev/null | xargs grep -l "$fid" >/dev/null 2>&1; then
+      # Может быть deferred
+      if grep -A1 "$fid:" "$scope" | grep -qi "deferred"; then
+        continue
+      fi
+      log_warn "mvp-scope-no-orphans: $fid в $scope, но spec не найден и не помечен deferred"
+    fi
+  done
+  log_ok "mvp-scope-no-orphans"
+}
+
+# === Check 4: foundational-docs-filled ===
+check_foundational_docs_filled() {
+  local docs=("personas.md" "user-journeys.md" "threat-model.md" "mvp-scope.md")
+  for doc in "${docs[@]}"; do
+    local f="$DOC_ROOT/$doc"
+    if [ ! -f "$f" ]; then
+      log_fail "foundational-docs-filled: $f отсутствует"
+      continue
+    fi
+    local total=$(wc -l < "$f")
+    local placeholders=$(grep -c '<.*>' "$f" || echo 0)
+    if [ "$total" -gt 10 ] && [ "$placeholders" -gt $((total / 3)) ]; then
+      log_fail "foundational-docs-filled: $f содержит много placeholder'ов <…> ($placeholders/$total строк)"
+    fi
+  done
+  log_ok "foundational-docs-filled"
+}
+
+# === Check 5: spec-structure ===
+check_spec_structure() {
+  local required=("## Контекст" "## User stories" "## Сценарии" "## Non-functional" "## Не в scope" "## Open questions")
+  for spec in "$DOC_ROOT/features/"*_spec.md; do
+    [ -e "$spec" ] || continue
+    for section in "${required[@]}"; do
+      if ! grep -qF "$section" "$spec"; then
+        log_fail "spec-structure: $spec missing section '$section'"
+      fi
+    done
+  done
+  log_ok "spec-structure"
+}
+
+# === Check 6: plan-exists-for-spec ===
+check_plan_exists_for_spec() {
+  for spec in "$DOC_ROOT/features/"*_spec.md; do
+    [ -e "$spec" ] || continue
+    local topic=$(basename "$spec" _spec.md)
+    local plan="$DOC_ROOT/features/${topic}_plan.md"
+    if [ ! -f "$plan" ]; then
+      # OK если spec ещё не approved (нет PM-marker)
+      if grep -qE "(approved|ок|поехали)" "$spec"; then
+        log_fail "plan-exists-for-spec: $spec помечен approved, но $plan отсутствует"
+      fi
+    fi
+  done
+  log_ok "plan-exists-for-spec"
+}
+
+# === Check 7: rework-has-diff-section / migration-section ===
+check_rework_sections() {
+  for spec in "$DOC_ROOT/features/"*_spec.v*.md; do
+    [ -e "$spec" ] || continue
+    if ! grep -qF "## Diff" "$spec"; then
+      log_fail "rework-has-diff-section: $spec не содержит '## Diff' section"
+    fi
+  done
+  for plan in "$DOC_ROOT/features/"*_plan.v*.md; do
+    [ -e "$plan" ] || continue
+    if ! grep -qF "## Migration" "$plan"; then
+      log_fail "rework-has-migration-section: $plan не содержит '## Migration' section"
+    fi
+  done
+  log_ok "rework-sections"
+}
+
+# === Check 8: spec-references-persona ===
+check_spec_references_persona() {
+  local personas=$(grep -oE '^## Persona [A-Z0-9]+' "$DOC_ROOT/personas.md" 2>/dev/null | awk '{print $3}' | tr -d ':' || true)
+  if [ -z "$personas" ]; then
+    return
+  fi
+  for spec in "$DOC_ROOT/features/"*_spec.md; do
+    [ -e "$spec" ] || continue
+    local found=0
+    for persona in $personas; do
+      if grep -q "Persona $persona\|persona $persona" "$spec"; then
+        found=1
+        break
+      fi
+    done
+    if [ "$found" -eq 0 ]; then
+      log_fail "spec-references-persona: $spec не ссылается ни на одну persona"
+    fi
+  done
+  log_ok "spec-references-persona"
+}
+
+# === Check 9: security-spec-cites-standard (conditional) ===
+check_security_spec_cites_standard() {
+  for spec in "$DOC_ROOT/features/"*_spec.md; do
+    [ -e "$spec" ] || continue
+    # Heuristic: spec считается security-touching, если в нём упоминается auth/crypto/PII/payments/session
+    if grep -qiE 'auth|crypto|PII|payment|session|secret' "$spec"; then
+      # Должна быть Security invariants секция с OWASP/CWE/ASVS ссылками
+      if ! grep -qF "## Security invariants" "$spec"; then
+        log_warn "security-spec-cites-standard: $spec выглядит security-touching, но без '## Security invariants' секции"
+        continue
+      fi
+      if ! grep -qiE 'OWASP|CWE|ASVS' "$spec"; then
+        log_fail "security-spec-cites-standard: $spec упоминает security-touching, но не ссылается на OWASP/CWE/ASVS стандарты в Security invariants"
+      fi
+    fi
+  done
+  log_ok "security-spec-cites-standard"
+}
+
+# === Main ===
+case "${1:-all}" in
+  --staged-only)
+    # TODO: для pre-commit hook — только staged files
+    # На v0 — просто run all
+    ;;
+  --check)
+    shift
+    if [ -z "${1:-}" ]; then
+      echo "Usage: $0 --check <check-name>" >&2
+      exit 2
+    fi
+    "check_${1//-/_}"
+    ;;
+  all|*)
+    check_personas_exist
+    check_journeys_reference_personas
+    check_mvp_scope_no_orphans
+    check_foundational_docs_filled
+    check_spec_structure
+    check_plan_exists_for_spec
+    check_rework_sections
+    check_spec_references_persona
+    check_security_spec_cites_standard
+    ;;
+esac
+
+echo ""
+echo "Summary: $FAILED FAILED, $WARNINGS WARNINGS"
+
+if [ "$FAILED" -gt 0 ]; then
+  exit 1
+fi
+exit 0

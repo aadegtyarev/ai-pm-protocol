@@ -1,0 +1,58 @@
+# <Feature> — Review Report
+
+**Stage F artifact, Step 7 (опционально).** Создаётся reviewer-subagent'ом для security-критичных фич, или protocol-compliance-reviewer'ом — для любых фич, где PM хочет независимое cross-check.
+
+Reviewer работает **в чистом контексте** — не знает, как и почему AI принимал конкретные решения; читает только spec, plan, code, tests.
+
+---
+
+## Scope of review
+
+- **Reviewed:** <files / modules>
+- **Reviewer agent:** <protocol-compliance-reviewer / security-reviewer>
+- **Date:** <…>
+
+---
+
+## Sections
+
+### Spec coverage
+
+Проверка: реализованы ли все scenarios из spec'а?
+
+- Scenario `<name>` — covered: yes/no — comments: <…>
+
+### Plan adherence
+
+Проверка: код соответствует plan'у? Если есть отклонения — задокументированы ли они в `_plan.md`?
+
+- <findings>
+
+### Test discipline
+
+- Pre-diff coverage: <%>
+- BDD scenarios соответствуют Gherkin'у из spec'а: yes/no
+- Property-based tests для invariants: <…>
+
+### Security / architecture (если security-reviewer)
+
+- T-IDs, против которых мы защищаемся, mitigated: <…>
+- New attack surfaces введены: <…>
+- Crypto / auth / billing / trigger boundaries не нарушены: yes/no
+
+---
+
+## Findings
+
+Каждое — severity-tagged.
+
+- **[blocking]** <…> — *Suggested fix:* <…>
+- **[question]** <…>
+- **[nit]** <…>
+
+---
+
+## Conclusion
+
+- **Recommendation:** approve / approve with comments / changes requested.
+- **PM acknowledgement:** <PM подтверждает прочтение и принятие решения>

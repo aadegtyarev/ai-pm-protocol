@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# .ai-pm/tooling/scripts/check-git-safety.sh
+# Layer 2 enforcement: блокирует опасные git-операции.
+# Используется как PreToolUse hook в .claude/settings.json для Bash tool.
+#
+# Input через env vars:
+#   CLAUDE_TOOL_NAME — "Bash"
+#   CLAUDE_TOOL_PARAM_COMMAND — bash command, которую AI собирается выполнить
+#
+# Output: exit 0 = allow; exit 1 + STDERR = block.
+
+set -e
+
+CMD="${CLAUDE_TOOL_PARAM_COMMAND:-}"
+if [ -z "$CMD" ]; then
+  exit 0
+fi
+
+# Block list — паттерны команд, которые запрещены без явного PM-approval.
+
+# 1. Direct push в main/master
+if echo "$CMD" | grep -qE "git\s+push.*\b(main|master)\b" && \
+   ! echo "$CMD" | grep -qE "(--dry-run|--help)"; then
+  echo "BLOCKED: direct git push в main/master запрещён." >&2
+  echo "Используй PR-flow: создай feature branch, push туда, открой PR с squash & merge." >&2
+  echo "См. development-protocol.md § 14." >&2
+  exit 1
+fi
+
+# 2. --no-verify (skip hooks)
+if echo "$CMD" | grep -qE "git\s+(commit|push)\s.*--no-verify"; then
+  echo "BLOCKED: --no-verify запрещён по anti-pattern AP-6." >&2
+  echo "Если pre-commit hook fail'ит, fix корень причины, не обходи hook." >&2
+  exit 1
+fi
+
+# 3. Force push в main/master
+if echo "$CMD" | grep -qE "git\s+push.*\s(--force|--force-with-lease|-f)\b.*\b(main|master)\b"; then
+  echo "BLOCKED: force push в main/master запрещён branch protection." >&2
+  echo "Если нужно undo merged commit — делай revert через новый PR." >&2
+  exit 1
+fi
+
+# 4. Прямой коммит в main (через checkout)
+if echo "$CMD" | grep -qE "git\s+checkout\s+(main|master)" && \
+   echo "$CMD" | grep -qE "&&.*git\s+commit"; then
+  echo "BLOCKED: попытка коммита в main/master напрямую." >&2
+  echo "Создай feature branch для work." >&2
+  exit 1
+fi
+
+# 5. git config user (изменение identity — нужно явное PM решение)
+if echo "$CMD" | grep -qE "git\s+config\s+user\.(name|email)"; then
+  echo "BLOCKED: изменение git user.name/user.email требует явного PM-approval." >&2
+  echo "Если это нужно — PM сделает руками или через explicit instruction." >&2
+  exit 1
+fi
+
+exit 0

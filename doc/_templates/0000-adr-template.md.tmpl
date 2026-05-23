@@ -1,0 +1,80 @@
+# ADR-NNNN: <Title>
+
+**Status:** Proposed | Accepted | Rejected | Deferred | Superseded by ADR-MMMM
+**Date:** YYYY-MM-DD
+**Deciders:** PM
+**Triggered by:** `.ai-pm/doc/features/<topic>_plan.md` Step 2 — встретили архитектурный fork.
+
+---
+
+## Context
+
+Какая задача / проблема привела к необходимости архитектурного решения. В чём fork — какие альтернативы рассматриваются.
+
+Ссылки на:
+- Spec'а фичи, который потребовал решения: `<topic>_spec.md`.
+- Threat-model T-IDs, если security-related.
+- Personas/journeys, если product-driven.
+- Существующие ADR, которые связаны или supersede'ятся.
+
+---
+
+## Decision
+
+Конкретное решение в 1-2 предложениях. Что выбрано.
+
+---
+
+## Alternatives considered
+
+Минимум 2 альтернативы, кроме принятой. Для каждой:
+
+### Alternative A: <name>
+
+- Что это.
+- Pro / Con.
+- Почему **не** выбрано.
+
+### Alternative B: <name>
+
+(то же)
+
+---
+
+## Consequences
+
+### Positive
+
+- Что становится возможным / проще / безопаснее.
+
+### Negative
+
+- Какой trade-off мы принимаем.
+- Какой технический долг создаётся.
+
+### Neutral
+
+- Изменения, которые не классифицируются однозначно.
+
+---
+
+## Implementation notes
+
+- Какие модули затронуты.
+- Какие новые fitness functions нужны (lint rules, semgrep, dependency-cruiser, etc.).
+- Какие тесты нужны для проверки invariant'ов решения.
+- Какие docs обновляются: topology.md? overlay? anti-patterns.md?
+
+---
+
+## Supersession
+
+Если этот ADR заменяет предыдущий — ссылка: «Supersedes ADR-MMMM».
+
+Если этот ADR в будущем будет заменён — supersedor добавит «Superseded by ADR-LLLL» в Status выше + ссылку в новом ADR.
+
+---
+
+## PM acknowledgement
+
+PM подтверждает, что прочитал, понял alternatives, и принимает trade-offs. Без этого ADR остаётся Proposed.

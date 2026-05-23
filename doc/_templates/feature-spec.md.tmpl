@@ -1,0 +1,149 @@
+# <Feature name>
+
+**Stage F artifact, Step 1.** Спецификация на естественном языке. Контракт между PM и AI.
+
+---
+
+## Контекст
+
+Почему делаем эту фичу. Что произошло в продукте, что её потребовало. Ссылка на journey-шаг, который она обслуживает.
+
+---
+
+## User stories
+
+Список user stories формата «As a <persona>, I want <action>, so that <outcome>». Каждая ссылается на конкретную persona из `.ai-pm/doc/personas.md`.
+
+---
+
+## Сценарии (Gherkin)
+
+### Happy path
+
+```gherkin
+Feature: <feature name>
+
+Scenario: <название>
+  Given <precondition>
+  When <action>
+  Then <outcome>
+  And <additional outcome>
+```
+
+### Edge cases
+
+- Что если <условие>? → <ожидаемое поведение>
+- Что если <условие>? → <ожидаемое поведение>
+
+---
+
+## Non-functional requirements
+
+- **Latency:** <предел>
+- **I18n:** <какие языки>
+- **Accessibility:** <…>
+- **Что ещё применимо:** <…>
+
+---
+
+## Competitive UX scan *(recommended для всех значимых фич)*
+
+**Цель — узкая:** как другие реализовали **этот тип фичи** (не всю category), что удобно, что неудобно. **НЕ landscape rebuild** — для этого есть `doc/competitive-analysis.md` (Stage A, делается раз). Здесь — **per-feature UX/UI scan**.
+
+### Когда обязателен
+
+- **Mode 1 (new-product) для каждой значимой UX-фичи** — Stage A дал landscape, здесь добавляем per-feature слой. Без этого UX слабее, даже если позиционирование сильное.
+- **Mode 2 (new-feature)** — обязателен (Stage A не повторяется, per-feature scan компенсирует).
+- **Mode 3 (rework-feature)** — особенно важен — мы редизайним то, что было; стоит посмотреть как другие решали это с тех пор.
+
+### Когда можно пропустить
+
+- Bugfix / lite-mode small changes (см. `lite-mode: bugfix` в frontmatter).
+- Чисто backend фичи без UX (типа «улучшить retry logic для notification queue»).
+- Фичи, где no relevant аналог не существует (часто проверка — у Mode 1 редкая).
+
+### Что собираем
+
+Ёмкость рынка / финансы здесь **не нужны** (это в `doc/competitive-analysis.md`). Только **UX patterns + мировые практики** для конкретной фичи.
+
+### Аналоги фичи
+
+2-5 компаний, у которых есть **похожая фича** (не обязательно прямые конкуренты продукта — могут быть adjacent или даже из других категорий, если у них этот UX-паттерн).
+
+| Компания / продукт | Как реализована эта фича | Что удобно (копируем) | Что неудобно (избегаем) |
+|---|---|---|---|
+| <Компания 1> | <короткое описание flow> | <конкретное удобство> | <конкретное неудобство> |
+| <Компания 2> | <…> | <…> | <…> |
+
+### Мировые практики (industry patterns)
+
+Если есть **стандартные UI patterns** для этого типа фичи — упомяните:
+
+- <e.g., «multi-step wizard со scroll-progress — стандарт для onboarding flow»>
+- <e.g., «WCAG-compliant focus trap в modal — стандарт accessibility»>
+
+### Наш подход
+
+После осмотра — **какой UX мы строим для этой фичи**:
+
+- <решение, основанное на «удобно у других + избегаем неудобного»>
+- <конкретное отличие, если есть, и почему>
+
+### Friction risk (специально для этой фичи)
+
+Что **может пойти не так с UX** именно у этой фичи (не у продукта в целом):
+
+- <конкретный риск>
+
+---
+
+## Impact assessment (mode-aware, для AP-13)
+
+Frontmatter spec'а должен включать:
+
+```yaml
+legal_impact: yes|no       # меняет ли фича ToS / Privacy / regulatory surface
+validation_required: yes|no # меняет ли фича ключевой journey / добавляет персону / меняет цену
+incident_impact: yes|no    # добавляет ли фича новый класс runtime-инцидентов
+```
+
+**Если `legal_impact: yes`** — обновить `doc/legal-brief.md` через отдельный PR до начала coding'а.
+
+**Если `validation_required: yes`** — обновить `doc/customer-interview-script.md` с новыми вопросами под изменённый journey.
+
+**Если `incident_impact: yes`** — добавить новый раздел в `doc/incident-runbook-draft.md` (или соответствующий финализированный runbook) с процедурой для нового класса инцидентов.
+
+См. AP-13 в `.ai-pm/tooling/doc/anti-patterns.md`.
+
+---
+
+## Security invariants
+
+Conditional section. **Обязательна**, если фича трогает crypto / auth / payments / PII / sessions / public endpoints. Иначе можно пропустить (но если spec linter `security-spec-cites-standard` fail'ит — нужно дополнить).
+
+Список инвариантов, которые AI обязан реализовать и которые tests + SAST обязаны enforce'ить. Привязка к стандартам (OWASP / CWE / ASVS) — не «как мы решили», а «индустрия решила». Примеры формата:
+
+- **<инвариант, например «keys не передаются в URL params и не логируются»>** — *Standard:* OWASP A02:2021 (Cryptographic Failures), CWE-321, CWE-522. *Test:* unit + integration. *SAST enforced by:* `semgrep p/owasp-top-ten`, `semgrep p/cwe-top-25`.
+- **<инвариант>** — *Standard:* <…>. *Test:* <…>. *SAST enforced by:* <…>.
+
+Threat-model ссылки (T-ID, M-ID) — отдельно, в конце секции:
+
+- **Threat-model:** mitigates <T01, T07, …>, implements mitigations <M01, …>.
+
+---
+
+## Не в scope
+
+Что точно не делаем в этой фиче (даже если кажется, что «логично было бы»).
+
+---
+
+## Open questions
+
+Вопросы, требующие ответа от PM / юриста / прочих до того, как фичу можно реализовывать.
+
+---
+
+## Approval
+
+После того как PM подтвердил «спека ок» — этот файл commit'ится. AI переходит к Step 2 (plan).

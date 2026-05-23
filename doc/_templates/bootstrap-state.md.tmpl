@@ -1,0 +1,93 @@
+<!--
+⚠️ DO NOT PRE-FILL this state file.
+
+Этот файл — output bootstrap-agent'а ПОСЛЕ ответов PM на AskUserQuestion.
+
+Если ты setup'ишь свежую репку:
+1. Скопируй этот template как `.ai-pm/.bootstrap-state.md`.
+2. ОСТАВЬ frontmatter values как pipe-separated options (mode: new-product | new-feature | rework-feature).
+3. НЕ заменяй values на «то, что ты помнишь из conversation» — это anti-pattern AP-9.
+4. Bootstrap-agent на init задаст PM вопросы через AskUserQuestion и **сам** заполнит frontmatter.
+5. После каждого Stage closure — обновляешь Stages checkboxes ниже.
+
+Pre-filled state означает что PM bypass'нул question flow и решения были сделаны лениво вместо явно — это нарушение AP-3 (PM-gate) и AP-9.
+-->
+---
+mode: new-product | new-feature | rework-feature
+integration: gitignore | submodule | vendor
+trust_profile: A | B | C
+doc_root: doc | .ai-pm/doc        # top-level для Mode 1 + Mode 2 без existing doc/, иначе .ai-pm/doc/
+primary_language: ru | en | other # язык project artifacts. AI переводит общие англицизмы; established техтермины (MVP, KDF, AEAD, WebAuthn) оставляет.
+started: YYYY-MM-DD
+last_update: YYYY-MM-DD
+template_version: v0.1
+stack: typescript | python | go | rust | ... | unknown
+project_capabilities:
+  - uses-crypto: yes | no
+  - uses-auth: yes | no
+  - uses-payments: yes | no
+  - processes-pii: yes | no
+  - uses-containers: yes | no
+  - uses-i18n: yes | no
+  - multi-tenant: yes | no
+  - public-web: yes | no
+---
+
+# Bootstrap state
+
+Этот файл — single source of truth для **где мы находимся** в bootstrap'е. Читается bootstrap-agent'ом при каждом запуске для resume.
+
+## Stage A — Discovery (порядок важен)
+
+- [ ] vision (YYYY-MM-DD) — что делаем + для кого + границы (без angle)
+- [ ] personas (YYYY-MM-DD)
+- [ ] user-journeys (YYYY-MM-DD)
+- [ ] competitive-analysis (YYYY-MM-DD, или N/A с reason)
+- [ ] positioning (YYYY-MM-DD, или N/A с reason) — angle / differentiators живут здесь
+- [ ] brand-voice (YYYY-MM-DD, или N/A с reason)
+
+## Stage B — Constraints
+
+- [ ] strategic-frame (YYYY-MM-DD) — включая секции «Обещания и метрики (SLO)» и «Метод валидации гипотез» (обязательно для Mode 1; см. AP-13)
+- [ ] threat-model (YYYY-MM-DD)
+- [ ] legal-frame (YYYY-MM-DD, или N/A — переносится на этап 1 если применимо)
+- [ ] legal-brief (YYYY-MM-DD) — **Mode 1: обязательно** перед началом юридической работы на этапе 1; **Mode 2/3:** условно по `legal_impact` в spec'е. См. AP-13
+- [ ] customer-interview-script (YYYY-MM-DD) — **Mode 1: обязательно** перед альфа-когортой; **Mode 2/3:** условно по `validation_required`. См. AP-13
+- [ ] incident-runbook-draft (YYYY-MM-DD) — **Mode 1 с runtime: обязательно** (скелет на стадии B, финализация на этапе 1); **Mode 2/3:** условно по `incident_impact`. См. AP-13
+- [ ] mvp-scope (YYYY-MM-DD)
+
+## Stage C — Solution shape
+
+- [ ] topology (YYYY-MM-DD)
+- [ ] foundational ADRs (YYYY-MM-DD, или «none needed yet»)
+
+## Stage D — Process
+
+- [ ] stack chosen (YYYY-MM-DD)
+- [ ] development-protocol overlay (YYYY-MM-DD)
+- [ ] ai-linting-rules.md (YYYY-MM-DD)
+- [ ] subagent configs verified (YYYY-MM-DD)
+
+## Stage E — Bootstrap
+
+- [ ] CI workflow generated (YYYY-MM-DD)
+- [ ] linter configs generated (YYYY-MM-DD)
+- [ ] security tools configured (YYYY-MM-DD)
+- [ ] CLAUDE.md в product root (YYYY-MM-DD)
+- [ ] .claude/settings.json + hooks (YYYY-MM-DD)
+- [ ] git hooks installed (YYYY-MM-DD)
+- [ ] branch protection enabled (YYYY-MM-DD)
+- [ ] initial CI run passed (YYYY-MM-DD)
+
+## Stage F — Production
+
+(не tracked в state — каждая feature в `.ai-pm/doc/features/`)
+
+---
+
+## Notes
+
+- **Возвраты в предыдущий stage:** если при работе над текущим stage'ом обнаружили пробел в предыдущем — записать с timestamp и причиной.
+- **Quick-draft mode (для Mode 2):** добавить маркер `quick-draft: yes` в шапку соответствующих artifacts; promotion в full — отдельным PR.
+- **Stage перешёл в closed:** добавь строку `Stage X closed: YYYY-MM-DD` под stage блоком.
+- **Sessions log (опционально):** даты + что было сделано — для long-running bootstrap'а через несколько сессий.

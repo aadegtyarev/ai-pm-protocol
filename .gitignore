@@ -1,0 +1,4 @@
+# Local-only files
+.bootstrap-state.local.md
+*.swp
+.DS_Store

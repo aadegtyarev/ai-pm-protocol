@@ -1,0 +1,605 @@
+# Development Protocol — Generic
+
+Универсальный protocol разработки в связке **соло-PM + AI-агент**. Описывает **процесс**, не технологию: стек и инструменты выбираются на Stage D и генерируются на Stage E под конкретный проект.
+
+**Статус:** v0. Source-of-truth — `../ai-pm-protocol/`. Project-specific overlays могут добавлять правила (см. § 13), но **не отменять** generic.
+
+---
+
+## 1. Принципы
+
+### 1.1. Content First, Infrastructure Generated
+
+PM **сначала** наполняет foundational docs (personas, journeys, threat-model, scope, …), и **только потом** init-agent генерирует конкретную инфраструктуру (CI, линтеры, архитектурные правила, spec/use-case checks, pre-commit) — потому что без стека, scope, security profile, set of capabilities нельзя выбрать правильные tools. Создавать infrastructure упреждающе — это анти-паттерн (см. § AP-2: premature Stage E).
+
+### 1.2. Specification First (для каждой фичи)
+
+Каждая фича начинается со spec'а на естественном языке. AI пишет код только после PM-approval spec'а и plan'а. См. `anti-patterns.md` § AP-4.
+
+### 1.3. Tests First
+
+AI пишет тесты до имплементации: property-based → BDD → unit → integration. См. § AP-5.
+
+### 1.4. Architecture as Code
+
+Архитектурные инварианты enforce'ятся **автоматическими fitness functions**, не через code review. PR не merge'ится, если правило нарушено. Категории — § 7 (code), § 8 (architecture), § 9 (spec/use-case).
+
+### 1.5. AI Provides Transparency
+
+AI не молча отклоняется от plan'а. См. § AP-6. PM — высший контроль.
+
+### 1.6. Boring Tech Where Possible
+
+На Stage D предпочтение — зрелым, скучным, хорошо документированным инструментам.
+
+### 1.7. PM-gates between stages
+
+См. § AP-3. Stage-to-stage переход — только по явному PM-approval.
+
+---
+
+## 2. File structure в product repo
+
+Структура зависит от `doc_root` setting, который bootstrap-agent определяет на Stage 0 init.
+
+### 2.0. Convention для product content location
+
+- **Mode 1 (new-product, greenfield):** product content (personas / journeys / threat-model / specs / etc.) в **top-level `doc/`**. Это стандартная конвенция, привычная разработчикам, легко discoverable.
+- **Mode 2/3 (existing project с уже занятым top-level `doc/`):** product content в **`.ai-pm/doc/`** для conflict avoidance.
+- **Mode 2/3 без existing `doc/`:** top-level `doc/` OK, как в Mode 1.
+
+`doc_root` записывается в frontmatter `.ai-pm/.bootstrap-state.md` и читается всеми subagents + scripts. **Не hardcode'ить пути** в template artifacts'ах.
+
+### 2.1. Greenfield layout (Mode 1, `doc_root: doc`)
+
+```
+<product-repo>/
+├── doc/                              ← product content (committed, top-level)
+│   ├── personas.md
+│   ├── user-journeys.md
+│   ├── threat-model.md
+│   ├── strategic-frame.md
+│   ├── mvp-scope.md
+│   ├── topology.md
+│   ├── positioning.md
+│   ├── brand-voice.md
+│   ├── ai-linting-rules.md            ← project-specific stack mapping
+│   ├── development-protocol.md        ← project overlay
+│   ├── anti-patterns.md               ← project additions (опц.)
+│   ├── architecture-decisions/
+│   └── features/
+├── .ai-pm/
+│   ├── .bootstrap-state.md            ← committed (state + resume)
+│   ├── version                        ← committed (template version pin)
+│   └── tooling/                       ← integration-mode-dependent
+│       ├── _templates/, recipes-cache/, agents/, scripts/
+│       └── development-protocol.md    ← generic (template-level)
+├── CLAUDE.md                          ← briefing для Claude sessions
+├── .claude/settings.json              ← Layer 2 enforcement hooks
+├── .gitignore
+└── (product code + standard project files)
+```
+
+### 2.2. Retrofit layout (Mode 2/3 с existing `doc/`, `doc_root: .ai-pm/doc`)
+
+```
+<product-repo>/
+├── doc/                              ← user's own doc/, нетронуто
+├── .ai-pm/
+│   ├── doc/                          ← ai-pm product content (committed)
+│   │   ├── personas.md, ...
+│   │   ├── ai-linting-rules.md
+│   │   ├── architecture-decisions/
+│   │   └── features/
+│   ├── .bootstrap-state.md
+│   ├── version
+│   └── tooling/
+├── CLAUDE.md, .claude/settings.json, .gitignore
+└── (rest of user project — нетронуто)
+```
+
+### 2.1. Three integration modes для `.ai-pm/tooling/`
+
+Bootstrap-agent при инициализации спрашивает PM, как интегрировать tooling:
+
+- **`gitignore` (default).** `.ai-pm/tooling/` в `.gitignore`, dev клонит template отдельно и symlink'ает. Минимальный footprint в repo.
+- **`submodule`.** `git submodule add` template-repo как `.ai-pm/tooling`. Version-pinned, чище для team-проектов.
+- **`vendor`.** Full copy commit'ится. Full ownership, можно local modifications.
+
+`.ai-pm/doc/` всегда commit'ится независимо от integration mode — это product content.
+
+### 2.2. CI integration
+
+ai-pm-specific jobs (spec discipline, security catalogue, AI-linting catalogue) добавляются в **существующий** `ci.yml` пользователя, не отдельный workflow. Job names префиксуются `ai-pm:` чтобы было ясно, что от template'а. Существующие user jobs не трогаются.
+
+---
+
+## 3. Three initialization modes
+
+Bootstrap-агент первым делом спрашивает mode, потому что mode определяет, как проходятся Stage A-E.
+
+### 3.1. Mode `new-product`
+
+Greenfield. Init-agent ведёт PM через Stage A-D (контент: personas, journeys, threat-model, scope, topology, выбор стека), потом делает Stage E (генерирует infrastructure из catalogue + стек), потом Stage F (фичи).
+
+### 3.2. Mode `new-feature`
+
+Существующий продукт. Stage A-D уже наполнены, Stage E (infrastructure) существует. Init-agent делает READ-pass по Stage A-C (опционально WRITE дельт), проверяет соответствие infrastructure ожиданиям (Stage E consistency), переходит к Stage F.
+
+### 3.3. Mode `rework-feature`
+
+Существующий продукт, переработка фичи. Как Mode 2, плюс обязательное чтение существующих `<topic>_spec.md`, `_plan.md`, кода, тестов. На Stage F — `_spec.v<N>.md` с обязательной секцией Diff и `_plan.v<N>.md` с обязательной секцией Migration. Step 7 (reviewer) обязателен (но он и так обязателен для всех modes — см. § 11).
+
+### 3.4. Bug-fix variant (вариация Mode 2)
+
+Bug-fix — это **не отдельный mode**, а вариация Mode 2 (`new-feature`). Workflow тот же, но lite-mode разрешён по умолчанию:
+
+- `<topic>_spec.md` с frontmatter `lite-mode: bugfix` (см. CLAUDE.md):
+  - Краткая структура: **Context** (что баг, как воспроизвести), **Expected behavior**, **Fix scope**, **Test** (failing test, который должен начать проходить).
+  - User stories / Сценарии / NFR могут быть пропущены если не релевантны.
+- `<topic>_plan.md` упрощённый: только «Соответствие spec'у» + «Tests plan».
+- Step 4: coder сначала пишет **failing test reproducing bug**, потом fix, тест проходит.
+- Step 7: reviewer всё равно обязателен, но output может быть terser.
+
+**Исключение — security bugs:** если bug в security path (auth/crypto/PII/payments/sessions) — full ceremony, **no lite-mode**. Security bugs требуют полного review + threat-model-cross-check.
+
+### 3.5. Lifecycle continuum
+
+Жизненный цикл проекта — **не одноразовый bootstrap**, а **постоянная последовательность циклов Stage F**:
+
+```
+Init bootstrap (Mode 1) → first feature → another feature → bug-fix → 
+                          → rework existing feature → release → 
+                          → new feature wave → ...
+```
+
+`project-bootstrap` agent — orchestrator всего жизненного цикла. На каждый новый PM-intent (новая фича / bug / rework / release / docs update) он определяет правильное routing.
+
+**Session resume:** если PM прервал работу в середине фичи (session crashed / next day), на новой сессии `project-bootstrap`:
+1. Reads `.ai-pm/.bootstrap-state.md`.
+2. Scans `.ai-pm/doc/features/` на in-progress фичи (по frontmatter каждого `_spec.md` / `_plan.md`).
+3. Proactively сообщает PM: «вижу in-progress topic X, state Y, продолжаем?».
+
+См. CLAUDE.md.tmpl «Session start routine» и project-bootstrap.md «Lifecycle routing» для деталей.
+
+### 3.4. Дискриминаторы
+
+Если PM не уверен, mode определяется по:
+1. Существует `.ai-pm/doc/personas.md` с реальным контентом? — нет → new-product.
+2. Меняется поведение/API/схема существующей фичи? — да → rework-feature.
+3. Иначе → new-feature.
+
+---
+
+## 4. Шесть stages
+
+| Stage | Что | Mode 1 | Mode 2 | Mode 3 |
+|---|---|---|---|---|
+| **A. Discovery** | vision → personas → user-journeys → competitive-analysis → positioning → brand-voice (в этом порядке) | WRITE | READ + WRITE дельт | READ + WRITE дельт |
+| **B. Constraints** | strategic-frame, threat-model, mvp-scope, (legal-frame если применимо) | WRITE | READ + WRITE дельт | READ + WRITE дельт |
+| **C. Solution shape** | topology, foundational ADRs (только если есть реальные forks) | WRITE | READ | READ |
+| **D. Process** | overlay (`doc/development-protocol.md`), AI-linting mapping, subagent configs | WRITE | SKIP | SKIP |
+| **E. Bootstrap** | концретная infrastructure: CI, линтеры, security tools, pre-commit, branch protection (генерируется из catalogue + стек) | WRITE | SKIP (verify consistency) | SKIP |
+| **F. Production** | `.ai-pm/doc/features/<topic>_{spec,plan,review}.md`, код, тесты | WRITE | WRITE | WRITE (с rework spec'/plan-структурой) |
+
+Stage E идёт **после** Stage A-D, не до — потому что infrastructure (какие линтеры включить, какие security rulesets, какой CI workflow) **выводится** из стека + project capabilities, зафиксированных в A-D. Создавать infrastructure упреждающе — анти-паттерн § AP-2. ADR-папка стартует **пустой**; первые ADR появляются либо в конце Stage C (foundational forks), либо в Step 2 plan'ов фич (§ AP-1).
+
+---
+
+## 5. Stage E: Bootstrap в деталях
+
+Когда Stage A-D пройдены и зафиксированы, init-agent делает Stage E.
+
+### 5.1. Что есть на руках к Stage E
+
+- Стек выбран (Stage D).
+- Project capabilities выяснены (Stage A-D content): uses-crypto / uses-auth / uses-payments / processes-PII / uses-containers / uses-i18n / multi-tenant / etc.
+- Catalogue § 7/8/9/10 фильтруется по этим capabilities — известно, какие категории включаются.
+- Recipe-cache (`doc/_recipes/cache/<aspect>-<stack>.md`) либо есть, либо драфтим с PM.
+
+### 5.2. Что Stage E генерирует
+
+**Code / security / CI infrastructure:**
+
+- `.github/workflows/ci.yml` (или эквивалент CI) — все блокирующие gate'ы (§ 6), без `continue-on-error`. Для Mode 2/3 — jobs добавляются в существующий `ci.yml`.
+- Конфиги линтеров (eslint / ruff / golangci / clippy / …) — собранные из catalogue § 7 с включёнными категориями.
+- Архитектурные конфиги (dependency-cruiser / import-linter / depguard / …) — из catalogue § 8.
+- Security rulesets (semgrep, dependency-audit, gitleaks, и т.д.) — из catalogue § 10 с conditional'ами по capabilities.
+
+**Multi-layer enforcement (см. § 5.5):**
+
+- `CLAUDE.md` в product root — Layer 1 (briefing для каждой Claude session). Из `_templates/CLAUDE.md.tmpl`.
+- `.claude/settings.json` — Layer 2 (hooks). Из `_templates/settings.json.tmpl`.
+- `.ai-pm/tooling/scripts/check-spec-precondition.sh` — PreToolUse hook (блокирует code edits без spec'а).
+- `.ai-pm/tooling/scripts/check-git-safety.sh` — PreToolUse hook (блокирует опасные git операции).
+- `.ai-pm/tooling/scripts/update-bootstrap-state.sh` — PostToolUse hook (audit trail).
+- `.ai-pm/tooling/scripts/check-spec-discipline.<lang>` — spec/use-case linting (catalogue § 9).
+- Git hooks через `.ai-pm/tooling/scripts/install-git-hooks.sh` — Layer 4 (pre-commit, commit-msg, pre-push).
+
+**Foundational artifacts:**
+
+- `.ai-pm/doc/architecture-decisions/0000-template.md` (если ещё нет).
+- `.ai-pm/doc/features/` (пустая директория с `.gitkeep`).
+
+**Branch protection (Layer 5):**
+
+- Branch protection rules для `main` через `gh api` или эквивалент: require PR, require status checks, no direct push, no force push, require linear history (enforces squash & merge).
+
+### 5.3. Initial-infrastructure commit + первый CI run
+
+После scaffold'а — initial commit на ветке `bootstrap/infrastructure`. PR в `main` через стандартный workflow (см. § 14). CI на этом коммите **должен пройти**, потому что Stage A-D content уже наполнен; если что-то fail'ит — это сигнал неполноты Stage A-D, возврат.
+
+### 5.4. Recipe cache update
+
+Если recipe для стека отсутствовал — драфтился совместно с PM на Stage D. После успешного Stage E result commit'ится в `doc/_recipes/cache/<aspect>-<stack>.md` для следующих проектов.
+
+### 5.5. Multi-layer enforcement (5 слоёв)
+
+Template enforce'ит протокол через **5 защитных слоёв**:
+
+| Layer | Что | Когда срабатывает | Hard / Soft |
+|---|---|---|---|
+| 1 | `CLAUDE.md` briefing | Каждый старт Claude session | Soft (Claude может игнорировать, PM напомнит) |
+| 2 | `.claude/settings.json` PreToolUse hooks | Перед Write/Edit/Bash | **Hard** — blocks tool call |
+| 3 | Subagent invocation routine | Через CLAUDE.md + explicit `claude --agent <name>` | Soft |
+| 4 | Git hooks (pre-commit, commit-msg, pre-push) | На git operations | **Hard** — `--no-verify` запрещён AP-6 |
+| 5 | CI gates + branch protection | На PR | **Hardest** — нельзя обойти без admin override'а |
+
+PM может проигнорировать Layer 1 и 3 (soft), но 2, 4, 5 — hard блокировки. Layer 5 — branch protection — единственный, который **физически невозможно** обойти без admin override'а.
+
+**Соло-PM рекомендация:** не отключать hooks даже когда «торопишься». Frustration в моменте < damage от пропущенной security issue или drift'а от plan'а.
+
+### 5.6. Что Stage E **не делает**
+
+- Не пишет код фич (это Stage F).
+- Не создаёт `apps/`, `packages/` со скелетом implementation'а. Производственный код появляется только когда есть spec в Stage F.
+- Не пишет ADR.
+- Не меняет foundational docs из Stage A-D.
+
+---
+
+## 6. CI gates
+
+На Stage E определяется конкретный список (на основе catalogue § 7/8/9/10 + capabilities проекта). **Generic baseline:**
+
+| Gate | Что проверяет | Категория |
+|---|---|---|
+| Code linter | code style, AI-specific patterns (§ 7) | code |
+| Type checker | static types | code |
+| Architecture linter | import boundaries, layer constraints, encapsulation (§ 8) | architecture |
+| Security scanner | known-bad patterns | code/security |
+| Test runner | все тесты проходят | code |
+| Per-diff coverage | новый код >= 80% | code |
+| Secret scanner | gitleaks или эквивалент | security |
+| Dependency audit | known CVE | security |
+| Spec discipline | каждая spec ссылается на persona/journey; structure соблюдена (§ 9) | spec |
+| Foundational docs filled | personas/journeys/threat-model не placeholder'ы (§ 9) | spec |
+| Spec/plan precondition | для Mode 3: spec.v<N> и plan.v<N> существуют до commits с кодом | spec |
+| Reviewer artifact | для Mode 3 и security-critical paths: `_review.md` присутствует | spec |
+
+**Все gate'ы блокируют merge.** Никаких `continue-on-error: true`.
+
+---
+
+## 7. AI-specific code linting
+
+Стандартные linter defaults писались под human developers. AI имеет свой «акцент» — catalogue из 17 категорий. На Stage D каждая обязательно замаппена на конкретное правило стека, на Stage E конфиги генерируются.
+
+### 7.1. Catalogue (language-agnostic)
+
+| Категория | Почему AI делает | Что enforce'ить |
+|---|---|---|
+| Debug-артефакты | Добавляет для «тестирования», забывает удалить | Запрет `console.log`/`print`/`debugger`/`breakpoint()` |
+| TODO/FIXME без issue-ref | Откладывает работу, должную быть в scope | Требовать `TODO(#NNN)` формат |
+| Закомментированный код | Хеджирует вместо удалить | Запрет блоков комментариев длиннее N строк рядом с кодом |
+| Длинные функции / глубокая вложенность | Не рефакторит по мере роста | `complexity ≤ 10`, `max-lines-per-function ≤ 60`, `max-depth ≤ 4` |
+| Слишком много параметров | Adds optional args вместо структурирования | `max-params ≤ 5` |
+| Magic numbers/strings | Хардкодит тестовые значения | `no-magic-numbers` с whitelist `[0, 1, -1]` |
+| Unchecked types / `any` | Escape'ит type system | Запрет `any`, `interface{}`, и т.п. |
+| Mutable defaults / bare catch | Языковые gotchas | Запрет mutable default args, bare catch |
+| Inconsistent naming | Меняет паттерны в середине файла | Naming convention rule на весь проект |
+| Dead code / unused imports | Не убирает после рефакторинга | `no-unused-vars`, dead-code-elimination |
+| Floating promises / unhandled async | Не думает про async correctness | `no-floating-promises`, `no-misused-promises` |
+| Naïve datetime | `new Date()` без timezone | Запрет конструкторов без timezone arg |
+| Sync I/O в async handlers | Смешивает sync/async | `no-sync-in-async`, запрет `fs.*Sync` |
+| Relative imports вне workspace | Не уважает module boundary'и | `import/no-relative-packages` |
+| Magic comments без объяснения | Заглушает линтер вместо fix'а | Запрет `eslint-disable` без `// reason: …` |
+| Hardcoded user-facing strings | Не интернационализирует | Запрет string literals вне i18n-функций |
+| Inline secrets / API keys | Test values остаются в коде | gitleaks + custom semgrep |
+
+### 7.2. Stack-specific mapping
+
+В recipe `doc/_recipes/ai-linting-<stack>.md`. На Stage E mapping копируется в проект и записывается в `.ai-pm/doc/ai-linting-rules.md`.
+
+### 7.3. Что делать, если категория не покрыта tooling'ом
+
+Custom rule (semgrep custom, eslint plugin, golangci-lint custom analyzer). Создаётся в `ci/lint-rules/` с fixture-тестами.
+
+---
+
+## 8. Architecture linting
+
+Архитектурные правила **отдельная категория** от code-linting. Это инварианты модуля «откуда что импортирует / что от чего зависит / какие границы пересекаются».
+
+### 8.1. Generic catalogue (language-agnostic)
+
+| Правило | Зачем |
+|---|---|
+| No circular dependencies | Циркулярные зависимости — признак плохой декомпозиции |
+| Layered architecture enforced | Routes → services → repositories → models (или эквивалент); запрет обратных направлений |
+| Crypto isolation | Crypto-код не импортируется из UI / API напрямую (только через crypto facade) |
+| Plugin boundaries | Core не импортирует impl плагинов, только их protocols |
+| Encapsulation via index | Импорты пакета только через `index`, не глубоко внутрь |
+| Regional/multi-tenant boundaries | Региональные сервисы не зависят от orchestrator (если применимо) |
+| No dead modules | Module не имеет ни одного импортёра → orphan → удалить |
+| No god modules | Module имеет > N импортёров → выделить facade или разделить |
+| External deps justified | Каждая production dep в `package.json` оправдана usecase'ом |
+
+### 8.2. Stack-specific tools
+
+- **TypeScript:** dependency-cruiser
+- **Python:** import-linter
+- **Go:** depguard (golangci-lint plugin), go-arch-lint
+- **Rust:** cargo-deny, custom clippy lints
+- **Java/Kotlin:** ArchUnit
+
+### 8.3. Custom semgrep architecture rules
+
+Для cross-language правил (например, «handlers не возвращают raw bytes», «JWT не содержит PII») — semgrep custom rules в `ci/semgrep-rules/architecture/`.
+
+---
+
+## 9. Spec / use-case linting
+
+**Новая категория линтеров** — проверяет дисциплину foundational docs и feature spec'ов. Реализована как single script в `.ai-pm/tooling/scripts/check-spec-discipline` (Python или Node, по стеку проекта). Запускается как CI gate.
+
+### 9.1. Catalogue checks
+
+| Check | Что проверяет | Когда fail |
+|---|---|---|
+| `personas-exist` | `.ai-pm/doc/personas.md` существует, имеет ≥ 1 persona с заполненными required fields | Stage A открыт но personas — placeholder |
+| `journeys-reference-personas` | Каждый journey в `user-journeys.md` ссылается на persona, существующую в `personas.md` | Journey ссылается на удалённую persona |
+| `mvp-scope-no-orphans` | Каждый F-ID в `mvp-scope.md` либо имеет matching `.ai-pm/doc/features/<topic>_spec.md`, либо помечен `deferred` | F-ID без spec'а и без deferred-маркера |
+| `spec-references-persona` | Каждый `<topic>_spec.md` в секции User stories ссылается на ≥ 1 persona по имени из `personas.md` | Spec описывает фичу без указания, для кого |
+| `spec-references-journey` | Каждый spec в секции Контекст ссылается на journey-шаг (по convention `journey-X step Y`) | Spec не объясняет, какой шаг journey'я обслуживает |
+| `spec-structure` | Каждый spec имеет required sections: Контекст / User stories / Сценарии / NFR / Не в scope / Open questions | Spec без обязательной секции |
+| `plan-exists-for-spec` | Если есть `<topic>_spec.md` с PM-approval-маркером, существует и `<topic>_plan.md` | Spec одобрен, plan забыт |
+| `plan-scenarios-cover-spec` | Section «Соответствие spec'у» в plan'е перечисляет все scenarios из spec'а | Plan забыл scenario |
+| `adr-only-from-plan` | Каждый ADR в `architecture-decisions/` создаётся в commit'е, который также содержит `<topic>_plan.md` (или в Stage C bootstrap commit) | ADR появился вне правила § AP-1 |
+| `foundational-docs-filled` | Personas/journeys/threat-model/positioning/mvp-scope не содержат placeholder-маркеров `<…>` | Stage A/B не пройдены |
+| `bootstrap-state-fresh` | `.bootstrap-state.md` обновлён в течение разумного окна (default 90 дней) | Stage abandoned mid-flow |
+| `rework-has-diff-section` | Если spec — `<topic>_spec.v<N>.md` (N > 1), он обязан содержать секцию `## Diff` | Mode 3 spec без diff |
+| `rework-has-migration-section` | Если plan — `<topic>_plan.v<N>.md` (N > 1), он обязан содержать секцию `## Migration` | Mode 3 plan без migration |
+
+### 9.2. Реализация
+
+Script `.ai-pm/tooling/scripts/check-spec-discipline.{py,ts}` парсит `doc/` через markdown AST или regex, выполняет checks из catalogue, выдаёт fail с указанием конкретных нарушений. Init-agent копирует его на Stage E из recipe.
+
+### 9.3. Когда что-то fail'ит при первом запуске после Stage E
+
+**Не нормально.** На момент Stage E (когда infrastructure генерируется) Stage A-D **должны быть закрыты**, и foundational docs — наполнены. Если spec/use-case linter fail'ит на initial CI — это сигнал неполноты Stage A-D, возврат к соответствующему stage'у. Это **отличается** от Stage F, где CI fail'ит из-за конкретного нарушения в новом spec/plan/code (нормально, фиксится в PR).
+
+### 9.4. Дополнительный check для security-touching фич
+
+- **`security-spec-cites-standard`** *(conditional: фича трогает auth/crypto/PII/payments/sessions/public endpoint)* — spec обязан в секции `## Security invariants` ссылаться на конкретные пункты OWASP / CWE / ASVS. Без этого spec невалиден.
+
+Это **отдельная от threat-model linkage** проверка. Threat-model говорит, *чего мы боимся*. OWASP/CWE/ASVS говорят, *какими стандартами мы это закрываем*. Должны быть оба.
+
+---
+
+## 10. Security scanning catalogue
+
+Четвёртая категория линтеров (после Code / Architecture / Spec). **Особенно критично для solo-PM**, который не читает AI-generated код: security-уязвимости должны ловиться tools'ом, а не human review.
+
+Каждая категория **анкорится в стандарт** (OWASP / CWE / NIST / CIS / SLSA), а не в «список хороших идей». Init-agent на Stage E включает соответствующие готовые rulesets (semgrep `p/owasp-top-ten`, CodeQL security queries и т.п.) — не выбирает «10 rules из 1000» вручную.
+
+### 10.1. Catalogue
+
+| # | Категория | Стандарт | Tools (примеры) |
+|---|---|---|---|
+| 1 | **SAST: OWASP Top 10 (web)** `[универсально]` | OWASP Top 10 2021 | semgrep `p/owasp-top-ten`, CodeQL security queries, Snyk Code |
+| 2 | **SAST: CWE Top 25** `[универсально]` | CWE Top 25 | semgrep `p/cwe-top-25`, Snyk Code, GitHub Advanced Security |
+| 3 | **Dependency vulnerabilities** `[универсально]` | NIST NVD / GHSA / OSV-DB | pnpm/npm audit, pip-audit, govulncheck, cargo-audit, Dependabot, Snyk |
+| 4 | **Secret scanning** `[универсально]` | CWE-798 + entropy | gitleaks, TruffleHog, GitHub Secret Scanning |
+| 5 | **SAST: OWASP API Top 10** `[conditional: backend API]` | OWASP API Security Top 10 2023 | semgrep API ruleset, 42Crunch |
+| 6 | **SAST: Crypto-specific** `[conditional: uses-crypto]` | CWE-321/322/327/328/329/338, OWASP ASVS V6 | semgrep crypto-pack, bandit B5xx (Py), gosec G401-G505 |
+| 7 | **SAST: Auth/Session-specific** `[conditional: uses-auth]` | OWASP ASVS V2/V3/V7 | semgrep auth-pack, custom rules |
+| 8 | **License compliance** `[conditional: 3rd-party deps]` | SPDX license list + project policy | license-checker, pip-licenses, cargo-deny, FOSSA |
+| 9 | **SBOM generation** `[conditional: published artifacts]` | SPDX / CycloneDX | syft, cyclonedx-cli |
+| 10 | **Container scanning** `[conditional: containerized]` | CVE DB + base-image best practices | trivy, grype, Docker Scout |
+| 11 | **IaC scanning** `[conditional: IaC в проекте]` | CIS Benchmarks, provider best practices | checkov, tfsec, kubesec, kube-linter |
+| 12 | **Supply chain integrity** `[conditional: published artifacts]` | SLSA framework, in-toto, sigstore | cosign, sigstore CLI |
+| 13 | **Logging hygiene** `[conditional: processes-PII]` | OWASP ASVS V9, custom no-PII-in-logs | semgrep custom rules + log-sink linters |
+
+### 10.2. Преимущество стандартного якоря
+
+PM не нужно держать в голове CWE-321 или OWASP A02. Init-agent активирует ruleset, и:
+
+- Аудит / compliance: можно сказать «мы покрываем OWASP Top 10 + CWE Top 25», это профессиональный язык.
+- Обновления стандарта (OWASP Top 10 2025) — автоматически дотягивают через обновление ruleset.
+- AI, который пишет код, знает что эти правила активны и **подстраивает поведение** — это самозащита через линтер.
+
+### 10.3. Stage E integration
+
+На Stage E (после того как Stage A-D content готов):
+
+1. Init-agent читает project capabilities из foundational docs (`threat-model.md`: есть auth/crypto/PII? `topology.md`: containers/IaC?).
+2. Включает все 4 must-have (#1-4) + conditional подкатегории по capabilities.
+3. Из recipe (`doc/_recipes/cache/security-<stack>.md`) берёт concrete tool list + конфиги.
+4. Если recipe нет — драфтит mapping с PM (один раз per стек), committs cache.
+
+---
+
+## 11. Feature workflow (Stage F)
+
+### 11.0. Stage F readiness — что должно быть на руках
+
+Перед началом первой фичи проверить (PM сам или через bootstrap-агент):
+
+**Foundational артефакты (deliverables Stage A-E):**
+
+- [ ] `vision.md` / `personas.md` / `user-journeys.md` / `competitive-analysis.md` / `positioning.md` / `brand-voice.md` (Stage A)
+- [ ] `strategic-frame.md` (включая SLO + метод валидации) / `threat-model.md` / `mvp-scope.md` (Stage B)
+- [ ] `legal-brief.md` (Mode 1 — обязательно; Mode 2/3 — условно по AP-13)
+- [ ] `customer-interview-script.md` (Mode 1 — обязательно; Mode 2/3 — условно по AP-13)
+- [ ] `incident-runbook-draft.md` (Mode 1 с runtime — обязательно; Mode 2/3 — условно по AP-13)
+- [ ] `topology.md` (Stage C)
+- [ ] `development-protocol.md` overlay + `ai-linting-rules.md` (Stage D)
+
+**Infrastructure:**
+
+- [ ] CI workflow готов (`.github/workflows/ci.yml` или эквивалент)
+- [ ] `.husky/pre-commit` или эквивалент готов
+- [ ] `.claude/settings.json` + hooks активны
+- [ ] `CLAUDE.md` адаптирован
+- [ ] GitHub repo создан + первый push сделан
+- [ ] Branch protection включён на main (require PR / require reviews / no force push)
+- [ ] Initial CI run прошёл успешно (даже на пустом репо)
+
+**Bootstrap state file** должен показывать все Stage A-E как `[x]` с датами. Если есть `[ ]` — Stage F не начинается.
+
+---
+
+
+
+| Step | Кто | Артефакт | Условие перехода |
+|---|---|---|---|
+| 1. Specification | PM (или AI draft → PM edit) | `<topic>_spec.md` | PM: «спека ок» |
+| 2. Plan | AI | `<topic>_plan.md` | — |
+| 3. Plan review | PM | (комменты) | PM: «поехали» |
+| 4. Implementation | AI | код + тесты | tests-first порядок |
+| 5. CI verification | автоматика | CI gates | все gate'ы pass |
+| 6. Acceptance | PM | мерч PR | PM прошёл scenarios в live-приложении |
+| 7. Reviewer | AI subagent | `<topic>_review.md` | опц. в Mode 2, обязателен в Mode 3 + security-critical |
+
+**Mode 3 (rework) специфика:** spec — `<topic>_spec.v<N>.md` с секцией Diff; plan — `<topic>_plan.v<N>.md` с секцией Migration. Step 7 обязателен.
+
+**Step 7 (reviewer) — обязателен для всех modes**, не только Mode 3. Причина: PM никогда не читает код, и без независимого review нет никакой human-level гарантии, что код = plan'у. Reviewer-agent работает в чистом контексте, не знает деталей implementation'а до review, выдаёт `<topic>_review.md` с severity-tagged findings. PM читает только review (формализованный markdown), не код.
+
+---
+
+## 12. Subagents
+
+- **project-bootstrap** — orchestrates Stage A-E (content → infrastructure generation) + handoff в Stage F. Mode-aware + integration-mode-aware + trust-profile-aware.
+- **planner** — читает spec + foundational docs, пишет plan. Trust-profile-aware (substantive для A, terser для C).
+- **coder** — реализует plan; не отклоняется без объявления; tests-first.
+- **reviewer** — независимый review (security/architecture + protocol-compliance в одной session). Mandatory all modes. Architectural-context + learning-oriented findings.
+- **release-helper** — changelog, version bump (SemVer), release PR. Не делает release сам.
+
+Конфиги — `.claude/agents/<role>.md`.
+
+---
+
+## 13. Error protocol
+
+Когда AI ошибается на любом уровне (CI, PM acceptance, reviewer, production, customer):
+
+1. Воспроизвести (failing test).
+2. Понять (какой инвариант нарушен).
+3. Исправить (fix code).
+4. Усилить (fitness function / test). Если pattern AI-specific — добавить категорию в § 7.1 / § 8.1 / § 9.1 / § 10.1.
+5. Документировать (architectural → ADR; процессный → новый anti-pattern).
+
+Цель: **каждый bug оставляет regression-protection после себя**.
+
+---
+
+## 14. Git workflow & versioning
+
+Обязательно для всех проектов по template'у. Эти правила enforce'ятся CI и branch protection rules; никакого manual override'а.
+
+### 14.1. Branch model
+
+- **`main` — святое.** Никаких direct-коммитов в `main`. Никогда. Никто (ни PM, ни AI, ни release-helper) не коммитит в `main` напрямую.
+- **Feature work — в branch'ах** с именем `feature/<topic>`, где `<topic>` совпадает с `<topic>` в `.ai-pm/doc/features/<topic>_spec.md`.
+- **Fix branches** — `fix/<topic>` или `fix/<issue-id>`. Доки-only PR — `docs/<topic>`.
+- **Release-please / release-helper branches** — управляются автоматически, не трогаем руками.
+
+### 14.2. Pull Request flow
+
+- **Каждое** изменение идёт через PR. Без exception.
+- PR description должен содержать: ссылку на spec/plan, summary, test plan (что было ручно проверено в acceptance step).
+- **CI gates** (см. § 6) **обязательно** проходят перед merge — все, без `continue-on-error`.
+- **Step 7 reviewer-agent** (`<topic>_review.md`) commit'ится в ту же ветку до merge; reviewer findings severity ≥ `blocking` → merge заблокирован.
+- **PM acceptance** (Step 6) — PM прошёл сценарии в running app, отметил `acceptance: ok` в PR.
+
+### 14.3. Merge strategy
+
+- **Squash and merge** — единственная разрешённая стратегия для feature PR.
+- Squash commit message: Conventional Commits 1.0 формат (`feat:`, `fix:`, `chore:`, `docs:`, и т.п.) с BREAKING CHANGE отметкой если применимо.
+- Squash сохраняет один читаемый commit в `main` per фича; история работы в branch'е остаётся в git до удаления ветки.
+- **Не используются:** merge commits (создают шум), rebase merge (теряется flat-history view).
+
+### 14.4. SemVer для releases
+
+- **Semantic Versioning 2.0** для всех публикуемых артефактов (`MAJOR.MINOR.PATCH`).
+- `MAJOR` — breaking change в любом publicly observable contract (API, схема данных, CLI args, конфиг-формат).
+- `MINOR` — backward-compatible additions.
+- `PATCH` — bug fixes без поведенческих изменений.
+- Bump происходит **автоматически** через `release-please` (или эквивалент): анализирует conventional commits с момента последнего тэга, определяет уровень bump'а, создаёт release PR с CHANGELOG.
+
+### 14.5. CHANGELOG
+
+- Формат Keep a Changelog 1.1.0.
+- Генерируется автоматически из conventional commits.
+- PM не пишет CHANGELOG руками.
+
+### 14.6. Branch protection enforcement
+
+На Stage E init-agent **обязательно** настраивает branch protection rules для `main`:
+- Require PR before merge.
+- Require status checks: все CI gates (§ 6).
+- Disallow direct push.
+- Disallow force push.
+- Require linear history (enforces squash, не merge commits).
+
+Если PM использует GitHub — это настраивается через `gh api` в Stage E. Если другой SCM — overlay указывает эквивалент.
+
+### 14.7. Никакого `--no-verify`, `--force` в main, `--amend` чужих коммитов
+
+- Pre-commit hooks никогда не skip'аются через `--no-verify`. Если hook fail'ит — фиксим причину, не обходим.
+- `git push --force` в `main` запрещён (branch protection это enforce'ит).
+- `git commit --amend` — только в своих локальных коммитах до push'а.
+
+---
+
+## 15. Document hygiene
+
+Foundational docs — living artifacts, но с разной review-cadence:
+
+- **personas / journeys** — quarterly review или после сильного user insight'а.
+- **threat-model** — quarterly или после security incident'а.
+- **positioning / brand-voice** — quarterly или после market change.
+- **mvp-scope** — monthly review.
+- **topology** — при крупных архитектурных изменениях (которые рождают ADR).
+- **ADRs** — append-only; existing ADRs не редактируются, только supersede через новый ADR.
+- **Feature specs** — once approved + merged, frozen; для крупных изменений — отдельный rework spec (`<topic>_spec.v<N>.md`).
+
+**Изменения foundational docs идут отдельным PR** (branch `docs/<topic>`) с явным «revisit X because Y» в title. Не смешиваются с feature PR'ами.
+
+См. `anti-patterns.md § AP-7`.
+
+---
+
+## 16. Что overlay может добавить, но не отменить
+
+Overlay (`doc/development-protocol.md` в конкретном проекте) **может**:
+
+- Добавить project-specific правила.
+- Уточнить generic-правила (например, «property-based — fast-check»).
+- Заполнить AI-linting и security mapping для стека (mandatory).
+- Перечислить subagent'ы проекта.
+- Зафиксировать stack-specific anti-patterns.
+- Указать конкретные `gh` или CI команды для branch protection enforcement (§ 14.6).
+
+Overlay **не может**:
+
+- Отменить Specification First, Tests First, PM-gate, ADR-реактивно, PM-never-reads-code.
+- Снять блокирующий характер CI gate'ов.
+- Пропустить § 7/8/9/10 mapping для своего стека.
+- Разрешить direct-commits в `main` или другие стратегии merge кроме squash.
+- Снять SemVer / Conventional Commits / branch protection.
+- Сделать Step 7 reviewer-agent опциональным.
+- Разрешить AI override'нуть PM'а technical-аргументом.
+
+Если что-то из generic'а явно мешает — это сигнал обновлять generic, не overlay.
