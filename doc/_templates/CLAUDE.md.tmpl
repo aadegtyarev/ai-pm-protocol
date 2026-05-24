@@ -12,9 +12,16 @@
 
 **Шаг 1: Прочитай `.ai-pm/.bootstrap-state.md`.**
 
-- **Если файла нет** → invoke `project-bootstrap` subagent. Мы в самом начале (new-product new-product mode).
+- **Если файла нет** → invoke `project-bootstrap` subagent. Мы в самом начале (new-product mode).
 - **Если Stage A-E не closed** (не все checkbox'ы) → invoke `project-bootstrap` subagent, скажи оператору «Bootstrap не завершён, продолжаем со stage X». Не работай над фичами.
-- **Если Stage A-E closed** → продолжай шаг 2.
+- **Если Stage A-E closed** → продолжай шаг 1.5.
+
+**Шаг 1.5: Проверь `foundation_completeness` в state.**
+
+- **`complete`** → standard workflow, AP-14 full read-pass.
+- **`partial`** → read-pass на existing artifacts, mini-research для missing (см. project-bootstrap.md Tier 1).
+- **`minimal`** (legacy-quick adoption) → per-feature mini-research для каждой фичи; предупреди оператора: «foundation_completeness=minimal, ожидай mini-persona + mini-threat + journey context inline в каждой spec'е».
+- **`none`** (legacy-skip adoption) → mini-research обязательна; hard floors (security path) — Mini-threat-list mandatory даже в `none`.
 
 **Шаг 2: Просканируй `{{doc_root}}/features/` на in-progress фичи.**
 

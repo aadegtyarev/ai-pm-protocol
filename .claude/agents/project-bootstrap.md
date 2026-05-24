@@ -183,7 +183,7 @@ adoption_overrides: []
 
 **Invocation:**
 - **Quick adoption full:** `./scripts/auto-extract/extract-all.sh` — writes artifacts в `doc_root`
-- **Architecture overview keyword routing:** `./scripts/auto-extract/extract-all.sh --read-only` — writes в `meta/architecture-extract-<date>.md`, **не меняет state**
+- **Architecture overview keyword routing:** `./scripts/auto-extract/extract-all.sh --read-only` — writes в `.ai-pm/extracts/architecture-<date>.md`, **не меняет state**
 - **Manual staged adoption (где applicable):** individual scripts (`extract-stack.sh`, `extract-ui-kind.sh`, etc.) per нужный аспект
 - **Skip adoption:** только `extract-stack.sh` для stack auto-detection
 
@@ -363,7 +363,7 @@ Template-sync has **3 phases:** template files apply, schema migration, **docume
 
 #### 3.1. Detect migration categories
 
-**Implementation:** script `scripts/template-sync-doc-migrate.py` (генерируется на Stage E из `_templates/scripts/template-sync-doc-migrate.py.tmpl`). Read-only analysis, writes report в `meta/template-sync-doc-migration-<date>.md` с counts + preview examples + affected files.
+**Implementation:** script `scripts/template-sync-doc-migrate.py` (генерируется на Stage E из `_templates/scripts/template-sync-doc-migrate.py.tmpl`). Read-only analysis, writes report в `.ai-pm/migrations/<date>-template-sync-doc-migration.md` с counts + preview examples + affected files.
 
 Invoke: `python3 scripts/template-sync-doc-migrate.py --from <old_version> --to <new_version>`
 
@@ -388,7 +388,7 @@ AI scan product docs и identify migration needs (через script + manual rev
   - `Apply migration` — AI применит changes, content preserved, добавляются только new fields/sections с defaults
   - `Apply selectively` — operator выбирает per-file (через follow-up AskUserQuestion)
   - `Skip с reason` — не migrate, declare `adoption_override` (AP-22) с reason
-  - `Show full diff first` — AI генерирует diff в `meta/template-sync-doc-migration.diff` для review, потом снова ask
+  - `Show full diff first` — AI генерирует diff в `.ai-pm/migrations/<date>-template-sync-doc-migration.diff` для review, потом снова ask
 
 #### 3.3. Apply migration (после approval)
 
@@ -407,7 +407,7 @@ AI применяет approved migrations:
    - Original sections preserved? (no content removed unintentionally)
    - Total length comparison (если уменьшилось > 5% — flag)
    - Key headers preserved
-3. **Generate verification report** в `meta/template-sync-verification-v0.X.Y.md`:
+3. **Generate verification report** в `.ai-pm/migrations/<date>-template-sync-verification-v0.X.Y.md`:
    ```markdown
    # Documentation Migration Verification — template-sync v0.<old> → v0.<new>
 
@@ -448,7 +448,7 @@ AI применяет approved migrations:
      - **Phase 1 — Template files:** что auto-applied / manual review items
      - **Phase 2 — Schema migration:** какие fields added / renamed
      - **Phase 3 — Documentation migration:** список migration categories с counts (e.g., «12 specs gained `version` field, 8 specs renamed mode, ui-style-guide split на 3 файла»)
-     - **Verification report:** ссылка на `meta/template-sync-verification-v0.X.Y.md`
+     - **Verification report:** ссылка на `.ai-pm/migrations/<date>-template-sync-verification-v0.X.Y.md`
      - **Adoption overrides declared:** если operator chose skip для каких-то migrations
      - **Breaking changes** (если MAJOR bump)
    - Update `.ai-pm/.bootstrap-state.md` field `template_version_applied: v0.X.Y`
@@ -480,7 +480,7 @@ AI применяет approved migrations:
    - UI style extracts (если applicable)
    - Database design extracts (если applicable)
    - Existing API surface (если OpenAPI / route files found)
-3. Save → `meta/architecture-extract-<YYYY-MM-DD>.md` (template repo) или `doc/architecture-extract-<YYYY-MM-DD>.md` (product)
+3. Save → `.ai-pm/extracts/architecture-<YYYY-MM-DD>.md` (template repo) или `.ai-pm/extracts/architecture-<YYYY-MM-DD>.md` (product)
 4. Show оператору в чате: structure + key findings + recommendations («могу запустить adoption по этому extract'у — Quick? Staged?»)
 5. **НЕ trigger** adoption automatically — оператор решает next steps separately
 

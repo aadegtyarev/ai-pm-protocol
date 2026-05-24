@@ -437,6 +437,8 @@ done < .ai-pm/.product-names-blocklist
 - В `.claude/agents/reviewer.md` — обязательная routine «Persist review» с 2 формами trail (committed для Stage F / local trace для прочего) и обязательная строка `**Verdict:**` в первых 50 строках `_review.md`.
 - В `.gitignore` (через bootstrap-agent) — `.ai-pm/.reviews/` (local trace, не commit'ится).
 
+**Metadata field `trail_type`** в frontmatter committed `_review.md` — informational marker для reader, показывающий тип trail'а. Допустимые значения: `committed-review` (Stage F feature/<topic> branch — full review file), `local-trace` (`.ai-pm/.reviews/<branch>.json` — chore/docs PR, gitignored), `skip-marker` (explicit `[skip-review]` в HEAD commit, trail отсутствует). Поле — **информационное**, не enforced скриптами; служит discoverability для PM при review history sweep'ах.
+
 **Skip-marker `[skip-review]`** — explicit visible в `git log`, не abuse'ится потому что:
 - Видим всем кто читает history
 - Должен быть на **отдельной строке** (line-anchored regex `^\[skip-review\][[:space:]]*$`) — упоминание в prose body commit'а не триггерит
