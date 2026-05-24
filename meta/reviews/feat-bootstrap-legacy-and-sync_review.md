@@ -126,3 +126,63 @@ Existing template-native projects продолжают работать:
 - Default values для missing new fields обрабатываются bootstrap-agent'ом на first session после template bump
 - Mode aliases (new-feature/rework-feature) transparently mapped
 - No forced migration
+
+---
+
+# Post-initial-review update (2026-05-24 second pass)
+
+**Operator feedback:** «обновление шаблона разработки не вижу синхронизации документации проекта под новый шаблон, оно же тоже разъезжается. надо явно запрашивать разрешение и проверкой миграции, что ничего не потерялось»
+
+**Critical gap addressed:** initial template-sync workflow покрывал только template-controlled files (subagents, scripts, anti-patterns). Product documentation тоже разъезжается с новой schema/conventions — silent migration или missing migration → потеря context.
+
+**Changes (additional commit):**
+
+## project-bootstrap.md — template-sync разделён на 3 phases
+
+### Phase 1 — Template files apply (preserved existing routine)
+
+Same as before — auto-apply safe, flag manual.
+
+### Phase 2 — Schema migration (NEW)
+
+Detect changes в `bootstrap-state.md.tmpl` schema vs product state file:
+- Missing fields → AskUserQuestion с предложенным default
+- Removed fields → migrate values или drop с reason
+- Type changes → convert + verify
+- Per-field operator approval
+
+### Phase 3 — Documentation migration (NEW, critical)
+
+**Каждая migration требует explicit operator approval с preview diff.**
+
+Detection categories:
+- Spec frontmatter additions (new fields, defaults)
+- Spec sections additions (new optional/mandatory sections)
+- Foundational artifact splits (e.g. ui-style-guide split на base + per-kind)
+- Mode renames (alias preservation)
+- State field renames
+- AP discipline introduction
+
+Per-category routine:
+1. AskUserQuestion с описанием + preview diff (sample 1-2 файла) + affected files list
+2. 4 options: Apply migration / Apply selectively / Skip с reason / Show full diff first
+3. После approval — AI применяет changes, content preserved
+4. **Verification phase** — diff before/after, content integrity check, length comparison, generate verification report в `meta/template-sync-verification-v0.X.Y.md`
+5. Если detected потеря content — STOP, rollback, escalate
+
+### Phase 4 — Generate PR
+
+PR body sections: Phase 1 summary, Phase 2 schema changes, Phase 3 documentation migrations с counts, verification report link, adoption overrides declared.
+
+## release-helper.md — Documentation migration impact в CHANGELOG
+
+Template release **обязательно** документирует какие product documentation migrations потребует new version:
+- Spec frontmatter additions
+- Spec sections additions
+- Foundational artifact restructure
+- Mode/state field renames
+- AP discipline introduction
+
+Format в CHANGELOG body — это input для downstream template-sync Phase 3.
+
+**Verdict (post-update):** approve. Critical gap addressed — documentation migration теперь explicit phase с approval + verification.

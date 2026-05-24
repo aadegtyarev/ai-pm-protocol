@@ -313,6 +313,10 @@ Multi-value possible (`web, backend` для full-stack TypeScript / Next.js).
 
 ### Steps
 
+Template-sync has **3 phases:** template files apply, schema migration, **documentation migration**. Каждая phase требует explicit operator approval per category. Документация product'а **тоже** разъезжается с новой версией template'а — example: template добавил поле `version:` в feature-spec frontmatter → existing spec'и lack it → migration нужна.
+
+### Phase 1: Template files apply
+
 1. **Read state:** `template_version_applied` из `.ai-pm/.bootstrap-state.md`
 2. **Read current template version:**
    - Submodule integration: `cd .ai-pm/tooling && git fetch && git describe --tags --abbrev=0`
@@ -329,14 +333,117 @@ Multi-value possible (`web, backend` для full-stack TypeScript / Next.js).
    - `development-protocol.md` — same logic
 5. **Apply safe changes auto**, **flag manual review items**:
    - Show оператору список что auto-applied / что manual
-6. **Generate PR** на branch `chore/template-sync-v0.X.Y`:
-   - Title: `chore(template-sync): v0.<old> → v0.<new>`
-   - Body: CHANGELOG showing apply summary + manual review items + breaking changes (если MAJOR bump)
-   - Update `.ai-pm/.bootstrap-state.md` field `template_version_applied: v0.X.Y`
-7. **`[skip-review]` marker в commit body** — это chore PR (AP-16 skip-marker discipline). **Исключение:** если MAJOR bump — `[skip-review]` НЕ применяется, требуется reviewer pass на consolidated changes.
-8. Operator reviews + merges
 
-### Conflict resolution
+### Phase 2: Schema migration (state file)
+
+После Phase 1 detect changes в `bootstrap-state.md.tmpl` schema:
+
+1. **Compare schema fields** в product `.ai-pm/.bootstrap-state.md` vs new template:
+   - Missing fields → нужно add с defaults
+   - Removed fields → нужно migrate values или drop с reason
+   - Type changes → нужно convert + verify
+2. **Per-field AskUserQuestion** с предложенным значением:
+   ```
+   «Template v0.X добавил поле `foundation_completeness`. У вас этот field отсутствует.
+   Предложенный default: `complete` (если Stage A-E closed). Accept / override / skip с reason?»
+   ```
+3. **Verify backwards-compat** для existing values (mode aliases, etc.)
+
+### Phase 3: Documentation migration (existing product docs)
+
+**Самая критическая phase** — product docs могут расходиться с новой template schema/conventions, и **silent migration недопустим** (потеря context / surprises). Каждая migration **требует explicit operator approval с preview diff**.
+
+#### 3.1. Detect migration categories
+
+AI scan product docs и identify migration needs:
+
+| Category | Что detect'им | Source change |
+|---|---|---|
+| **Spec frontmatter additions** | Existing `<topic>_spec.md` файлы lack новых полей frontmatter (например `version:`, `pr_ordering:`, impact flags) | Template добавил поля в `feature-spec.md.tmpl` |
+| **Spec sections additions** | Existing spec'и lack новых обязательных секций (например Mini-persona / Mini-threat-list) | Template добавил new section в `feature-spec.md.tmpl` |
+| **Foundational artifact split** | Existing монолитный `ui-style-guide.md` → нужен split на base + per-kind | Template split single file на multiple per ui_kind |
+| **Frontmatter mode rename** | Existing spec'и используют `mode: new-feature` → нужно alias на `mode: feature` | Template renamed modes |
+| **State field renames** | Existing state field renamed в новой версии | Template renamed |
+| **AP discipline introduction** | Existing spec'и не соответствуют new AP (например, AP-21 require `version:` field) | Template ввёл new AP с enforcement |
+
+#### 3.2. Per-category proposal через AskUserQuestion
+
+**Для каждой detected category** — отдельный AskUserQuestion с:
+- **Описание изменения:** «Template v0.X добавил `<change>`. Это влияет на N artifact'ов в product.»
+- **Preview diff:** показать sample (1-2 файла) что именно поменяется
+- **Список affected files** полностью
+- **Options:**
+  - `Apply migration` — AI применит changes, content preserved, добавляются только new fields/sections с defaults
+  - `Apply selectively` — operator выбирает per-file (через follow-up AskUserQuestion)
+  - `Skip с reason` — не migrate, declare `adoption_override` (AP-22) с reason
+  - `Show full diff first` — AI генерирует diff в `meta/template-sync-doc-migration.diff` для review, потом снова ask
+
+#### 3.3. Apply migration (после approval)
+
+AI применяет approved migrations:
+- **Frontmatter additions** — добавляет new fields **только** в конец frontmatter с default values, не touch'ит existing fields
+- **Sections additions** — добавляет new sections **только** если они optional или с placeholder marker; mandatory sections без content → flag оператору
+- **Renames** — replace exact pattern, verify nothing else matched
+- **Splits (например ui-style-guide)** — extract content по разделам в new файлы, original sохраняется с pointer markers
+
+#### 3.4. Verification — content preservation
+
+**Обязательная step после apply:**
+
+1. **Diff before/after** — для каждого modified файла генерировать diff
+2. **Content integrity check:**
+   - Original sections preserved? (no content removed unintentionally)
+   - Total length comparison (если уменьшилось > 5% — flag)
+   - Key headers preserved
+3. **Generate verification report** в `meta/template-sync-verification-v0.X.Y.md`:
+   ```markdown
+   # Documentation Migration Verification — template-sync v0.<old> → v0.<new>
+
+   ## Files modified
+
+   | File | Before lines | After lines | Delta | Status |
+   |---|---|---|---|---|
+   | `doc/features/auth_spec.md` | 245 | 252 | +7 | OK (frontmatter additions) |
+   | `doc/ui-style-guide.md` | 320 | 0 | -320 | SPLIT into 3 files |
+   | `doc/ui-style-guide-base.md` | 0 | 180 | +180 | NEW |
+   | `doc/ui-style-guide-web.md` | 0 | 140 | +140 | NEW |
+   | `doc/ui-style-guide-backend.md` | 0 | 95 | +95 | NEW |
+
+   ## Content preservation check
+
+   - [x] Original ui-style-guide.md splittable headers preserved across base/web/backend
+   - [x] Spec frontmatter additions: 12 specs gained `version: 1` field (default)
+   - [x] Spec frontmatter renames: 8 specs `mode: new-feature` → `mode: feature`
+
+   ## Anomalies detected
+
+   - None
+   ```
+4. **Show оператору в чате** structure verification report + flag anomalies
+5. **Если detected потеря content** (большой delta, missing headers, etc.) — STOP migration, rollback changes на staging branch, escalate оператору с specific finding
+
+#### 3.5. Operator final approval
+
+После Phase 3 verification — AskUserQuestion: «Documentation migration applied. Verification report показывает: <summary>. Proceed с PR? Или rollback и обсудить?»
+
+### Phase 4: Generate PR
+
+После всех 3 phase approved:
+
+1. **Generate PR** на branch `chore/template-sync-v0.X.Y`:
+   - Title: `chore(template-sync): v0.<old> → v0.<new>`
+   - Body sections:
+     - **Phase 1 — Template files:** что auto-applied / manual review items
+     - **Phase 2 — Schema migration:** какие fields added / renamed
+     - **Phase 3 — Documentation migration:** список migration categories с counts (e.g., «12 specs gained `version` field, 8 specs renamed mode, ui-style-guide split на 3 файла»)
+     - **Verification report:** ссылка на `meta/template-sync-verification-v0.X.Y.md`
+     - **Adoption overrides declared:** если operator chose skip для каких-то migrations
+     - **Breaking changes** (если MAJOR bump)
+   - Update `.ai-pm/.bootstrap-state.md` field `template_version_applied: v0.X.Y`
+2. **`[skip-review]` marker** для PATCH bumps только. MINOR/MAJOR требуют reviewer pass на consolidated changes (см. AP-16).
+3. Operator reviews + merges
+
+### Conflict resolution (Phase 1 files only)
 
 Если sync хочет обновить файл который product custom'нул:
 - AI **не auto-overwrites** — это unsafe

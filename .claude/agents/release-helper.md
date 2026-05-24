@@ -130,6 +130,32 @@ description: Подготавливает release — анализирует con
 
 Release-helper в template repo flag'ит в CHANGELOG body: «MAJOR / MINOR / PATCH — downstream products should consider template-sync».
 
+**Documentation migration impact** (для downstream template-sync Phase 3):
+
+В CHANGELOG body **обязательно** документировать какие product documentation migrations потребует new version — это input для downstream template-sync Phase 3 (Documentation migration) routine. Categories к перечислению:
+
+- **Spec frontmatter additions:** новые поля во `feature-spec.md.tmpl` frontmatter (e.g., «v0.2 added `version:` field per AP-21»)
+- **Spec sections additions:** новые секции (e.g., «v0.3 added optional Mini-persona section для legacy adoption foundation»)
+- **Foundational artifact restructure:** splits / merges existing files (e.g., «v0.1 split single `ui-style-guide.md` на base + per-kind»)
+- **Mode/state field renames:** schema rename impacts (e.g., «v0.2 renamed `mode: new-feature` → `mode: feature`»)
+- **AP discipline introduction:** new AP с enforcement (e.g., «v0.2 introduced AP-21 — Mode 3 rework spec.v3+ requires AskUserQuestion exit confirmation»)
+
+Format в CHANGELOG body:
+
+```markdown
+## Documentation migration impact (для downstream template-sync)
+
+Downstream projects при template-sync v0.<old> → v0.<new> должны:
+
+- [Spec frontmatter] Add `<field>` field в existing `_spec.md` (default: `<value>`)
+- [Spec sections] Add optional `<section>` section при condition X
+- [Mode rename] `mode: new-feature` → `mode: feature` (alias preserved для backwards compat)
+
+Downstream template-sync Phase 3 routine handle'ит каждую category с explicit operator approval + verification preservation.
+```
+
+Без этого секции — downstream template-sync не знает что migrate. Release без documentation migration impact = breaking change без instructions = downstream products broken.
+
 **`[skip-review]` для template self-release** разрешён для PATCH bump (typo-tier). MINOR и MAJOR требуют full reviewer pass per AP-16.
 
 ## Что ты НЕ делаешь
