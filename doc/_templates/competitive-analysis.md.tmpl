@@ -1,114 +1,21 @@
-# Competitive Analysis
+# Competitive Analysis (deprecated as standalone — moved to positioning.md § 1)
 
-**Stage A artifact (для new-product mode / new-product).** Полный landscape analysis при создании продукта. Цели:
+**v0.3.0 redirect.** Этот файл больше **не используется как отдельный артефакт**. Competitive landscape (landscape / frames / market sizing) теперь живёт как **§ 1 в `positioning.md`**.
 
-1. **Осмотреть landscape** — кто ещё в нише, какие сегменты, какие фреймы.
-2. **Понять сильные и слабые места конкурентов** — где они угрозы, где у них дыры.
-3. **Правильно спозиционировать себя** — выводы → `positioning.md` тезисы.
-4. **Разведать ёмкость рынка** — обороты, exit'ы, funding (понять есть ли деньги в нише).
+**Why merged:** competitive analysis + positioning — одна ось quality (product framing). Positioning есть вывод из competitive analysis — две тематически связанные секции одного документа.
 
-**Этот артефакт — для всего продукта целиком.** Делается **один раз при bootstrap'е продукта** (new-product mode) и **пересматривается quarterly** (см. § Review cadence в конце).
+## Migration для existing projects
 
-### Два слоя анализа в new-product mode
+Если у вас уже есть filled `competitive-analysis.md` от предыдущей версии template'а:
 
-Полный конкурентный анализ для нового продукта = **два слоя**, не один:
+1. Скопировать содержимое в новый `positioning.md` § 1
+2. Удалить этот файл из `doc/`
+3. Update cross-references: spec'и которые ссылались на `competitive-analysis.md` → обновить на `positioning.md` (любая anchor link к секции в § 1)
 
-1. **Этот артефакт** (`doc/competitive-analysis.md`, Stage A) — **landscape**: финансы, frame'ы, позиционирование, ёмкость рынка. Делается один раз при создании продукта.
-2. **Competitive UX scan на Stage F per-feature** (секция «Competitive UX scan» в `<topic>_spec.md`) — **per-feature**: как другие реализовали ЭТУ фичу, что удобно, что неудобно. Делается **для каждой значимой фичи** при разработке.
+`template-sync-doc-migrate.py` script в Stage E (v0.3.0+) автоматизирует это для template-native проектов.
 
-Оба слоя нужны для new-product mode. Landscape **без** per-feature scan = слабый UX. Per-feature scan **без** landscape = слабое позиционирование.
+## Generating this file (skipped в v0.3.0+)
 
-### feature mode и rework mode
+В v0.3.0+ bootstrap-agent **не генерирует** этот файл при Stage A. Вместо — генерируется единый `positioning.md` с обеими секциями.
 
-Для существующих продуктов **landscape слой не дублируется** — используется существующий `doc/competitive-analysis.md` (обновляется только если landscape сдвинулся). **Per-feature UX scan делается всегда** при создании / редизайне фичи. Цель здесь — узкая: «как другие реализовали similar feature, что удобно / что неудобно».
-
----
-
-## Сегментация рынка
-
-Опционально: разбиение «прямых конкурентов» vs «adjacent» vs «substitutes» (что люди используют сейчас вместо нашего продукта).
-
----
-
-## Прямые конкуренты
-
-Для каждого конкурента — таблица или короткий блок:
-
-### <Конкурент 1>
-
-- **URL / origin:** <…>
-- **Что делают:** 1-2 предложения.
-- **Сильные стороны:** <…>
-- **Слабые стороны:** <…>
-- **Что мы делаем иначе:** <одно отличие, конкретное>
-
-### <Конкурент 2>
-
-(тот же шаблон)
-
----
-
-## Adjacent / substitutes
-
-Что люди используют сейчас как «достаточно хороший» аналог, даже если это не прямой конкурент.
-
----
-
-## Главная ось анализа — тематический фрейм продукта
-
-**Рекомендуемая практика (по prod-run обратной связи 2026-05-22).** Помимо feature-by-feature сравнения — найдите **смысловой фрейм** (с какого emotional / conceptual подхода продукт обращается к пользователю). Часто все конкуренты сидят в одном frame, и **переход в другой** даёт уникальное позиционирование.
-
-Пример таблицы (под свой проект адаптируйте):
-
-| Frame A (типовой для категории) | Frame B (наш — отличный) |
-|---|---|
-| <e.g., «inheritance / death prep»> | <e.g., «care / acts of love»> |
-
-Каждого конкурента — в какой фрейм он попадает. Если **все** в одном — это **возможность**.
-
----
-
-## Финансовый / организационный профиль конкурентов *(опционально, но recommended)*
-
-Для понимания **ёмкости рынка** и **силы конкурентов**. Данные из открытых источников.
-
-Источники (по стране конкурента):
-
-- **РФ:** rusprofile.ru / list-org.com / nalog.ru (ОГРН/ИНН/Юр.адрес/гендиректор), bo.nalog.ru (бухгалтерская отчётность ООО), zachestnyibiznes.ru.
-- **UK:** Companies House (find-and-update.company-information.service.gov.uk) — публичные отчётности.
-- **US:** Crunchbase / PitchBook / SEC (для public companies), TechCrunch / VentureBeat для funding rounds.
-- **Прочие jurisdictions:** local equivalent of company registry (Грузия, Казахстан, Кипр, etc.).
-
-Шаблон таблицы:
-
-| Конкурент | Юрисдикция | Юрлицо | Финансовый статус |
-|---|---|---|---|
-| <Конкурент 1> | <страна> | <ООО / Ltd / LLC, регистрационный номер> | <funding / revenue / acquisition status / cash position> |
-| <Конкурент 2> | <…> | <…> | <…> |
-
-### Market sizing implications (выводы из финансов)
-
-- <e.g., «рынок зрелый — N acquisition'а в году X, indicates revenue потенциал и exit опции»>
-- <e.g., «главный direct competitor финансово struggle'ит — возможно distress / consolidation»>
-- <e.g., «RU/local рынок почти пустой — главный игрок — solo ИП без публичной отчётности»>
-- <e.g., «exit опции в Phase 2+ существуют через industry-buyer route (не VC)»>
-
-### Открытые финансовые вопросы
-
-- Конкуренты с непубличными финансами — что мы не знаем.
-- Стартап landscape (incubators / pre-launch) — не покрыто.
-- Локальные операции, у которых нет open data.
-
-**Если данные недоступны / time-constrained** — оставить как «TODO: финансовый профиль» с указанием каких конкурентов хочется верифицировать позже.
-
----
-
-## Что отсюда следует для positioning'а
-
-Список **тезисов**, которые потом проявятся в `positioning.md`:
-
-- <тезис 0 (центральный, если есть frame switch): «мы в frame B, все остальные в frame A»>
-- <тезис 1: «никто из конкурентов не делает X, мы делаем»>
-- <тезис 2: «все делают Y; мы намеренно не делаем»>
-
-Не более 5-7 тезисов. Если больше — фокус размыт.
+См. план реализации: `meta/design/2026-05-25_merged-optimization-plan.md` § v0.3.0 Path C.

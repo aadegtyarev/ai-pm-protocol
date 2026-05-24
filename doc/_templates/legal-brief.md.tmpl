@@ -1,89 +1,12 @@
----
-status: draft
-stage: B
-artifact: legal-brief
-created: {{date}}
-last_review: {{date}}
-mode: {{mode}}
-target: brief для юриста (когда задействуется)
----
+# Legal Brief (deprecated as standalone — moved to legal.md § 2)
 
-# {{Project}} — Brief для юриста
+**v0.3.0 redirect.** Legal brief больше не отдельный артефакт. Объединено с `legal-frame` (раньше предполагавшимся отдельным документом) в единый **`legal.md`** — same axis quality (legal / compliance).
 
-**Артефакт стадии B, mode-aware deliverable.**
+## Migration
 
-## Когда применим этот артефакт
+1. Скопировать filled content (ToS / PP / Cookie / Open questions / Budget) в `legal.md` § 2 (sections 2.1-2.5)
+2. Удалить этот файл из `doc/`
 
-| Mode | Обязательно? | Зачем |
-|---|---|---|
-| **new-product mode** | **Да, обязательно** | Юрист пишет ToS / Privacy Policy / Refund Policy с нуля. Без brief'а — потратит лишнюю неделю на разбор vision / strategic-frame / threat-model. |
-| **feature mode** | **Условно** — только если фича меняет: ToS surface (новый платный продукт / новый refund сценарий), Privacy footprint (новый тип PII / новый процессинг), Regulatory surface (новая юрисдикция / новый класс пользователей) | Если фича в существующем regulatory скоупе — brief не нужен, существующие ToS / PP покрывают. |
-| **rework mode** | **Условно** — только если меняет regulatory / legal характеристики существующей фичи | То же что feature mode. |
-| **Lite-mode / bugfix** | Нет | Bugfix-spec не меняет legal surface. |
+`template-sync-doc-migrate.py` автоматизирует.
 
-**Решение принимает оператор при создании feature-spec** — отметить в frontmatter spec'а `legal_impact: yes|no`. Если `yes` — этот brief обновляется и юрист рассматривает.
-
----
-
-## Структура brief'а (для new-product mode — обязательная)
-
-### 1. Юридическая структура
-
-- Юрлицо (страна, форма)
-- Применимое право
-- Юрисдикция для споров
-- Налоговый режим
-
-### 2. Регуляторные обязательства
-
-- Локальные регуляторы (152-ФЗ, GDPR, CCPA, и т.п.)
-- Размещение данных (data residency)
-- Уведомительные процедуры
-
-### 3. ToS — обязательные пункты
-
-- Описание услуги (что именно делаем)
-- Обещания и SLO (количественно — см. `strategic-frame.md`)
-- Ответственность за содержимое
-- Тарифы и оплата
-- Refund policy
-- Wind-down clause (если применимо для долгосрочных обязательств)
-- Изменение ToS
-- Ограничение ответственности
-
-### 4. Privacy Policy
-
-- Что собираем
-- Что НЕ собираем / не храним
-- Права субъекта данных
-- Передача третьим сторонам
-- Раскрытие по правовым запросам
-
-### 5. Cookie / consent
-
-- Применимо ли (нужны ли cookies требующие согласия?)
-- Consent flow если применимо
-
-### 6. Юрисдикционные нюансы под персон
-
-- Если разные регионы — различия в правовом обращении
-
-### 7. Open questions для юриста
-
-- Конкретные вопросы которые оператор не может сам решить
-
-### 8. Бюджет и сроки
-
-- Сколько юр-работы стоит на этапе 1
-- Календарь работы
-
----
-
-## Brief актуализируется
-
-- При каждом изменении strategic-frame § Обещания и метрики (SLO меняется → ToS меняется)
-- При каждой feature mode фиче с `legal_impact: yes`
-- Перед каждым этапом задействования юриста
-- При значительных регуляторных изменениях
-
-См. AP-7 о foundational артефактах + AP-13 о mode-aware deliverables.
+См. `meta/design/2026-05-25_merged-optimization-plan.md` § v0.3.0 Path C.
