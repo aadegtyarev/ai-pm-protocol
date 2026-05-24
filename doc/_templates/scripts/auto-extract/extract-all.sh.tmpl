@@ -8,7 +8,7 @@
 #
 # Usage:
 #   ./extract-all.sh                — full extract, write artifacts в doc_root
-#   ./extract-all.sh --read-only    — extract в meta/architecture-extract-<date>.md, не trigger adoption
+#   ./extract-all.sh --read-only    — extract в .ai-pm/extracts/architecture-<date>.md, не trigger adoption
 #   ./extract-all.sh --output <dir> — override output directory
 
 set -e
@@ -42,7 +42,7 @@ fi
 
 if [ "$READ_ONLY" = "1" ]; then
   TODAY=$(date +%Y-%m-%d)
-  COMBINED_OUTPUT="meta/architecture-extract-${TODAY}.md"
+  COMBINED_OUTPUT=".ai-pm/extracts/architecture-${TODAY}.md"
   mkdir -p meta
 fi
 
