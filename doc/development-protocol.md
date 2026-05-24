@@ -471,6 +471,7 @@ Custom rule (semgrep custom, eslint plugin, golangci-lint custom analyzer). Со
 | `rework-has-migration-section` | Если plan — `<topic>_plan.v<N>.md` (N > 1), он обязан содержать секцию `## Migration` | rework mode plan без migration |
 | `spec-impact-fields-present` | Каждый `<topic>_spec.md` (кроме `lite-mode: bugfix`) содержит в frontmatter все 7 impact-полей с явным `yes`/`no`: 3 AP-13 (legal/validation/incident) + 4 AP-14 (journey/threat/scope/topology) | Spec без явных impact-полей — структурный read-pass пропущен (см. AP-14) |
 | `pr-ordering-for-multi-domain` | Если spec body содержит indicator'ы ≥ 2 domains (schema / API / UI), frontmatter обязан иметь `pr_ordering: [...]` с явным списком | Multi-domain фича без атомарного split'а (нарушает AP-19) |
+| `regression-coverage-for-shared-modules` (v0.2.0+, gap 3 / AP-14 ext.) | Spec с `topology_impact: yes` обязан содержать секцию `## Regression coverage plan` с shared modules list + existing tests check + new regression tests. Skip: `lite-mode: bugfix`, явная пометка `N/A — standalone` | Shared module modification без regression planning — silent break existing features |
 
 ### 9.2. Реализация
 
