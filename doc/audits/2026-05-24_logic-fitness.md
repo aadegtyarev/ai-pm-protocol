@@ -287,18 +287,21 @@ G-1 и G-3 — **разные mental models** (sync vs partial adoption), тре
 
 ---
 
-## Рекомендация на immediate action
+## Рекомендация на immediate action — status (post-merge 2026-05-24)
 
-Порядок by severity и зависимостям:
+| # | Finding | Status | PR |
+|---|---|---|---|
+| 1 | **[H-4]** README mode discoverability | **closed** | #13 (merged) |
+| 2 | **[B-1]** AP-14 CI enforcement | **closed** | #14 (merged; mega-PR с operator-neutralize development-protocol.md task #58) |
+| 3 | **[H-1]** pr_ordering validation | **closed** | #15 (merged) |
+| 4 | **[H-2]** Spec versioning + exit condition (AP-21) | **closed** | #16 (merged) |
+| 5 | **[H-3]** Competitive UX scan criteria refinement | **closed** | #17 (merged) |
+| 6 | **[B-2]** Trust profile auto-read | **INVALID** | false positive — agents уже читают state |
+| 7 | **[G-1]** Template-apply mode | open | task #48 (отдельный major цикл, HeartVault use case) |
+| 8 | **[G-3]** Legacy partial mode | open | task #56 (отдельный major цикл, idea pending operator discussion) |
 
-1. **[H-4]** README mode discoverability — закрыто PR #13
-2. **[B-1]** AP-14 CI enforcement в check-spec-discipline.sh
-3. **[H-1]** pr_ordering validation в planner / check-spec (после B-1)
-4. **[H-2]** Spec versioning + exit condition
-5. **[H-3]** Competitive UX scan criteria refinement
-6. **[G-1]** Template-apply mode (отдельный major design + implement цикл, task #48)
-7. **[G-3]** Legacy partial mode (отдельный major design + implement цикл, новая задача)
+[M-1..4] и [L-1..3] — пока deferred, могут попасть в second audit pass (task #55).
 
-[M-1..4] и [L-1..3] — параллельно или batch'ом после blocking/high.
+**Verdict (post-fix):** все blocking + high findings закрыты. Шаблон **production-ready** для multi-week real-world projects на основе шаблона. [G-1] и [G-3] — отдельные major pieces для существующих продуктов (HeartVault test case для G-1; любой legacy adoption для G-3) — не блокирует use as-is.
 
-После 1-5 шаблон **production-ready** для multi-week real-world projects на основе шаблона. [G-1] и [G-3] — отдельные major pieces для существующих продуктов (HeartVault test case для G-1; любой legacy adoption для G-3).
+Сам audit doc остаётся как **исторический артефакт** в `doc/audits/` — analogously `doc/reviews/`. Полезен для понимания evolution шаблона.
