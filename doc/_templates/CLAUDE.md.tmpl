@@ -1,109 +1,58 @@
 # <Project> — Claude Code briefing
 
-**Это authoritative briefing для каждой сессии Claude в этой репке.** Прочитай ПОЛНОСТЬЮ перед любой работой.
+**Authoritative briefing для каждой сессии Claude в этой репке.** Прочитай ПОЛНОСТЬЮ перед работой.
 
-Проект использует **ai-pm-protocol**. Полная документация — `{{doc_root}}/development-protocol.md` (project overlay) + `.ai-pm/tooling/development-protocol.md` (generic protocol).
+Проект использует **ai-pm-protocol**. Полная документация — `{{doc_root}}/development-protocol.md` (project overlay) + `.ai-pm/tooling/development-protocol.md` (generic). On-demand references — `.ai-pm/tooling/_claude/<concept>.md` (читай когда концепт релевантен).
 
-**Конвенция paths:** `{{doc_root}}` в этом briefing'е — placeholder, который bootstrap-agent заменил на `doc` (new-product mode / greenfield) или `.ai-pm/doc` (feature/rework modes с existing top-level `doc/`). Какое именно — см. `.ai-pm/.bootstrap-state.md` frontmatter `doc_root:`.
+**`{{doc_root}}`** — placeholder, bootstrap заменил на `doc` (greenfield) или `.ai-pm/doc` (retrofit). Текущее — frontmatter `doc_root:` в `.ai-pm/.bootstrap-state.md`.
 
 ---
 
-## Session start routine — что делать СРАЗУ
+## Session start routine — делать СРАЗУ
 
 **Шаг 1: Прочитай `.ai-pm/.bootstrap-state.md`.**
 
-- **Если файла нет** → invoke `project-bootstrap` subagent. Мы в самом начале (new-product mode).
-- **Если Stage A-D не closed** (не все checkbox'ы) → invoke `project-bootstrap` subagent, скажи оператору «Bootstrap не завершён, продолжаем со stage X». Не работай над фичами.
-- **Если Stage A-D closed** → продолжай шаг 1.5.
+- Файла нет → invoke `project-bootstrap` (new-product mode).
+- Stage A-D не closed → invoke `project-bootstrap`, скажи оператору «Bootstrap не завершён, продолжаем со stage X». Не работай над фичами.
+- Stage A-D closed → шаг 1.1.
 
-**Шаг 1.1: Если есть `.ai-pm/.session-state.md` — прочитай его.**
+**Шаг 1.1: Прочитай `.ai-pm/.session-state.md`, если есть.** Lightweight hint «где мы во флоу». State — hint, не contract: git wins при расхождении. Нет файла — восстанови через `git branch --show-current` + `gh pr list --state open` + scan `{{doc_root}}/features/*_spec.md` без парного `_plan.md`.
 
-Это lightweight hint «где мы во флоу» (current_topic / branch / step / pending sub-agents). SessionStart hook уже напечатал содержимое в stderr, но дублирующее чтение защищает от случая когда оператор скипнул hook output. Если файла нет — восстанови контекст через `git branch --show-current` + `gh pr list --state open` + scan `{{doc_root}}/features/*_spec.md` без парного `_plan.md`. State — hint, не contract: git wins при расхождении (см. feature session-resume-state).
+**Шаг 1.5: Проверь `foundation_completeness` в state.** `complete` → standard workflow, AP-14 full read-pass. `partial` / `minimal` / `none` → mini-research per feature (project-bootstrap.md Tier 1). Security hard floors (Mini-threat-list) обязательны даже при `none`.
 
-**Шаг 1.5: Проверь `foundation_completeness` в state.**
+**Шаг 2: Просканируй `{{doc_root}}/features/` на in-progress фичи.** Признаки: `_spec.md` без `_plan.md` → Step 2 pending; spec/plan без `acceptance: ok` / `merged: yes` → Step 3-4-5 ongoing; PR без `_review.md` → Step 7 pending; `spec.v<N>` без `_review.v<N>.md` → rework Step 7 pending. Нашёл — скажи оператору: «Вижу in-progress фичу `<topic>`. State: <конкретно>. Resume — invoke <agent>?»
 
-- **`complete`** → standard workflow, AP-14 full read-pass.
-- **`partial`** → read-pass на existing artifacts, mini-research для missing (см. project-bootstrap.md Tier 1).
-- **`minimal`** (legacy-quick adoption) → per-feature mini-research для каждой фичи; предупреди оператора: «foundation_completeness=minimal, ожидай mini-persona + mini-threat + journey context inline в каждой spec'е».
-- **`none`** (legacy-skip adoption) → mini-research обязательна; hard floors (security path) — Mini-threat-list mandatory даже в `none`.
-
-**Шаг 2: Просканируй `{{doc_root}}/features/` на in-progress фичи.**
-
-Признаки in-progress:
-- `<topic>_spec.md` есть, `<topic>_plan.md` НЕТ → Step 1 done, ждём Step 2 (planner).
-- `<topic>_plan.md` есть, в spec/plan нет operator-marker `acceptance: ok` или `merged: yes` (в frontmatter) → Step 3-4-5 ongoing.
-- PR открыт, `<topic>_review.md` нет → Step 7 pending (invoke reviewer).
-- Spec.v<N> (N > 1) есть, но `<topic>_review.v<N>.md` нет → rework Step 7 pending.
-
-**Если найдена in-progress фича** → скажи оператору: «Вижу in-progress фичу `<topic>`. State: <конкретно>. Resume — invoke <agent>? Или закончить иначе?»
-
-**Шаг 3: Слушай оператора. Routing по keywords (см. ниже).**
-
----
-
-## Keyword routing в чате оператору
-
-Когда оператор пишет что-то в чате — детектируй intent и предлагай (или invoke) соответствующего subagent'а:
-
-| Оператор пишет / keyword | Routing |
-|---|---|
-| «хочу добавить фичу X» / «новая фича» / «add feature» | Step 1: предложить draft `<topic>_spec.md` (сам draft'ишь или оператор пишет) |
-| «исправь баг X» / «fix bug» / «починим» | Bug-fix variant — короткий spec с `lite-mode: bugfix`, потом обычный workflow Step 2-7 |
-| «переделать X» / «rework» / «переписать фичу X» | rework mode — invoke `project-bootstrap` для rework routing |
-| «продолжай работу над X» / «resume» | Найди state фичи X, invoke соответствующий step agent |
-| «выпустить релиз» / «release» / «релиз» | invoke `release-helper` |
-| «ревью PR» / «проверь код» / «review» | invoke `reviewer` для текущего feature-branch |
-| «план для X» / «как реализуем» / «plan» | (если spec X есть) invoke `planner` для Step 2 |
-| «обнови threat-model / personas / journeys» | Отдельный PR на foundational docs (branch `docs/<topic>`) — НЕ в feature branch |
-
-**Routing — это suggestion, не auto-invoke.** Объясни оператору что предлагаешь и почему, спроси «делаем так?».
+**Шаг 3: Слушай оператора.** Routing по keywords — `.ai-pm/tooling/_claude/keyword-routing.md`. Routing — suggestion, не auto-invoke: объясни что предлагаешь и почему, спроси «делаем так?».
 
 ---
 
 ## Жёсткие правила без исключений
 
-- **Никакого кода без approved spec'а** (см. anti-pattern AP-4). Если spec'а нет — драфтим spec через Step 1 ПЕРЕД любым coding.
+- **Никакого кода без approved spec'а** (AP-4). Нет spec'а — draft через Step 1 ПЕРЕД coding.
 - **Никакого упреждающего ADR** (AP-1). ADR пишется только в Step 2 plan'а, когда упёрся в архитектурный fork.
 - **Никаких direct-commits в `main`** (§ 13). Только feature/<topic> branch'и + PR + squash & merge.
-- **`--no-verify` запрещён** (AP-6). Если pre-commit hook fail'ит — fix корень, не обходи.
-- **Reviewer-agent обязателен для каждого PR перед `git push`** — mandatory all modes, не только feature PR. Layer 4 git pre-push hook вызывает `scripts/check-review-trail.sh <branch>` и блокирует push если (a) нет локального review-trail **или** (b) verdict = `request-changes` (AP-16). Дополнительный Layer 5 — CI workflow `.github/workflows/check-review-trail.yml` блокирует merge PR с тем же check'ом (defense-in-depth — если pre-push hook не установлен / обойдён). Review всегда фиксируется локально **до** push'а; цикл «открыть PR → дождаться comment'ов → гонять fix'ы» устранён by design. Допустимые формы trail: committed `doc/features/<topic>_review.md` для Stage E (с `**Verdict:** approve|approve-with-comments|request-changes` в первых 50 строках), local trace `.ai-pm/.reviews/<branch>.json` для chore / docs / template-extension (с полем `verdict`). Skip-marker `[skip-review]` **на отдельной строке** в HEAD commit body — explicit override только для trivial chore'ов (typo / dep bump / README). Для не-Stage-E PR'ов (chore/docs/fix) CI не видит local trace (gitignored), поэтому требует либо `[skip-review]`, либо `[review-override: <reason>]` в commit body. `gh pr review` не используется — review живёт в репе/локально, дублирование в GitHub UI не имеет смысла для оператора+AI workflow.
-- **оператор никогда не читает код** (по дизайну — PM-only ЦА в v0). Не показывай diff'ы оператору. Если нужно обсудить, что AI сделал — формулируй в spec terms (поведение / scenarios / architectural decisions), не в code terms (модули / функции).
-- **Языковая дисциплина: формальные части проекта пишутся на `primary_language` из `.bootstrap-state.md`** (AP-12 — **soft рекомендация**, mandatory grep-самопроверка отключена). Для русскоязычных проектов предпочитай русские эквиваленты для общих понятий (содержимое, доставка, угрозы, меры защиты, граница, рамки, льготный период, обязательный, проверка, нарушение, отговорки); англицизмы оставляй для стандартных технических терминов (MVP, KDF, AEAD, TLS, GDPR, OWASP, и подобных). Если оператор просит конкретный термин по-русски — переводи. Если хочется strict enforcement в конкретном продукте — добавь pre-commit hook с linter'ом (не template-level concern). Точечная замена через sed запрещена (русская грамматика ломается — «запуск'а» не русский); только Edit / переписать раздел.
+- **`--no-verify` запрещён** (AP-6). Pre-commit hook fail'ит — fix корень, не обходи.
+- **Reviewer-agent обязателен для каждого PR перед `git push`** (AP-16). Детали enforcement (Layer 4 hook + Layer 5 CI, формы trail, override marker'ы) — `.ai-pm/tooling/_claude/hard-rules-detail.md`.
+- **Оператор никогда не читает код** (PM-only ЦА в v0). Не показывай diff'ы; обсуждай в spec terms (поведение / scenarios / decisions), не в code terms.
+- **Языковая дисциплина** (AP-12 soft): формальные части проекта на `primary_language` из state. Детали (русские эквиваленты, sed запрещён) — `.ai-pm/tooling/_claude/hard-rules-detail.md`.
 
 ---
 
 ## Source-bounded discipline для orchestrator'а (main session AI)
 
-Я (main session AI / orchestrator) — равноправный участник source-bounded contract (AP-25 / AP-26). Орchestrator — **vector #1** для drift'а потому что я вижу всю сессию и могу подкинуть «логичную» идею subagent'у через spawn-prompt.
+Я (main session) — равноправный участник source-bounded contract (AP-25 / AP-26). Vector #1 для drift'а — могу подкинуть «логичную» идею subagent'у через spawn-prompt.
 
-**Ground truth для меня (main session):** spec/plan/ADR файлы текущей фичи + AP catalogue + текущая operator-чата.
+**Ground truth:** spec/plan/ADR текущей фичи + AP catalogue + operator-чата.
 
-**Fork triggers** (когда останавливаюсь):
-- Хочется подкинуть архитектурную идею в spawn-prompt subagent'у («planner, подумай про retention window»).
-- Хочется рекомендовать оператору вариант, не покрытый source artifacts (изобретённый default).
-- При показе output'а subagent'а оператору тянет cherry-pick'нуть «удобную» часть.
+**Fork triggers** (останавливаюсь): хочется подкинуть архитектурную идею в spawn-prompt; хочется рекомендовать оператору вариант не покрытый source; при показе subagent output'а тянет cherry-pick'нуть.
 
-**Spawn discipline (AP-26):**
-- Spawn-prompt = **только маршрутизация** (pointer на artifacts + topic + scope of work).
-- Запрещено в spawn-prompt: архитектурные идеи / альтернативы / суждения / «подумай про X».
-- Если считаю что нужна архитектурная дискуссия — обсуждаю с оператором **до** invoke'а subagent'а через fork-justification protocol ниже.
+**Spawn-prompt = только маршрутизация** (pointer на artifacts + topic + scope). Запрещено: архитектурные идеи / альтернативы / «подумай про X».
 
-**Summary discipline:**
-- При показе output'а subagent'а оператору — **full extract** relevant блоков, не cherry-pick.
-- Если subagent surface'ил fork — surface'у оператору **целиком**, не суммирую и не decide'ю сам.
+**Summary discipline:** full extract relevant блоков, не cherry-pick. Subagent surface'ил fork — surface'ю оператору целиком.
 
-**Fork-protocol для main session (AP-25):**
+**Fork → AskUserQuestion** с structured proposal (Source говорит / Я предлагаю / Почему / Что выбираем?). Только после ответа — кодифицирую решение.
 
-Если хочу подкинуть архитектурную идею — это fork, иду к оператору через AskUserQuestion с structured proposal:
-
-- **Source говорит:** «<точная цитата spec/plan/ADR>» (`<file>:<line-range>`)
-- **Я предлагаю по-другому:** `<что меняется>`
-- **Почему:** `<конкретный аргумент>`
-- **Что выбираем?**
-
-Только после ответа оператора — кодифицирую решение в spec / plan / ADR (через relevant subagent при необходимости).
-
-См. AP-25 (AI artifact extends beyond source) + AP-26 (Orchestrator architectural injection) в `anti-patterns.md`.
+Детали (full fork-protocol formatting, edge cases) — `.ai-pm/tooling/_claude/source-bounded-detail.md` + AP-25/AP-26 + `development-protocol.md § 9.5`.
 
 ---
 
@@ -111,111 +60,24 @@
 
 В `.ai-pm/tooling/agents/`:
 
-- **`project-bootstrap`** — Stage A-D setup + resume + lifecycle routing. Mode + integration + trust profile aware.
+- **`project-bootstrap`** — Stage A-D setup + resume + lifecycle routing. Mode/integration/trust-profile aware.
 - **`planner`** — Step 2 plan writer. Read-only по коду. Trust-profile-aware.
 - **`coder`** — Step 4 implementation. Tests-first. No silent deviation.
-- **`reviewer`** — Step 7 review primary (consolidated, v0.7.0+). Detect domain PR'а → apply inline sections sequentially: **always** «Mandatory baseline» (process check — spec↔plan↔code consistency, frontmatter, AP discipline) + **ONE** Domain-specific section (`Backend domain` / `Frontend domain` / `Design domain` / `Database domain`). Consolidates findings → single verdict. Mandatory all modes. См. AP-19 + AP-20.
-- **`release-helper`** — release PR при накоплении merged feature-PR'ов. SemVer bump + CHANGELOG.
+- **`reviewer`** — Step 7 review primary (consolidated v0.7.0+). Mandatory baseline + ONE domain section sequentially. AP-19 + AP-20.
+- **`release-helper`** — release PR + SemVer bump + CHANGELOG.
 
-Запуск: `claude --agent <name>`. Или ты в main session приглашаешь оператора: «invoke <agent>?», ждёшь approval, и сам передаёшь управление (через Agent tool с appropriate subagent_type).
+Запуск: `claude --agent <name>` или ты приглашаешь оператора «invoke <agent>?», ждёшь approval, передаёшь управление (Agent tool с appropriate subagent_type).
 
-### Известный context: project-level agent enum gap (Claude Code limitation)
-
-**Симптом (Bug #3 protocol-minors-2026-05-25):** В running session project-level agent'ы из `.claude/agents/*.md` могут не появляться в Agent tool'а `subagent_type` enum. Source unclear (Claude Code bug / missing documentation / intended behavior).
-
-**v0.7.0 consolidation response:** reviewer.md теперь монолит — все 5 reviewer ролей (protocol-compliance + 4 domains) inlined как sections в один файл, sequential self-pass. Никакого nested spawn'а не требуется. См. `.claude/agents/reviewer.md` § Mandatory baseline + § Domain-specific checks.
-
-**Legacy review trail'ы** (pre-v0.7.0) могут содержать frontmatter с `agent_type: specialized-reviewer` / `general-purpose-with-role-spec` / `inline-roleplay` — accepted backward-compat в existing committed `_review.md`. Новые review'и используют `agent_type: inline-sections` + `applied_sections: [...]` (см. reviewer.md Step 5.2).
+Known agent enum gap (Bug #3) + legacy review trail backward-compat — `.ai-pm/tooling/_claude/subagent-context.md`.
 
 ---
 
-## Lifecycle scenarios — что делать
+## Pointers — читать когда релевантно
 
-### Scenario: New product (greenfield)
-
-- `.bootstrap-state.md` пустой / нет.
-- Routing: project-bootstrap → Stage A-D → handoff в Stage E.
-
-### Scenario: New feature в зрелом проекте
-
-- `.bootstrap-state.md` закрыт, Stage A-D done.
-- Оператор: «хочу добавить фичу X».
-- Routing: Step 1 spec для X (оператор draft или ты draft → оператор approve) → Step 2 planner → ...
-- Stage A-C read-pass — если фича требует новой persona / journey / threat surface → отдельный PR в `docs/<topic>` branch ДО feature branch.
-
-### Scenario: Bug fix в зрелом проекте
-
-- Оператор: «починим baг X».
-- Routing: lite-mode spec с `lite-mode: bugfix` в frontmatter → planner лёгкий → coder с failing test first → reviewer (terser).
-- НЕ lite-mode если bug в security path — full ceremony.
-
-### Scenario: Rework existing feature (rework mode)
-
-- Оператор: «переработаем фичу X, меняется поведение».
-- Routing: project-bootstrap для rework setup → `<topic>_spec.v<N>.md` с Diff секцией → `_plan.v<N>.md` с Migration секцией → coder → mandatory reviewer.
-
-### Scenario: Resume interrupted session
-
-- На session start scan `{{doc_root}}/features/` обнаружил in-progress фичу.
-- Routing: предложи resume или закрыть.
-
-### Scenario: Multiple feature streams в parallel
-
-- Каждая фича — своя feature/<topic> branch.
-- State per feature через frontmatter в `_spec.md` / `_plan.md`.
-- При switch'е branches Claude re-reads CLAUDE.md и feature state.
-
-### Scenario: Release time
-
-- Оператор: «релиз?» или несколько fic merged в main без release.
-- Routing: invoke `release-helper`.
-
----
-
-## Файловая структура (для ориентирования)
-
-```
-.ai-pm/
-├── doc/                       ← committed product content
-│   ├── personas.md, journeys, threat-model, scope, topology, ...
-│   ├── ai-linting-rules.md
-│   ├── architecture-decisions/
-│   └── features/
-│       ├── <topic>_spec.md, _plan.md, _review.md
-│       └── <topic>_spec.v2.md, _plan.v2.md, _review.v2.md (rework)
-├── .bootstrap-state.md         ← committed; session resume + lifecycle state
-├── version                     ← committed; template version pin
-└── tooling/                    ← integration mode-dependent (gitignore/submodule/vendor)
-    ├── agents/, _templates/, recipes-cache/, scripts/
-    └── development-protocol.md ← generic (template-level)
-```
-
-Product code — в стандартных директориях проекта (`apps/`, `packages/`, `src/`, etc.), **не в `.ai-pm/`**.
-
----
-
-## Frontmatter convention для feature artifacts
-
-Каждый `<topic>_spec.md` имеет frontmatter:
-
-```yaml
----
-topic: auth-signup
-mode: feature  # или: new-product (если первая фича) | rework
-lite-mode: no  # или: yes, bugfix, small-fix — означает упрощённый workflow
-version: 1  # spec.v1 (default); spec.v2 / v3 для rework mode. См. AP-21 ограничение на бесконечные итерации.
-created: YYYY-MM-DD
-spec_approved: YYYY-MM-DD  # operator-marker; пусто пока не approved
-plan_approved: YYYY-MM-DD
-acceptance: pending | ok | failed
-merged: no | yes (PR-url)
-review_url: ...
----
-```
-
-Bootstrap-agent + main session обновляют эти поля по мере прохождения Step'ов. Это даёт programmatic state без отдельного state-file per feature.
-
-**Spec versioning (AP-21):** `version: 1` для new spec'а; для rework mode — увеличивается на каждую следующую iteration (`spec.v2.md` → `version: 2`, `spec.v3.md` → `version: 3`). При `version: 3+` reviewer **обязан** через AskUserQuestion подтвердить осознанность: «3-я iteration — адресует ли findings v2? Или split / abort?». Это exit condition против бесконечного цикла rework'ов (см. AP-21).
+- **Lifecycle scenarios** (new product / feature / bugfix / rework / resume / parallel / release) — `.ai-pm/tooling/_claude/lifecycle-scenarios.md`.
+- **Frontmatter convention** для `<topic>_spec.md` / `_plan.md` + AP-21 spec versioning — `.ai-pm/tooling/_claude/frontmatter-convention.md`.
+- **Файловая структура** (`.ai-pm/` layout, product code locations) — `.ai-pm/tooling/_claude/file-structure.md`.
+- **Keyword routing table** (chat keyword → suggested subagent) — `.ai-pm/tooling/_claude/keyword-routing.md`.
 
 ---
 
@@ -224,6 +86,7 @@ Bootstrap-agent + main session обновляют эти поля по мере 
 - Generic protocol — `.ai-pm/tooling/development-protocol.md`.
 - Project overlay — `{{doc_root}}/development-protocol.md`.
 - Anti-patterns — `.ai-pm/tooling/anti-patterns.md` + `{{doc_root}}/anti-patterns.md`.
-- В случае разрыва между generic и overlay — generic primat.
+- On-demand references — `.ai-pm/tooling/_claude/<concept>.md`.
+- В случае разрыва generic vs overlay — generic primat.
 
-**Если ты в сомнении, должен ли ты делать действие — спрашивай оператора через AskUserQuestion. Лучше переспросить, чем нарушить протокол.**
+**Если в сомнении делать ли действие — спрашивай оператора через AskUserQuestion. Лучше переспросить, чем нарушить протокол.**
