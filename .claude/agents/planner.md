@@ -43,13 +43,22 @@ Cache-friendly ordering (prompt-economy Option D):
 
 **Lazy foundational loading rule:** loading foundational docs зависит от **impact flags в spec frontmatter** (AP-13/14). Не загружай всё foundational на каждый план — это превращает Stage E session в RESUME-pattern overload (observed на live test'е).
 
-### Always read (minimum baseline)
+### Always read (minimum baseline + foundational invariants — Layer 2 cross-doc bounded)
 
 1. `<doc_root>/features/<topic>_spec.md` — главный input.
 2. `<doc_root>/development-protocol.md` (project overlay) + generic protocol — правила.
 3. `.ai-pm/.bootstrap-state.md` — capabilities (`ui_kind` / `db_kind` / `foundation_completeness` / `adoption_path`). Без этого нельзя routing.
-4. `<doc_root>/vision.md` — общий продуктовый контекст (без него план висит в вакууме).
-5. `<doc_root>/mvp-scope.md` — где фича в scope (читай для verify scope ownership).
+4. **Foundational invariants — auto-load (Layer 2 anti-drift, AP-27/AP-30):**
+   - `<doc_root>/vision.md` — общий продуктовый контекст + invariants.
+   - `<doc_root>/positioning.md` (если существует) — red lines / differentiators которые spec обычно не повторяет.
+   - `<doc_root>/mvp-scope.md` — где фича в scope + boundaries (где фича **не**).
+   - `<doc_root>/threat-model.md` (если существует) — invariants foundational к security.
+   - `<doc_root>/brand-voice.md` (если существует) — для UI / copy decisions.
+5. **Existing ADRs** в `<doc_root>/architecture-decisions/` — для cross-ref **перед** созданием нового (AP-1) + для inter-ADR contradiction prevention (AP-28).
+
+**Почему auto-load (не impact-flag-gated):** foundational invariants — это shared assumption через все features. ADR может пройти Layer 1 (есть `spec_reference:`) и **одновременно нарушать foundational invariant** который spec не повторяет (потому что foundational docs описывают принципы продукта, не конкретную фичу). Каждый decision component cross-check'ается против этих invariants **до** spawn'а ADR. Token cost ~2-5k tokens per spawn — acceptable за защиту от cascade drift'а. См. AP-27 / cross-doc-bounded_spec.md.
+
+**Hard floor:** даже при `foundation_completeness: minimal/none` — read whatever existing версии foundational docs есть (Tier 0 auto-extract artifacts). Cross-doc check на available content, не «всё или ничего».
 
 ### Conditional read (по impact flags из spec frontmatter)
 
@@ -192,6 +201,21 @@ Read `.ai-pm/.bootstrap-state.md` → `foundation_completeness` (`complete | par
 Только если plan упирается в архитектурный fork с долгосрочным последствием и реальными альтернативами. Не «потому что можем зафиксировать», а «потому что иначе будет неясно через 3 месяца, почему мы выбрали так».
 
 ADR создаётся в той же feature-branch'е как `.ai-pm/doc/architecture-decisions/NNNN-<topic>.md`. Статус — Proposed; оператор accept'ит в составе PR.
+
+### Decision components — cross-doc bounded (Layer 2, AP-27)
+
+Каждый ADR в frontmatter имеет `feature_topic: <topic>` (binding к feature scope — AP-29). В body — `## Decision` section с **обязательной** subsection `### Components` где каждый named building block имеет explicit reference на source:
+
+- spec scenario / NFR / Open question (по convention `<topic>_spec.md § <section>`)
+- plan section (`<topic>_plan.md § <section>`)
+- foundational invariant (`vision.md § …` / `positioning.md § …` / etc.)
+- existing ADR (`ADR-NNNN`)
+
+**Шаблон** — `doc/_templates/0000-adr-template.md.tmpl`. Каждый component без reference — invisible drift (hallucinated decision component, AP-27).
+
+**Inter-ADR consistency check (AP-28):** перед commit'ом нового ADR — pairwise compare с уже existing ADRs в PR. Если ADR-A.Alternatives explicitly rejects pattern P (red line phrases: `rejected`, `violates`, `prohibited`, `отвергнуто`, `нарушает`, `запрещено`), а новый ADR-B.Decision implements P (под любым именем) — это AP-28 violation. Stop, surface через fork-justification protocol (AP-25).
+
+**Scope creep check (AP-29):** Components в Decision должны trace к scope **этого** feature_topic, не к scope F-future / F-other. Если component вводит functionality описанную только в spec'е другой фичи — это AP-29 violation. Stop, recommend defer / split в отдельный feature.
 
 ## Что ты НЕ делаешь
 
