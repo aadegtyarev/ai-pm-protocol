@@ -4,7 +4,7 @@
 
 Без UI-деталей; только последовательность точек принятия решения и эмоциональный регистр.
 
-**Контекст:** v0.4.0 framework state baseline. После v0.3.0 — 5 stages (Stage C упразднён, fold в Stage C). После v0.4.0 — conditional skip framework + discipline-advisor (opt-in до PoC validation). С v0.7.0 (`agent-consolidation`) — `discipline-advisor` retired (никогда не validated через required accuracy gate ≥80% per axis); 5 specialized reviewer файлов inlined в `reviewer.md` как sections (Mandatory baseline + 4 Domain subsections). Conditional skip framework работает через deterministic scripts (`check-security-floor.sh` + `check-skip-reprompts.sh`).
+**Контекст:** v0.4.0+ framework state baseline. Conditional skip framework работает через deterministic scripts (`check-security-floor.sh` + `check-skip-reprompts.sh`). Reviewer — inline self-pass: Mandatory baseline + ONE Domain section (backend / frontend / design / database).
 
 **Persona aspect:** v0 supports одна persona — PM, не читает AI-код (Trust profile A auto-set). Developer-as-operator (cross-stack senior / full-stack pro) — backlog после empirical validation PM-кейса. Это значит «friction per persona» секции в каждом journey содержат **только PM aspect**; old B/C friction notes удалены до возрождения developer-кейса.
 
@@ -72,7 +72,7 @@
 | 4 | Bootstrap-agent: «Draft spec? Or PM пишет?» | Дилемма time-cost vs ownership |
 | 5 | Создаётся `<doc_root>/features/<topic>_spec.md` с frontmatter (mode: feature, 7 impact полей, lite-mode, etc.) | — |
 | 6 | Step 1 (spec draft): planner-agent проверяет lazy foundational loading — читает только relevant к impact flags artifacts. Operator маркирует ОК | — |
-| 7 | Step 2 (plan): planner draft'ит `<topic>_plan.md`. **С v0.7.0:** discipline-advisor retired — scope-proportionality / ADR extraction checks через deterministic scripts (`check-spec-discipline.sh adr-auto-extraction`). Operator approve | — |
+| 7 | Step 2 (plan): planner draft'ит `<topic>_plan.md`. Scope-proportionality / ADR extraction checks через deterministic scripts (`check-spec-discipline.sh adr-auto-extraction`). Operator approve | — |
 | 8 | Step 3-4 (tests + code): coder-agent. AP-5 tests first; AP-23 — нельзя ослаблять existing assertions без ADR ref; AP-24 — > 50 LOC arch decisions в spec → fail | Standard implementation |
 | 9 | CI gates: spec-test-mapping (gap 1), test-assertion-weakening (gap 2), regression-coverage-for-shared-modules (gap 3), adr-auto-extraction (AP-24), per-diff coverage ≥ 80% | Validation |
 | 10 | Step 7: reviewer-agent **mandatory all modes**. Size gate (PR < 100 LOC → baseline only). Content-aware override для auth/payments/crypto paths → full domain fan-out независимо от LOC | — |
@@ -110,7 +110,7 @@
 | 3 | Agent ведёт через Stage A-C read-pass (lazy, по impact flags), плюс: «Rework меняет persona / journey / threats / positioning?» | — |
 | 4 | Draft'ит `<topic>_spec.v<N>.md` с обязательной секцией **Diff**: «было / становится / мигрирует / deprecated / breaking yes-no» (enforce'ится через CI gate `rework-has-diff-section`) | — |
 | 5 | Operator ревьюит spec.v<N>, маркирует ОК | — |
-| 6 | Draft'ит `<topic>_plan.v<N>.md` с обязательной секцией **Migration**: backward compatibility / data migration / deprecation timeline / rollback strategy (CI gate `rework-has-migration-section`). **Опционально (v0.4.0+):** advisor invocation для scope-proportionality | — |
+| 6 | Draft'ит `<topic>_plan.v<N>.md` с обязательной секцией **Migration**: backward compatibility / data migration / deprecation timeline / rollback strategy (CI gate `rework-has-migration-section`) | — |
 | 7 | Operator ревьюит plan.v<N>, маркирует «поехали» | — |
 | 8 | Implementation в branch `feature/<topic>-rework` | Standard implementation |
 | 9 | CI: spec discipline (v0.2.0+ gates включая spec-test-mapping для new scenarios), code linting, **mandatory `<topic>_review.v<N>.md`** | — |
@@ -293,7 +293,7 @@ PM rarely uses этот journey — она строит с нуля. Но useful
 
 3. **Spaced sessions: формат `.bootstrap-state.md`** — markdown с обязательным frontmatter (mode / integration / trust_profile / advisor_preset / started / last_update / template_version / stack / project_capabilities / foundation_completeness / adoption_path / adoption_overrides / skip_decisions / advisor_log). Update'ы через `update-bootstrap-state.sh` hook.
 
-4. **Recipe staleness** — **deferred в v0.X**: рецепты (`doc/_recipes/cache/ai-linting-{go,python,typescript}.md`) обновляются вручную при необходимости. Frontmatter `last_reviewed` / `stack_versions` + bootstrap-agent staleness check — backlog item (decision 2026-05-25). Recipes для других стеков (Rust / Java / C# / etc.) — community contributions или manual draft.
+4. **Recipe staleness** — **backlog**: рецепты (`doc/_recipes/cache/ai-linting-{go,python,typescript}.md`) обновляются вручную при необходимости. Frontmatter `last_reviewed` / `stack_versions` + bootstrap-agent staleness check — backlog (decision 2026-05-25). Recipes для других стеков (Rust / Java / C# / etc.) — community contributions или manual draft.
 
 5. **3-choice legacy entry** (v0.1.0+) — Quick auto (recommended, 5-10 min, Tier 0) / Manual staged (часы-дни, multi-select) / Skip (sub-minute, hard floors only).
 
