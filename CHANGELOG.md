@@ -17,6 +17,14 @@
 
 ---
 
+## [0.10.3] — 2026-05-27
+
+### Fixed
+
+- **bootstrap-greenfield: autonomous competitor research for positioning.md.** Agent теперь самостоятельно исследует конкурентов через WebSearch (читает vision.md → ищет конкурентов → черновик landscape → PM review), вместо вопроса «кто ваши конкуренты?». (815328b, #100)
+
+---
+
 ## [0.10.2] — 2026-05-27
 
 ### Fixed
