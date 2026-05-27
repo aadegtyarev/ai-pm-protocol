@@ -161,7 +161,7 @@ Profile auto-set на init — bootstrap-agent не спрашивает. Пол
 - **Inline-sections ревьюер (v0.7.0+):** один `reviewer.md` файл с Mandatory baseline section (always-on — спека vs план vs код) + 4 Domain sections (backend / frontend / design / database). Reviewer определяет scope PR'а и применяет baseline + одну domain section sequentially. Никакого fake-spawn'а nested subagent'ов (раньше pre-v0.7.0 был router pattern, fail'ил из-за Claude Code limitation — см. Bug #3 в spec'е consolidation)
 - **Composition matrices:** для гибридов вроде «web + backend + external БД» правила фильтруются по реальным capabilities, не копипастятся
 - **Реактивные ADR:** пишутся, когда planner находит развилку в плане. Не upfront, не «для галочки»
-- **Линтер дисциплины:** `check-spec-discipline.sh` — 15 проверок на типичные AI-косяки (ослабление assertion'ов, забытый regression test, fork без ADR)
+- **Линтер дисциплины:** `check-spec-discipline.sh` — 23 проверки на типичные AI-косяки (ослабление assertion'ов, забытый regression test, fork без ADR, hallucinated decision component, cross-feature contradiction, jargon в operator-facing блоках) в 4 families (base / cross-doc-bounded / cross-feature-bounded / operator-communication)
 - **Статический security floor:** `check-security-floor.sh` — детерминированный grep по манифестам/коду/схемам на stripe/bcrypt/aes-gcm/PII. Output — ground truth для advisor'а
 - **Reprompt auto-trigger:** `check-skip-reprompts.sh` парсит state-файл на старте каждой сессии и перед commit'ом, печатает истёкшие skip-решения
 
