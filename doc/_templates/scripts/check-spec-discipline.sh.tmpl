@@ -17,8 +17,11 @@ set -e
 # DOC_ROOT — читается из .ai-pm/.bootstrap-state.md frontmatter поле `doc_root:`.
 # Default для new projects: doc (top-level).
 # Для retrofit projects с existing doc/: .ai-pm/doc.
-DOC_ROOT=$(awk -F': ' '/^doc_root:/ {print $2; exit}' .ai-pm/.bootstrap-state.md 2>/dev/null | tr -d ' ')
-DOC_ROOT="${DOC_ROOT:-doc}"
+# Если DOC_ROOT уже set в env (например, regression mode) — honor.
+if [ -z "${DOC_ROOT:-}" ]; then
+  DOC_ROOT=$(awk -F': ' '/^doc_root:/ {print $2; exit}' .ai-pm/.bootstrap-state.md 2>/dev/null | tr -d ' ')
+  DOC_ROOT="${DOC_ROOT:-doc}"
+fi
 
 # FOUNDATION_COMPLETENESS — читается из state file. Determines check behavior
 # для AP-14 / AP-15 / mini-* sections. См. design doc § F-I.
@@ -79,7 +82,9 @@ check_personas_exist() {
   fi
   # Проверка что не placeholder (нет `<…>` маркеров на > 50% строк)
   local total=$(wc -l < "$f")
-  local placeholders=$(grep -c '<.*>' "$f" || true)
+  local placeholders
+  placeholders=$(grep -c '<.*>' "$f" 2>/dev/null || true)
+  placeholders=${placeholders:-0}
   if [ "$total" -gt 0 ] && [ "$placeholders" -gt $((total / 2)) ]; then
     log_fail "personas-exist: $f выглядит как placeholder (много <…> маркеров)"
     return
@@ -156,7 +161,9 @@ check_foundational_docs_filled() {
       continue
     fi
     local total=$(wc -l < "$f")
-    local placeholders=$(grep -c '<.*>' "$f" || echo 0)
+    local placeholders
+    placeholders=$(grep -c '<.*>' "$f" 2>/dev/null || true)
+    placeholders=${placeholders:-0}
     if [ "$total" -gt 10 ] && [ "$placeholders" -gt $((total / 3)) ]; then
       log_fail "foundational-docs-filled: $f содержит много placeholder'ов <…> ($placeholders/$total строк)"
     fi
@@ -165,13 +172,30 @@ check_foundational_docs_filled() {
 }
 
 # === Check 5: spec-structure ===
+# Backward-compat: new structure (6 mandatory sections) was introduced 2026-05-26.
+# Pre-existing specs (created < 2026-05-26) are downgraded FAIL → WARN, чтобы
+# не сломать CI на legacy artifact'ах. New specs (>= 2026-05-26 OR no created field)
+# enforce as FAIL.
+SPEC_STRUCTURE_ENFORCE_FROM="2026-05-27"
 check_spec_structure() {
   local required=("## Контекст" "## User stories" "## Сценарии" "## Non-functional" "## Не в scope" "## Open questions")
   for spec in "$DOC_ROOT/features/"*_spec.md; do
     [ -e "$spec" ] || continue
+    # Extract created: field from frontmatter (first 30 lines)
+    local created_date
+    created_date=$(head -30 "$spec" | awk -F': ' '/^created:[[:space:]]/ {gsub(/ /, "", $2); print $2; exit}' 2>/dev/null || true)
+    local enforce_fail=1
+    # If created date present and < cutoff — downgrade to WARN
+    if [ -n "$created_date" ] && [ "$created_date" \< "$SPEC_STRUCTURE_ENFORCE_FROM" ]; then
+      enforce_fail=0
+    fi
     for section in "${required[@]}"; do
       if ! grep -qF "$section" "$spec"; then
-        log_fail "spec-structure: $spec missing section '$section'"
+        if [ "$enforce_fail" -eq 1 ]; then
+          log_fail "spec-structure: $spec missing section '$section'"
+        else
+          log_warn "spec-structure: $spec missing section '$section' (legacy spec created $created_date, downgraded to WARN)"
+        fi
       fi
     done
   done
@@ -670,6 +694,370 @@ check_plan_spec_reference() {
   fi
 }
 
+# === Cross-doc bounded family (AP-27 / AP-28 / AP-29 enforcement) ===
+#
+# Layer 2 anti-drift checks. Closes invisible drift class (hallucinated
+# decision components, inter-ADR contradictions, ADR scope creep) that
+# Layer 1 (`adr-spec-reference` / `plan-spec-reference`) пропускает.
+#
+# Family: cross-doc-bounded. Override: тот же `[source-bounded-override:]`
+# marker — оператор знаком с механикой.
+
+# === Check: adr-decision-component-bounded (AP-27) ===
+# Для каждого ADR в architecture-decisions/ (кроме 0000-*):
+# - Если есть `## Decision` секция:
+#   - Если есть `### Components` (или `## Components`) subsection — каждая
+#     строка таблицы / list item должен содержать reference (link или цитата
+#     `<file>` substring) на source artifact.
+#   - Если нет Components subsection но Decision body содержит ≥ 2 backtick'ed
+#     identifier'ов — warn (recommend Components subsection).
+# Override: [source-bounded-override: <reason>] в HEAD commit body.
+check_adr_decision_component_bounded() {
+  local adr_dir="$DOC_ROOT/architecture-decisions"
+  if [ ! -d "$adr_dir" ]; then
+    log_ok "adr-decision-component-bounded (no ADR dir)"
+    return
+  fi
+
+  local has_override=0
+  if _source_bounded_has_override; then
+    has_override=1
+  fi
+
+  local fail_count=0
+  for adr in "$adr_dir"/*.md; do
+    [ -e "$adr" ] || continue
+    case "$(basename "$adr")" in
+      0000-*) continue ;;
+    esac
+
+    # Extract Decision section body (between `## Decision` and next `## `)
+    local decision_body
+    decision_body=$(awk '/^## Decision$/{flag=1; next} /^## /{flag=0} flag' "$adr" 2>/dev/null)
+
+    [ -z "$decision_body" ] && continue
+
+    # Has Components subsection (### Components OR ## Components)?
+    local has_components_sub=0
+    if echo "$decision_body" | grep -qE '^###[[:space:]]+Components([[:space:]]|$)'; then
+      has_components_sub=1
+    elif grep -qE '^##[[:space:]]+Components([[:space:]]|$)' "$adr" 2>/dev/null; then
+      has_components_sub=1
+    fi
+
+    if [ "$has_components_sub" -eq 1 ]; then
+      # Extract Components subsection body
+      local comp_body
+      comp_body=$(awk '/^###[[:space:]]+Components/{flag=1; next} /^###[[:space:]]/{if(flag){exit}} /^##[[:space:]]/{flag=0} flag' "$adr" 2>/dev/null)
+      if [ -z "$comp_body" ]; then
+        comp_body=$(awk '/^##[[:space:]]+Components/{flag=1; next} /^##[[:space:]]/{flag=0} flag' "$adr" 2>/dev/null)
+      fi
+
+      # Heuristic: каждая строка с `` `identifier` `` должна иметь reference indicator.
+      # Structured forms only — избегаем false-positive на plain prose substring'ах
+      # (e.g. слово «specification» не должно matches `spec`; «replanning» не matches `plan`).
+      # Accepted indicators:
+      #   - `<doc>.md` (markdown file reference, word-bounded)
+      #   - `ADR-NNNN` (ADR id ref, word-bounded)
+      #   - § anchor citation (Unicode section sign)
+      #   - citation markers `«...»` / `"..."` / `'...'` (quoted source phrase)
+      #   - whole-word foundational doc names (vision/positioning/mvp-scope/threat-model/brand-voice)
+      #     с границами \b — не substring match
+      local missing_refs=0
+      while IFS= read -r line; do
+        # Только строки с backtick-named identifier (component candidate)
+        if echo "$line" | grep -qE '`[^`]+`'; then
+          # Должна содержать reference indicator (structured form)
+          if ! echo "$line" | grep -qE '(\.md\b|\bADR-[0-9]+\b|§|«[^»]+»|"[^"]+"|'\''[^'\'']+'\''|\b(vision|positioning|mvp-scope|threat-model|brand-voice)\b)'; then
+            missing_refs=$((missing_refs + 1))
+          fi
+        fi
+      done <<< "$comp_body"
+
+      if [ "$missing_refs" -gt 0 ]; then
+        local msg="adr-decision-component-bounded: $adr — Components subsection has $missing_refs entries без source reference (AP-27)"
+        if [ "$has_override" -eq 1 ]; then
+          log_warn "$msg [source-bounded-override applied]"
+        else
+          log_fail "$msg"
+          fail_count=$((fail_count + 1))
+        fi
+      fi
+    else
+      # Нет Components subsection — count backtick-named identifier'ов
+      local backtick_count
+      backtick_count=$(echo "$decision_body" | grep -oE '`[^`]+`' | wc -l)
+      if [ "$backtick_count" -ge 2 ]; then
+        log_warn "adr-decision-component-bounded: $adr — Decision body содержит $backtick_count backtick'ed identifier'ов но нет '### Components' subsection (suggest adding с per-component source-ref, AP-27)"
+      fi
+    fi
+  done
+
+  if [ "$fail_count" -eq 0 ]; then
+    log_ok "adr-decision-component-bounded"
+  fi
+}
+
+# === Check: inter-adr-contradiction (AP-28) ===
+# Pairwise check ADRs изменённых в текущем PR (git diff main...HEAD):
+# - Extract red-line phrases из Alternatives секции ADR-A
+# - Grep названия rejected patterns в Decision секции ADR-B (B ≠ A в этом же PR)
+# - Match → flag inter-ADR contradiction
+# Conservative threshold: meaningful term overlap (≥ 4-char terms).
+# Override: [source-bounded-override: <reason>].
+check_inter_adr_contradiction() {
+  local adr_dir="$DOC_ROOT/architecture-decisions"
+  if [ ! -d "$adr_dir" ]; then
+    log_ok "inter-adr-contradiction (no ADR dir)"
+    return
+  fi
+
+  local has_override=0
+  if _source_bounded_has_override; then
+    has_override=1
+  fi
+
+  # Determine PR-scoped ADR set: prefer git diff (PR mode), fall back to all
+  local pr_adrs=""
+  if git rev-parse --verify main >/dev/null 2>&1; then
+    pr_adrs=$(git diff --name-only main...HEAD 2>/dev/null | grep -E "${adr_dir}/.+\.md$" | grep -vE '0000-' || true)
+  fi
+  if [ -z "$pr_adrs" ]; then
+    # No PR diff — apply on all ADRs (regression / full pass mode)
+    pr_adrs=$(ls "$adr_dir"/*.md 2>/dev/null | grep -vE '0000-' || true)
+  fi
+
+  # < 2 ADRs in scope — nothing to pairwise check
+  local adr_count
+  adr_count=$(echo "$pr_adrs" | grep -c . 2>/dev/null || true)
+  adr_count=${adr_count:-0}
+  if [ "$adr_count" -lt 2 ]; then
+    log_ok "inter-adr-contradiction (< 2 ADRs in scope)"
+    return
+  fi
+
+  local fail_count=0
+  # Pairwise loop
+  local adr_a
+  local adr_b
+  for adr_a in $pr_adrs; do
+    [ -e "$adr_a" ] || continue
+    # Extract Alternatives section body
+    local alts_body
+    alts_body=$(awk '/^## Alternatives/{flag=1; next} /^## /{flag=0} flag' "$adr_a" 2>/dev/null)
+    [ -z "$alts_body" ] && continue
+
+    # Extract red-line lines (containing rejection phrases)
+    local red_line_terms
+    red_line_terms=$(echo "$alts_body" | grep -iE '(rejected|violates|prohibited|отвергнуто|нарушает|запрещено)' | \
+      grep -oE '`[^`]{4,}`' | tr -d '`' | sort -u || true)
+
+    [ -z "$red_line_terms" ] && continue
+
+    for adr_b in $pr_adrs; do
+      [ -e "$adr_b" ] || continue
+      [ "$adr_a" = "$adr_b" ] && continue
+
+      # Extract Decision section body of ADR-B
+      local dec_body
+      dec_body=$(awk '/^## Decision$/{flag=1; next} /^## /{flag=0} flag' "$adr_b" 2>/dev/null)
+      [ -z "$dec_body" ] && continue
+
+      local term
+      while IFS= read -r term; do
+        [ -z "$term" ] && continue
+        # Case-insensitive substring match в Decision section ADR-B
+        if echo "$dec_body" | grep -qiF "$term"; then
+          local msg="inter-adr-contradiction: $adr_a Alternatives rejects '$term', но $adr_b Decision implements '$term' (AP-28)"
+          if [ "$has_override" -eq 1 ]; then
+            log_warn "$msg [source-bounded-override applied]"
+          else
+            log_fail "$msg"
+            fail_count=$((fail_count + 1))
+          fi
+        fi
+      done <<< "$red_line_terms"
+    done
+  done
+
+  if [ "$fail_count" -eq 0 ]; then
+    log_ok "inter-adr-contradiction"
+  fi
+}
+
+# === Check: adr-feature-scope (AP-29) ===
+# Каждый ADR обязан иметь frontmatter `feature_topic:` (binding к feature scope).
+# Если присутствует — Components должны trace к scope этого feature_topic.
+# Heuristic: для каждого backtick-named identifier в Decision — grep в spec'ах
+# других feature_topic'ов; match found только в другом topic'е (не в current)
+# → flag scope creep.
+# Override: [source-bounded-override: <reason>].
+check_adr_feature_scope() {
+  local adr_dir="$DOC_ROOT/architecture-decisions"
+  if [ ! -d "$adr_dir" ]; then
+    log_ok "adr-feature-scope (no ADR dir)"
+    return
+  fi
+
+  local has_override=0
+  if _source_bounded_has_override; then
+    has_override=1
+  fi
+
+  local fail_count=0
+  for adr in "$adr_dir"/*.md; do
+    [ -e "$adr" ] || continue
+    case "$(basename "$adr")" in
+      0000-*) continue ;;
+    esac
+
+    local frontmatter
+    frontmatter=$(awk '/^---$/{c++; next} c==1' "$adr" 2>/dev/null)
+
+    local feature_topic
+    feature_topic=$(echo "$frontmatter" | grep -E '^feature_topic:[[:space:]]+\S' | awk -F': ' '{print $2}' | tr -d ' "'"'"'')
+
+    if [ -z "$feature_topic" ]; then
+      local msg="adr-feature-scope: $adr — frontmatter поле 'feature_topic:' отсутствует или пусто (AP-29)"
+      if [ "$has_override" -eq 1 ]; then
+        log_warn "$msg [source-bounded-override applied]"
+      else
+        log_fail "$msg"
+        fail_count=$((fail_count + 1))
+      fi
+      continue
+    fi
+
+    # Check current feature spec exists
+    local current_spec="$DOC_ROOT/features/${feature_topic}_spec.md"
+    if [ ! -f "$current_spec" ]; then
+      # spec.v<N>.md fallback
+      current_spec=$(ls "$DOC_ROOT/features/${feature_topic}_spec.v"*.md 2>/dev/null | head -1)
+    fi
+
+    # Если current spec не существует — warn (feature_topic неcorrelating)
+    if [ -z "$current_spec" ] || [ ! -f "$current_spec" ]; then
+      log_warn "adr-feature-scope: $adr — feature_topic '$feature_topic' но не найден соответствующий spec в $DOC_ROOT/features/"
+      continue
+    fi
+
+    # Extract Components subsection (если есть) для cross-feature scope check
+    local comp_body
+    comp_body=$(awk '/^###[[:space:]]+Components/{flag=1; next} /^###[[:space:]]/{if(flag){exit}} /^##[[:space:]]/{flag=0} flag' "$adr" 2>/dev/null)
+    if [ -z "$comp_body" ]; then
+      comp_body=$(awk '/^##[[:space:]]+Components/{flag=1; next} /^##[[:space:]]/{flag=0} flag' "$adr" 2>/dev/null)
+    fi
+    [ -z "$comp_body" ] && continue
+
+    # Extract backtick-named identifier'ы
+    local identifiers
+    identifiers=$(echo "$comp_body" | grep -oE '`[^`]{4,}`' | tr -d '`' | sort -u || true)
+    [ -z "$identifiers" ] && continue
+
+    local ident
+    while IFS= read -r ident; do
+      [ -z "$ident" ] && continue
+
+      # Mentioned в current spec? — OK, scope match
+      if grep -qiF "$ident" "$current_spec" 2>/dev/null; then
+        continue
+      fi
+
+      # Mentioned в spec'е другого feature_topic? — flag scope creep
+      local other_spec_match=""
+      other_spec_match=$(grep -liF "$ident" "$DOC_ROOT/features/"*_spec.md 2>/dev/null | grep -v "$current_spec" | head -1 || true)
+      if [ -n "$other_spec_match" ]; then
+        local other_topic
+        other_topic=$(basename "$other_spec_match" _spec.md)
+        local msg="adr-feature-scope: $adr — component '$ident' описан в '$other_topic' spec, но ADR feature_topic='$feature_topic' (AP-29 scope creep)"
+        if [ "$has_override" -eq 1 ]; then
+          log_warn "$msg [source-bounded-override applied]"
+        else
+          log_fail "$msg"
+          fail_count=$((fail_count + 1))
+        fi
+      fi
+      # Если не найден нигде — это AP-27 territory (check_adr_decision_component_bounded), не дублируем
+    done <<< "$identifiers"
+  done
+
+  if [ "$fail_count" -eq 0 ]; then
+    log_ok "adr-feature-scope"
+  fi
+}
+
+# === Regression mode ===
+# Запускает все checks на synthetic test fixtures из doc/_templates/regression-cases/
+# Каждый fixture: directory с anonymized synthetic case + expected_finding.md
+# Если check не ловит expected finding → regression failure.
+run_regression_mode() {
+  local cases_dir="${REGRESSION_CASES_DIR:-doc/_templates/regression-cases}"
+  if [ ! -d "$cases_dir" ]; then
+    echo "FAIL: regression-cases directory '$cases_dir' не существует" >&2
+    exit 1
+  fi
+
+  local total_cases=0
+  local passed_cases=0
+  local failed_cases=0
+
+  for case_dir in "$cases_dir"/*/; do
+    [ -d "$case_dir" ] || continue
+    total_cases=$((total_cases + 1))
+    local case_name
+    case_name=$(basename "$case_dir")
+
+    local expected="$case_dir/expected_finding.md"
+    if [ ! -f "$expected" ]; then
+      echo "WARN: $case_name — нет expected_finding.md, skip"
+      continue
+    fi
+
+    # Read expected: ожидаемые keywords / check names / AP-IDs которые должны
+    # surface в output на этом fixture'е.
+    local expected_keywords
+    expected_keywords=$(grep -E '^expected_keyword:' "$expected" | awk -F': ' '{print $2}' | tr -d ' ')
+
+    if [ -z "$expected_keywords" ]; then
+      echo "WARN: $case_name — expected_finding.md не содержит expected_keyword: lines, skip"
+      continue
+    fi
+
+    # Run checks on fixture (with DOC_ROOT pointing inside fixture)
+    local sandbox_out
+    sandbox_out=$(
+      cd "$case_dir" && \
+      DOC_ROOT="." \
+      bash "$(cd - >/dev/null && pwd)/${BASH_SOURCE[0]}" 2>&1 || true
+    )
+
+    # Cross-check: каждый expected_keyword должен присутствовать в output
+    local missing=0
+    local kw
+    while IFS= read -r kw; do
+      [ -z "$kw" ] && continue
+      if ! echo "$sandbox_out" | grep -qF "$kw"; then
+        echo "FAIL: $case_name — expected keyword '$kw' не найден в output (regression!)"
+        missing=$((missing + 1))
+      fi
+    done <<< "$expected_keywords"
+
+    if [ "$missing" -eq 0 ]; then
+      passed_cases=$((passed_cases + 1))
+      echo "PASS: regression case $case_name"
+    else
+      failed_cases=$((failed_cases + 1))
+    fi
+  done
+
+  echo ""
+  echo "Regression summary: $passed_cases/$total_cases passed, $failed_cases failed"
+  if [ "$failed_cases" -gt 0 ]; then
+    exit 1
+  fi
+  exit 0
+}
+
 # === Main ===
 case "${1:-all}" in
   --staged-only)
@@ -680,6 +1068,14 @@ case "${1:-all}" in
     # Frontmatter-only checks — fast, run on staged set тоже.
     check_adr_spec_reference
     check_plan_spec_reference
+    # Cross-doc bounded family (Layer 2) — frontmatter + body checks, fast.
+    check_adr_decision_component_bounded
+    check_inter_adr_contradiction
+    check_adr_feature_scope
+    ;;
+  --regression)
+    # Regression test mode — run checks on synthetic fixtures
+    run_regression_mode
     ;;
   --check)
     shift
@@ -707,6 +1103,9 @@ case "${1:-all}" in
     check_adr_auto_extraction
     check_adr_spec_reference
     check_plan_spec_reference
+    check_adr_decision_component_bounded
+    check_inter_adr_contradiction
+    check_adr_feature_scope
     ;;
 esac
 

@@ -58,7 +58,7 @@ Cache-friendly ordering (prompt-economy Option D):
 
 **Тебя зовут с чистого контекста.** Ты НЕ знаешь, что и почему coder писал.
 
-### Always read (minimum baseline)
+### Always read (minimum baseline + foundational invariants — Layer 2 cross-doc bounded)
 
 - `<doc_root>/features/<topic>_spec.md` — frontmatter + scenarios + NFR
 - `<doc_root>/features/<topic>_plan.md` — frontmatter + структура
@@ -66,6 +66,16 @@ Cache-friendly ordering (prompt-economy Option D):
 - Commit messages (для detect domain через Conventional Commits scope)
 - Tests, добавленные/изменённые в этом PR
 - `.ai-pm/.bootstrap-state.md` — capabilities (`ui_kind`/`db_kind`/`foundation_completeness`/`adoption_overrides`)
+- **Foundational invariants — auto-load (Layer 2 anti-drift, AP-27/AP-30):**
+  - `<doc_root>/vision.md` — общий продуктовый контекст + invariants
+  - `<doc_root>/positioning.md` (если существует) — red lines / differentiators
+  - `<doc_root>/mvp-scope.md` — где фича в scope + boundaries
+  - `<doc_root>/threat-model.md` (если существует) — foundational security invariants
+  - `<doc_root>/brand-voice.md` (если существует) — для UI / copy decisions
+- **All ADRs touched в текущем PR** (`git diff main...HEAD --name-only -- '*architecture-decisions/*.md'`) — для inter-ADR pairwise contradiction check (AP-28)
+- **`<doc_root>/anti-patterns.md`** — для scope creep (AP-1 / AP-29) и plausibility bias (AP-30) detection
+
+**Почему auto-load (не impact-flag-gated):** foundational invariants — это shared assumption через все features. Layer 1 (frontmatter + alternative source-ref) пропускает hallucinated decision components, inter-ADR contradictions, scope creep — invisible drift который detect'ится только через cross-doc reasoning. Token cost ~2-5k tokens — acceptable за защиту от cascade drift'а. См. AP-27 / AP-28 / AP-29 / AP-30.
 
 ### Conditional read (по impact flags из spec frontmatter)
 
@@ -174,6 +184,36 @@ PATHS_CHANGED=$(git diff main...HEAD --name-only)
 
 ---
 
+## Step 1.7: Cross-doc review mode (Layer 2, AP-27/28/29/30)
+
+Reviewer вызывается в **двух режимах** — оба используют тот же agent + sections, но разную ground truth и output destination:
+
+| Mode | Когда | Ground truth | Output |
+|---|---|---|---|
+| **Step 2.5: Cross-doc review** | Между planner output и `plan_approved:` (Layer 2 anti-drift) | Spec + plan + new ADRs draft (нет diff'а кода) | Verdict в чате + draft trail `_review.md` |
+| **Step 7: Code review** | После coder завершил implementation, перед operator-acceptance | Spec + plan + actual `git diff` + tests | Final `_review.md` committed |
+
+**Step 2.5 trigger (mandatory):** в plan'е новые ADRs (один+) OR spec frontmatter `topology_impact: yes` / `threat_impact: yes` / `scope_impact: yes` OR planner-flagged foundational-area impact.
+
+**Step 2.5 cannot skip:** `[step-2.5-skip: <reason>]` marker в HEAD commit body downgrade'ит к warn (только legitimate use case — lite-mode bugfix без новых ADRs). Pattern identical AP-23 `[test-modify-override:]` / AP-16 `[review-override:]`.
+
+### Step 2.5 specifics (что делать в этом mode)
+
+В этом mode ты делаешь **plan-level review** (не code review):
+
+1. **Apply Mandatory baseline** (subset relevant к plan-stage):
+   - Spec ↔ plan consistency
+   - Frontmatter completeness в plan и draft ADRs
+   - AP discipline: **AP-1** (ADR реактивный), **AP-25** (source-bounded), **AP-26** (orchestrator injection), **AP-27** (hallucinated decision component), **AP-28** (inter-ADR contradiction), **AP-29** (ADR scope creep), **AP-30** (plausibility bias).
+2. **Apply Cross-doc cross-cutting checks** (см. § Step 3.6 ниже).
+3. **Skip Domain sections** — нет diff'а кода, domain checks (backend / frontend / design / database) не applicable до Step 7.
+4. **Output verdict в чате** + draft `_review.md` (frontmatter `step: 2.5` / `mode: cross-doc-bounded`).
+5. **На Step 7 re-run** — теперь с code diff'ом, polished output supersedes Step 2.5 draft (review_version bump).
+
+**Token budget rationale:** Step 2.5 spawn'ит reviewer agent ~2-5k tokens (planner output + foundational docs auto-load). Step 7 re-spawn — ~5-10k tokens (full diff + tests). Total ~7-15k tokens per feature — acceptable за защиту от cascade rollback.
+
+---
+
 ## Step 2: Apply inline sequential pass
 
 **Always:**
@@ -239,6 +279,70 @@ Cross-cutting security что не относится к одному domain (н
 - Никаких TODO/FIXME без issue-ref
 - Никакого закомментированного кода
 - Function complexity / length / depth в нормах (catalogue)
+
+### 3.6. Cross-doc bounded (Layer 2, AP-27/28/29/30)
+
+**Always-on в Step 2.5 mode; optional но recommended в Step 7 mode** если PR содержит новые / modified ADRs.
+
+#### 3.6.1. Hallucinated decision component (AP-27)
+
+Для каждого нового / modified ADR:
+
+1. Detect `## Decision` section + `### Components` subsection (или enumeration в Decision body через backtick'ed identifier'ы / structural list).
+2. Для каждого named component — verify source reference (link или явная цитата) на:
+   - spec scenario / NFR / Open question (`<topic>_spec.md § <section>`)
+   - plan section (`<topic>_plan.md § <section>`)
+   - foundational invariant (`vision.md § <…>` / `positioning.md § <…>` / etc.)
+   - existing ADR (`ADR-NNNN`)
+3. Components без reference — `[blocking]` finding tagged `AP-27`.
+
+**Heuristic для component detection:** backtick'ed identifier'ы в Decision body (`` `component-name` ``) → если ≥ 2 и нет Components subsection → flag («Decision вводит N building blocks без structured Components subsection — recommend adding с per-component source-ref»).
+
+#### 3.6.2. Inter-ADR contradiction (AP-28)
+
+Pairwise compare всех ADRs изменённых в PR:
+
+1. Extract «red line» phrases из Alternatives section ADR-A: `rejected`, `violates`, `prohibited`, `отвергнуто`, `нарушает`, `запрещено`.
+2. Извлеки terms / patterns identified как rejected.
+3. Grep Decision section ADR-B (B ≠ A в этом же PR) на appearance этих terms (case-insensitive substring match, conservatively).
+4. Match → flag `[blocking]` finding tagged `AP-28`: «ADR-A.Alternatives explicitly rejects X. ADR-B.Decision implements X (под именем Y если renamed). Это inter-ADR contradiction.»
+
+**Conservative threshold:** at least 2-character meaningful term overlap. Better miss ambiguous case чем flood false positives — за false positive в этом check'е operator-fatigue cost > value.
+
+#### 3.6.3. ADR scope creep (AP-29)
+
+Для каждого ADR:
+
+1. Read frontmatter `feature_topic:` field. Если отсутствует — `[blocking]` finding tagged `AP-29-missing-binding`.
+2. Cross-check Components vs spec этого `feature_topic` — components вводящие functionality:
+   - Не упомянутую в `<feature_topic>_spec.md` — но упомянутую в **другом** `*_spec.md` → flag scope creep, recommend defer / move в другой ADR feature_topic.
+   - Не упомянутую нигде → отдельный AP-27 finding (hallucinated component).
+3. AP-1 cross-check: ADR должен motivated конкретным fork'ом в `<feature_topic>_plan.md` (а не «полнота»).
+
+**Heuristic для cross-feature detection:** для каждого component grep названия / описания в всех `<doc_root>/features/*_spec.md`. Если match found в другом topic'е и **не** в current — flag.
+
+#### 3.6.4. Plausibility / structural bias (AP-30)
+
+**Discretionary check** — на judgement reviewer'а, не auto-detect. Spot patterns:
+
+- Symmetric layered designs где tier_3 / wrap_3 / level_3 не traced к concrete invariant («elegant generalization» smell)
+- «Mature engineering» framing без supporting source citation
+- N+1 architectural extension «for completeness» (если есть wrap_1, wrap_2 — добавлен wrap_3 без spec demand)
+
+При spot — `[question]` finding tagged `AP-30`: «Component X выглядит как plausibility-driven extension (visual signal mature, но не traced к source). Verify with operator: invariant / scenario demanding это?»
+
+**Bias acknowledgement:** этот check sometimes catches legitimate engineering judgement. Conservative — surface as question, не blocking, до confirm'а operator'а.
+
+#### 3.6.5. Foundational invariant cross-check (AP-27 extension)
+
+Для каждого decision component в ADRs:
+
+1. Cross-ref vs `vision.md` invariants (e.g. «продукт E2E, no server-side decryption»).
+2. Cross-ref vs `positioning.md` red lines (e.g. «продукт не делает Z»).
+3. Cross-ref vs `mvp-scope.md` boundaries (component внутри `F-current` scope или вышел в `F-future`).
+4. Cross-ref vs `threat-model.md` invariants (component не нарушает M-ID mitigation'ы).
+
+При conflict → `[blocking]` finding tagged `AP-27-foundational-drift`: «Component X нарушает foundational invariant I (`<file>:<anchor>`). Spec этого не повторяет, но invariant — shared assumption через все features.»
 
 ## Step 4: Consolidate findings
 
@@ -572,6 +676,11 @@ pr_ordering: [schema, backend, frontend] | null
 - **AP-18 (deploy/migration safety):** plan содержит breaking change? → expand-contract pattern documented, backup discipline, forward-only schema rollback (если schema), feature flag для risky, no ORM `db.sync()`/`auto-migrate`, no down migrations на production.
 - **AP-19 (per-PR atomicity):** PR scope соответствует одному domain (commits + paths consistent)? Если PR mixes domains (backend + frontend в одном PR) — request-changes с suggestion разделить.
 - **AP-20 (domain section routing):** N/A — это сам primary reviewer enforce'ит при выборе applied_sections, не PR это нарушает.
+- **AP-25 (source-bounded artifact):** каждый artifact в PR (plan / ADR / etc.) имеет frontmatter `spec_reference:` + (для ADRs) `operator_approved:`. Override через `[source-bounded-override:]` legitimate только для legacy migration.
+- **AP-27 (hallucinated decision component):** ADRs с `## Decision` / `### Components` — каждый named component traced к source. См. § 3.6.1.
+- **AP-28 (inter-ADR contradiction):** pairwise check ADRs touched в PR. См. § 3.6.2.
+- **AP-29 (ADR scope creep):** каждый ADR имеет frontmatter `feature_topic:` + components в `feature_topic` scope. См. § 3.6.3.
+- **AP-30 (plausibility / structural bias):** discretionary — spot symmetric / «mature engineering» patterns без source. См. § 3.6.4.
 
 #### 4. Lite-mode discipline
 

@@ -47,6 +47,10 @@ AP-инварианты — **opinionated defaults**, не engineering laws. К�
 | [AP-24](anti-patterns/AP-24.md) | Architectural decisions buried in spec без ADR | high | adr | active |
 | [AP-25](anti-patterns/AP-25.md) | AI artifact extends beyond source | critical | source-bounded | active |
 | [AP-26](anti-patterns/AP-26.md) | Orchestrator architectural injection | critical | source-bounded | active |
+| [AP-27](anti-patterns/AP-27.md) | Hallucinated decision component (Layer 2 cross-doc bounded) | critical | cross-doc-bounded | active |
+| [AP-28](anti-patterns/AP-28.md) | Inter-ADR contradiction в одной PR (Layer 2 cross-doc bounded) | critical | cross-doc-bounded | active |
+| [AP-29](anti-patterns/AP-29.md) | ADR scope creep (multi-feature, Layer 2 cross-doc bounded) | high | cross-doc-bounded | active |
+| [AP-30](anti-patterns/AP-30.md) | Plausibility / structural bias (Layer 2 cross-doc bounded) | high | cross-doc-bounded | active |
 
 ## Растёт по мере опыта
 
