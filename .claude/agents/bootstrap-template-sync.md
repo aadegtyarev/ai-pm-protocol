@@ -62,13 +62,27 @@ Per-spawn cost rationale (prompt-economy Option B / PR-5):
 
 2. **Determine target version** — AskUserQuestion: «target = latest tag (stable) или main HEAD (bleeding edge, unreleased)?». Default — latest tag (более safe для production).
 
-3. **Bump submodule к target:**
-   ```
-   cd .ai-pm/tooling && git fetch
-   git checkout <target>  # tag или HEAD commit
-   cd ../.. && git add .ai-pm/tooling
-   ```
-   (Commit отложен — будет частью первого PR'а после audit)
+3. **Bump tooling к target — ОБЯЗАТЕЛЬНО ДО любого чтения из `.ai-pm/tooling/`:**
+
+   Per integration mode (читаю из `.ai-pm/.bootstrap-state.md` → `integration:`):
+
+   - **`submodule`:**
+     ```
+     cd .ai-pm/tooling && git fetch
+     git checkout <target>  # tag или HEAD commit
+     cd ../.. && git add .ai-pm/tooling
+     ```
+   - **`gitignore`** (symlink на отдельный клон):
+     ```
+     cd $(readlink .ai-pm/tooling) && git fetch
+     git checkout <target>
+     cd -
+     ```
+     Если `readlink` не даёт путь — скажи оператору: «Tooling — symlink, но не могу определить путь к клону. Обнови вручную: `cd <path-to-template-clone> && git fetch && git checkout <target>`, потом продолжим.»
+   - **`vendor`** (скопированные файлы):
+     Скажи оператору: «Tooling — vendor copy. Автоматический bump невозможен. Нужно скопировать файлы из template repo вручную или через `rsync`. После обновления `.ai-pm/tooling/` — продолжим audit.» AskUserQuestion: «Хочешь перейти на submodule integration (проще обновлять)?»
+
+   (Commit submodule bump отложен — будет частью первого PR'а после audit)
 
 4. **No-op check:** если pinned == target → «template up to date, ничего мигрировать не нужно», просто commit submodule bump + update `.ai-pm/.bootstrap-state.md` → PR `chore: bump template к <target> (no migration)`. Routine завершена.
 
