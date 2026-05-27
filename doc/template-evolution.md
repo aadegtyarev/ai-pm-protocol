@@ -159,7 +159,11 @@ Template убрал `meta/` целиком (был sandbox для audits / revie
 
 ---
 
-## v0.7.0 (unreleased, в main HEAD — будет v0.7 при release) — `agent-consolidation`
+## v0.7.0 — 2026-05-27
+
+**Релизное резюме:** anti-drift layers complete (Layer 2 + Layer 3), agent consolidation 11 → 5, prompt-economy wave, operator interface model (3-level + 6 triggers + 6 rules), brownfield Full retrofit routine. MINOR-additive — backward-compat preserved.
+
+### v0.7.0 — `agent-consolidation`
 
 **Agent count reduction 11 → 5.** MINOR-additive (no schema breaks; legacy review trail values accepted backward-compat).
 

@@ -15,6 +15,21 @@
 
 ## [Unreleased]
 
+<!-- New entries go here. Move to a new ## [X.Y.Z] section at release time. -->
+
+---
+
+## [0.7.0] — 2026-05-27
+
+v0.7.0 — anti-drift layers complete + agent consolidation + prompt-economy wave + operator interface model. **MINOR-additive** — все additions backward-compat (legacy state values accepted, legacy review trail values parsed, deprecated fields marked но preserved).
+
+Major themes:
+- **3 layers anti-drift complete** (Layer 1 в v0.6.0, Layer 2 + Layer 3 в этом релизе)
+- **Operator interface model** formalized (3-level architecture, 6 triggers, 6 rules)
+- **Agent count 11 → 5** (5 inline reviewer sections)
+- **Prompt-economy wave** (cache ordering, granularization, fragmentation — измеренный output token reduction)
+- **Brownfield Full retrofit routine**
+
 ### Added
 
 - **Cross-doc-bounded — Layer 2 anti-drift** (feature `cross-doc-bounded`, PR #71):
@@ -621,7 +636,8 @@ Initial public release. Foundation для template ai-pm-protocol с полно�
 
 Это **initial release**. Шаблон обкатывается на реальных prod-run'ах; правила и templates уточняются по мере того, как реальный проект сталкивается с реальностью.
 
-[Unreleased]: https://github.com/aadegtyarev/ai-pm-protocol/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/aadegtyarev/ai-pm-protocol/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/aadegtyarev/ai-pm-protocol/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/aadegtyarev/ai-pm-protocol/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/aadegtyarev/ai-pm-protocol/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/aadegtyarev/ai-pm-protocol/compare/v0.3.0...v0.4.0
