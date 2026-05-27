@@ -4,7 +4,7 @@ mode: feature
 lite-mode: no
 created: 2026-05-26
 spec_approved: 2026-05-27
-plan_approved:
+plan_approved: 2026-05-27
 acceptance: pending
 merged: no
 review_url:
