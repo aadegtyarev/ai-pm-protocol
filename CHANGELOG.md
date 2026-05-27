@@ -27,6 +27,12 @@
 - **reviewer.md: scope boundary в «Что ты НЕ делаешь».** Явно задокументировано что не входит в зону reviewer'а: стандарты кода (зона линтеров), полнота бизнес-логики в spec'е (зона planner + operator). (#84)
 - **feat(reviewer): lazy-load domain sections — 1358 → 787 строк.** 4 domain-секции (backend / frontend / design / database, 590 строк) вынесены в `doc/_claude/reviewer-domain-*.md`. Reviewer читает только нужный файл по Tier 3 routing. Экономия ~400–475 строк per review (68–80% domain-секций не загружаются). (#88)
 
+### Changed
+
+- **README: acceptance testing (Step 6) вынесен в отдельный раздел.** Явно объяснено что PM делает на Step 6 — проходит сценарии из spec'а в live app, не читая код. Flow diagram обновлён: `спека → план → код (с тестами) → ревью → acceptance → merge`. (#90)
+- **meta/ directory** — dogfooding-артефакты шаблона (`personas.md`, `user-journeys.md`, `architectural-backlog.md`) переехали из `doc/` в `meta/`. `doc/` теперь содержит только protocol tooling. (#87)
+- **Agent prompts cleanup** — убраны исторические version labels (`v0.X.0+` в заголовках), Bug # tracking labels, legacy agent_type compatibility блоки из `reviewer.md`, `project-bootstrap.md`, `bootstrap-resume.md`, `planner.md`, `coder.md`. (#88, #89)
+
 ### Fixed
 
 - **GitHub Releases не создавались при merge release/* PR.** auto-tag workflow создавал только annotated git tag, но не GitHub Release с release notes. Теперь после push tag'а workflow запускает `gh release create` с CHANGELOG-контентом для этой версии. (#85)
