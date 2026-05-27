@@ -17,6 +17,14 @@
 
 ---
 
+## [0.10.2] — 2026-05-27
+
+### Fixed
+
+- **release-helper: AskUserQuestion enforcement for bump conflict.** Operator-proposed bump level, противоречащий Conventional Commits в log'е, теперь требует явного AskUserQuestion перед созданием release PR. (#98)
+
+---
+
 ## [0.10.1] — 2026-05-27
 
 ### Fixed
