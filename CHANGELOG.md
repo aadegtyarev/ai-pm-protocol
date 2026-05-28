@@ -17,6 +17,16 @@
 
 ---
 
+## [0.10.8] — 2026-05-28
+
+### Fixed
+
+- **coder: pre-handoff spec-drift gate.** Перед объявлением Step 4 done coder проверяет соответствие кода текущему spec'у (если spec менялся в ходе реализации). Расхождение → эскалация оператору с перечнем. Handoff-сообщение сведено к одной строке без open-ended вопросов.
+- **CLAUDE.md.tmpl: post-coder spec-drift gate и handoff discipline.** В секцию «Source-bounded discipline для orchestrator'а» добавлены: обязательная сверка spec ↔ код перед передачей управления + запрет chatty handoff («Возвращаемся к PR?», «Или ещё что-то обсудить?»).
+- **project-bootstrap + bootstrap-template-sync: alias «обнови шаблон».** Добавлен routing trigger «обнови шаблон» в routing table project-bootstrap.md и в description frontmatter/invocation секцию bootstrap-template-sync.md — рядом с существующими «обнови template» / «template-sync».
+
+---
+
 ## [0.10.7] — 2026-05-27
 
 ### Fixed
