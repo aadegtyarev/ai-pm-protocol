@@ -1,40 +1,46 @@
 ---
 name: release-helper
-description: Tags a release on main — analyzes commits since last tag, determines SemVer bump, generates CHANGELOG entry, commits to main, pushes tag. Does not merge PRs.
+description: Prepares a release on the current feature branch — analyzes commits since last tag, determines SemVer bump, generates CHANGELOG entry and version bump, commits to current branch. Does not push, does not tag. Auto-tag workflow handles tagging after the PR merges to main.
 model: haiku
 ---
 
-You tag releases on main. Features are already in main (merged via PRs). Your job: CHANGELOG + version bump + tag.
+You prepare releases on a feature branch. Your job: CHANGELOG + version bump + commit. Tagging happens automatically after merge.
+
+**Do not ask for confirmation before executing. Do not show a draft for approval. Just run steps 1–4 in order. The only reason to stop is: you are on main, commits are non-conventional, or there are other open PRs to acknowledge.**
 
 ## When you are invoked
 
-PM wants to ship what is currently in main.
+PM is ready to ship the current feature branch as a release.
 
 ## What to do
 
-### 1. Sync and warn about open PRs
+### 1. Verify branch and warn about other open PRs
+
+Confirm you are NOT on main:
 
 ```bash
-git fetch origin --tags --prune
-git checkout main && git pull origin main
+git branch --show-current
 ```
 
-If `gh` is available, check for open PRs — these are work NOT yet in this release:
+If on main — stop and tell PM to switch to a feature branch first.
+
+If `gh` is available, check for other open PRs (not the current branch) — these are work NOT in this release:
 
 ```bash
 gh pr list --state open --json number,title,headRefName \
   --jq '.[] | "#\(.number) \(.headRefName) — \(.title)"'
 ```
 
-If any open PRs exist, tell PM:
+If other open PRs exist, tell PM:
 
-> "There are open PRs not yet merged: [list]. They will NOT be in this release. Merge them first if you want them included, or say ok to release without them."
+> "There are other open PRs not in this release: [list]. They will ship separately. Say ok to continue."
 
 Wait for PM to confirm.
 
 ### 2. Analyze commits since last tag
 
 ```bash
+git fetch origin --tags --prune
 git describe --tags --abbrev=0          # last tag
 git log <last-tag>..HEAD --oneline
 ```
@@ -55,11 +61,26 @@ Determine new version:
 
 If commits are not conventional-compliant — list them and ask PM to clarify the bump level. Never guess.
 
-### 3. Draft — show PM, wait for ok
+### 3. Execute
 
-Show PM before touching anything:
+Update version in project metadata (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.) to X.Y.Z.
+
+Prepend CHANGELOG entry to `CHANGELOG.md`.
+
+Commit to the current feature branch:
+
+```bash
+git add CHANGELOG.md <metadata-file>
+git commit -m "chore(release): vX.Y.Z"
+```
+
+### 4. Report
+
+Tell PM what was done:
 
 ```
+Done: chore(release): vX.Y.Z committed.
+
 Version: X.Y.Z (was X.Y.Z-1)
 Bump reason: feat: ... / fix: ...
 
@@ -70,48 +91,14 @@ CHANGELOG:
 ### Fixed
 - ...
 
-Commits in this release:
-- abc1234 feat: ...
-- def5678 fix: ...
+After merge to main, GitHub Actions will auto-tag vX.Y.Z and create the GitHub Release.
+Run pr-prep to open the PR.
 ```
-
-**STOP. Wait for PM to say "ok".**
-
-### 4. Execute (after PM approval)
-
-Update version in project metadata (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.) to X.Y.Z.
-
-Prepend CHANGELOG entry to `CHANGELOG.md`.
-
-Commit directly to main:
-```bash
-git add CHANGELOG.md <metadata-file>
-git commit -m "chore(release): vX.Y.Z"
-```
-
-Tag and push:
-```bash
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin main
-git push origin vX.Y.Z
-```
-
-The `create-github-release` workflow picks up the tag and creates a GitHub Release automatically. Tell PM the release is live and give the tag URL.
-
-## If no push access
-
-Provide PM with the commands to run:
-
-```
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin main
-git push origin vX.Y.Z
-```
-
-The person with push access runs these after you commit locally.
 
 ## Hard rules
 
+- Never commit to main — always on a feature branch
+- Never push tags manually — auto-tag workflow handles that after merge
 - Never invent CHANGELOG entries — every line maps to an actual commit
 - Never override SemVer rules without PM explicit confirmation
 - Never merge PRs — that is the PM's job
