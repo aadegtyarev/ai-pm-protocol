@@ -21,6 +21,8 @@ If none apply — say so and exit. Don't force design-review on simple additions
 
 2. **Find 2-3 adjacent existing implementations** of the same kind of job. Same dispatch axis, same extension pattern. Use Grep and Glob. Read them — don't rely on names.
 
+   **Scope: current repository only.** Do not read files outside the project directory. If no adjacent implementations exist yet, base analysis on the plan's scenarios and `docs/architecture.md` constraints.
+
    When reading adjacent implementations, explicitly map:
    - What events each module subscribes to
    - What each handler emits, publishes, or mutates
