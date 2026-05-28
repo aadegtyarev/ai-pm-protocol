@@ -57,7 +57,7 @@ Show the draft to PM. Iterate until PM says ok.
 
 Save to `docs/features/<topic>_plan.md`.
 
-Then tell the orchestrator: plan is ready, ready to implement.
+Tell PM the plan is saved and ask if they want to proceed to implementation.
 
 ## What the plan does NOT include
 

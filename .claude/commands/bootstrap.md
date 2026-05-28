@@ -59,3 +59,25 @@ Show PM the drafts. Iterate until PM says ok. Then save files.
 Tell PM: "Project initialized. Describe a feature and I'll help plan it."
 
 Do NOT start planning a feature until PM explicitly asks.
+
+---
+
+## Setup (run once when connecting template to a new repo)
+
+If `.claude/agents/` and `.claude/commands/` don't exist or aren't linked yet:
+
+```bash
+git submodule add git@github.com:aadegtyarev/ai-pm-protocol.git .ai-pm/tooling
+mkdir -p .claude
+ln -s ../.ai-pm/tooling/.claude/agents .claude/agents
+ln -s ../.ai-pm/tooling/.claude/commands .claude/commands
+git add .ai-pm/tooling .claude/agents .claude/commands .gitmodules
+git commit -m "chore: connect ai-pm-protocol template"
+```
+
+To update to a newer template version:
+```bash
+git submodule update --remote .ai-pm/tooling
+git add .ai-pm/tooling
+git commit -m "chore: bump ai-pm-protocol"
+```

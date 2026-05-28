@@ -60,8 +60,10 @@ Both must be green before coder is done. No exceptions.
 
 ## How I work
 
+**If `docs/` doesn't exist yet** — I'll ask you a few questions and set up the project documentation before we do anything else. You don't need to run any commands.
+
 When you describe a feature or bug, I:
-1. Read `docs/` to understand project context before asking anything
+1. Read `docs/architecture.md`, `docs/user-journeys.md`, and `docs/features/` to understand context before asking anything
 2. Plan together with you — ask clarifying questions grounded in architecture and existing scenarios
 3. Save `docs/features/<topic>_plan.md` when you say ok
 4. Optionally run architect agent — if the plan has a structural choice (where does the new code live? multiple plausible homes? new extension axis?). I decide this, you don't need to ask.
@@ -75,6 +77,8 @@ I involve you when:
 - Planning has a high-stakes ambiguity you need to resolve
 
 Everything else flows automatically.
+
+**To update the workflow** (get new agent versions): `git submodule update --remote .ai-pm/tooling` in your project root.
 
 ---
 
