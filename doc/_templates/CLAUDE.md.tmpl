@@ -76,17 +76,23 @@ These agents are part of this project's workflow (from `.claude/agents/`). Use o
 
 **If `docs/` doesn't exist yet** — I'll ask you a few questions and set up the project documentation before we do anything else. You don't need to run any commands.
 
-When you describe a feature or bug, I:
-1. Read `docs/architecture.md`, `docs/user-journeys.md`, and `docs/features/` to understand context before asking anything
-2. Plan together with you — ask clarifying questions grounded in architecture and existing scenarios
-3. Save `docs/features/<topic>_plan.md` when you say ok
-4. Optionally run architect agent — if the plan has a structural choice (where does the new code live? multiple plausible homes? new extension axis?). I decide this, you don't need to ask.
-5. Implement via coder agent — runs pipeline, never touches existing tests
-6. Review via reviewer agent — checks plan compliance, code quality, security
-7. Surface verdict to you in plain language
+When you describe a feature or bug:
+
+**Step 1 — I read the project context first.** `docs/architecture.md`, `docs/user-journeys.md`, `docs/features/`. No questions until I understand what already exists.
+
+**Step 2 — We plan together.** I ask clarifying questions grounded in the architecture and existing scenarios. Then I show you the plan in plain language — scenarios, what changes for users, what must not break — and ask: does this match what you want?
+
+**Step 3 — I show you the architecture decision (if one was needed).** If the plan had a structural question (where does new code live?), I'll explain what was decided and why — in plain language, with a diagram if it helps. You can push back.
+
+**Step 4 — Coder implements.** Runs pipeline, never touches existing tests. After coder finishes, I tell you:
+- What the feature now does (user perspective, no code)
+- How to try it yourself step by step
+- Anything that needs your attention
+
+**Step 5 — Reviewer checks.** Plan compliance, code quality, security, infrastructure. I surface the verdict to you in plain language.
 
 I involve you when:
-- There is an architectural fork (new technology, breaks a constraint, changes public API)
+- Architectural fork (new technology, breaks a constraint, changes public API)
 - Reviewer finds a blocking issue
 - Planning has a high-stakes ambiguity you need to resolve
 
