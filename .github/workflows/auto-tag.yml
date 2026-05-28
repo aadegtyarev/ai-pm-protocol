@@ -57,8 +57,8 @@ jobs:
         id: notes
         run: |
           VERSION="${{ steps.detect.outputs.semver }}"
-          NOTES=$(awk "/^## \[${VERSION}\]/,/^## \[/" CHANGELOG.md \
-            | head -n -1 | tail -n +2 | sed '/^[[:space:]]*$/d' | head -200)
+          NOTES=$(awk "/^## \[${VERSION}\]/,/^## \[[0-9]/" CHANGELOG.md \
+            | head -n -1 | tail -n +2 | sed '/^---$/d' | sed '/^[[:space:]]*$/d' | head -200)
           if [ -z "$NOTES" ]; then
             NOTES="Release ${{ steps.detect.outputs.version }}"
           fi
