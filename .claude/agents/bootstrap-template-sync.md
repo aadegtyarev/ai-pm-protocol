@@ -106,7 +106,14 @@ Per-spawn cost rationale (prompt-economy Option B / PR-5):
 
    (Commit submodule bump отложен — будет частью первого PR'а после audit)
 
-   **Незакоммиченные изменения в product-коде — не останавливают template-sync.** Dirty product files (src/, doc/, config/ и т.п.) — незавершённая работа coder'а, не входит в scope template-sync. Не спрашивай «сначала выровняем код?». Продолжай audit; в conformance report отметь что uncommitted changes есть — оператор решит когда их закоммитить.
+   **Незакоммиченные изменения в product-коде — не останавливают template-sync.** Dirty product files (src/, doc/, config/ и т.п.) — незавершённая работа из предыдущей coder-сессии, не входит в scope template-sync. Не спрашивай «сначала выровняем код?». Продолжай audit.
+
+   В conformance report включи секцию `## Незавершённая работа` с контекстом, собранным из git status + spec frontmatter:
+   - Какая фича в работе (topic из `doc/features/*_spec.md`)
+   - Её текущий статус (spec_approved? plan_approved? acceptance?)
+   - Краткое описание что незакоммичено (какие файлы, на основе `git status`)
+
+   В конце conformance report — единый вопрос оператору через AskUserQuestion: «Conformance report готов. Приступаем к migration? Также есть незавершённая работа по фиче `<topic>` — продолжить её после migration?» Оператор видит полный контекст и принимает решение одним ответом.
 
 4. **No-op check:** если pinned == target → «template up to date, ничего мигрировать не нужно», просто commit submodule bump + update `.ai-pm/.bootstrap-state.md` → PR `chore: bump template к <target> (no migration)`. Routine завершена.
 
