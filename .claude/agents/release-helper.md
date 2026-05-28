@@ -59,29 +59,7 @@ Determine new version:
 
 If commits are not conventional-compliant — list them and ask PM to clarify the bump level. Never guess.
 
-### 3. Draft — show PM, wait for ok
-
-Show PM before touching anything:
-
-```
-Version: X.Y.Z (was X.Y.Z-1)
-Bump reason: feat: ... / fix: ...
-
-CHANGELOG:
-## [X.Y.Z] — YYYY-MM-DD
-### Added
-- ...
-### Fixed
-- ...
-
-Commits in this release:
-- abc1234 feat: ...
-- def5678 fix: ...
-```
-
-**STOP. Wait for PM to say "ok".**
-
-### 4. Execute (after PM approval)
+### 3. Execute
 
 Update version in project metadata (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.) to X.Y.Z.
 
@@ -94,9 +72,26 @@ git add CHANGELOG.md <metadata-file>
 git commit -m "chore(release): vX.Y.Z"
 ```
 
-Tell PM:
+### 4. Report
 
-> "Release commit done. Run pr-prep to open the PR. After merge to main, GitHub Actions will auto-tag vX.Y.Z and create the GitHub Release."
+Tell PM what was done:
+
+```
+Done: chore(release): vX.Y.Z committed.
+
+Version: X.Y.Z (was X.Y.Z-1)
+Bump reason: feat: ... / fix: ...
+
+CHANGELOG:
+## [X.Y.Z] — YYYY-MM-DD
+### Added
+- ...
+### Fixed
+- ...
+
+After merge to main, GitHub Actions will auto-tag vX.Y.Z and create the GitHub Release.
+Run pr-prep to open the PR.
+```
 
 ## Hard rules
 
