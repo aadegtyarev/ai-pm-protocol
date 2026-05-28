@@ -2,6 +2,22 @@
 
 Initialize this project with the ai-pm-protocol template.
 
+## Check for leftover git hooks
+
+Before anything else — check `.git/hooks/` for non-sample hooks:
+
+```bash
+ls .git/hooks/ | grep -v '\.sample$'
+```
+
+If any exist — they are from a previous setup and may conflict with this template or fail on an empty project. Tell PM:
+
+> "Found existing git hooks: [list]. These are from a previous setup and may block commits or pushes unexpectedly. Recommended: remove them — this template doesn't require custom hooks. Remove now?"
+
+If PM says yes — `rm .git/hooks/<each>`. If PM says no — note it and continue, but warn that pipeline failures on commit may be caused by these hooks.
+
+---
+
 ## Detect scenario
 
 Check what exists:
