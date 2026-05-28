@@ -32,9 +32,13 @@ When you describe a feature or bug:
 
 **Step 5 — Reviewer checks.** Plan compliance, code quality, security, infrastructure. I surface the verdict to you in plain language:
 
-- **Approved** → I run `pr-prep`: squashes commits into one clean commit and opens a PR. I give you the PR link — you merge it on GitHub.
+- **Approved** → I run `pr-prep`: squashes feature branch commits into one clean commit and opens a PR. CI runs on the PR. I give you the PR link — you merge it on GitHub, branch gets deleted.
 - **Approved with comments** → same as above, I note the comments for the next iteration.
 - **Request changes** → I tell you what was found and why it matters (no code). Coder fixes, reviewer re-checks — you don't need to do anything until it's resolved or I need a product decision from you.
+
+After you merge: pull main locally and we're ready for the next feature.
+
+**When you're ready to ship** — say "release". I'll show you what's in main since the last release, propose a version number, draft the CHANGELOG. You say ok — I tag and push. GitHub publishes the release automatically.
 
 I involve you when:
 - Architectural fork (new technology, breaks a constraint, changes public API)
