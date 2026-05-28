@@ -63,7 +63,8 @@ One of:
 
 ## Output
 
-Write to `docs/research/<topic>_research.md`.
+- **Feature research** (specific feature area): write to `docs/features/<topic>_research.md` — alongside the plan and arch notes for that feature
+- **Project-level research** (whole product or technology choice at bootstrap): write to `docs/research.md`
 
 Format for PM:
 

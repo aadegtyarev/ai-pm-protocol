@@ -13,6 +13,13 @@
 
 ---
 
+## [1.0.4] — 2026-05-28
+
+### Fixed
+
+- research command: output path — feature research beside plan in `docs/features/<topic>_research.md`, project-level research in `docs/research.md` (2558671)
+
+
 ## [1.0.3] — 2026-05-28
 
 ### Added
