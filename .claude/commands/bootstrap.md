@@ -2,6 +2,22 @@
 
 Initialize this project with the ai-pm-protocol template.
 
+## Check for leftover git hooks
+
+Before anything else — check `.git/hooks/` for non-sample hooks:
+
+```bash
+ls .git/hooks/ | grep -v '\.sample$'
+```
+
+If any exist — they are from a previous setup and may conflict with this template or fail on an empty project. Tell PM:
+
+> "Found existing git hooks: [list]. These are from a previous setup and may block commits or pushes unexpectedly. Recommended: remove them — this template doesn't require custom hooks. Remove now?"
+
+If PM says yes — `rm .git/hooks/<each>`. If PM says no — note it and continue, but warn that pipeline failures on commit may be caused by these hooks.
+
+---
+
 ## Detect scenario
 
 Check what exists:
@@ -21,7 +37,11 @@ Ask the PM these questions (one conversation, not a form):
 3. What problem does it replace or eliminate?
 4. Does your company or team have technology standards? (approved languages, forbidden dependencies, codestyle guide — link or describe key rules)
 5. Tech stack? (language, framework, database — and why each choice)
-6. Does the project have a UI? If yes, what kind (web / mobile / desktop / CLI / TUI)?
+6. Does the project have a UI? Three cases:
+   - **Custom UI** (HTML/CSS/components the project builds) → create `docs/ui-guide.md`
+   - **Platform UI** (generated forms, admin panels, dashboards provided by a platform — e.g., WB jsoneditor/confed, Django admin, Grafana) → no `ui-guide.md`. Add a "UI pattern" section to `docs/architecture.md` describing what platform surfaces exist and what the project owns (e.g., the JSON schema, the virtual device topics). Add same note to `CLAUDE.md`.
+   - **UI planned but not started** → add a note to CLAUDE.md `## Docs` table: `docs/ui-guide.md — not created yet, create when UI work starts`. Do NOT create the file now.
+   - **No UI** → skip entirely
 7. Any known security requirements? (auth, payments, PII, encryption)
 
 Then create from templates:
@@ -30,11 +50,13 @@ Then create from templates:
 - `README.md` from `README.md.tmpl`
 - `docs/architecture.md` from `architecture.md.tmpl`
 - `docs/user-journeys.md` from `user-journeys.md.tmpl` — leave as guided skeleton for PM to fill
-- `docs/ui-guide.md` from `ui-guide.md.tmpl` — only if project has UI
+- `docs/ui-guide.md` from `ui-guide.md.tmpl` — only if **custom** UI (case 1 above)
 - `docs/threat-model.md` from `threat-model.md.tmpl` — only if security requirements mentioned
 - `docs/features/` directory
 
 Show PM what was created. Ask: anything wrong or missing?
+
+**Initial commit:** commit the created docs files. If there is no source code yet (no package.json, no test runner) — the pipeline cannot run and that is expected. Use `git commit --no-verify` for this first documentation-only commit. State explicitly to PM: "Pipeline check skipped — no source code yet. Will be enforced on all subsequent commits once code exists."
 
 ---
 
@@ -52,6 +74,8 @@ Draft the missing documents:
 - Optional docs — same rules as greenfield
 
 Show PM the drafts. Iterate until PM says ok. Then save files.
+
+Same UI note and initial commit rules as greenfield apply.
 
 ---
 
