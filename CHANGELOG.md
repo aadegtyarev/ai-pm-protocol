@@ -13,6 +13,24 @@
 
 ---
 
+## [1.0.7] — 2026-05-29
+
+### Added
+
+- auto-open release PR workflow on branch push — no gh CLI needed locally (eca5b45)
+
+### Fixed
+
+- 9 protocol gaps: bootstrap detection, coder frontmatter, research output path, reviewer cycle, architect trigger, bugfix branch naming, --no-verify in bootstrap, retrospective artifact, submodule command placement (6f74a4d)
+- git workflow gaps: atomic commits, feature/fix branch naming, manual release steps (34414c0)
+
+### Changed
+
+- release model: tag main directly instead of release/vX.Y.Z branch + PR ceremony (ba5f613)
+- WORKFLOW.md: full reviewer verdict cycle + Maintenance section for submodule update (6f74a4d)
+
+---
+
 ## [1.0.6] — 2026-05-28
 
 ### Added
