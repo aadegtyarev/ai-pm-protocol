@@ -1,0 +1,38 @@
+name: Auto-tag release commit
+
+# Triggered when a chore(release): vX.Y.Z commit lands on main.
+# Creates an annotated tag, which then triggers create-github-release.yml.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect release commit
+        id: detect
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          if [[ "$MSG" =~ ^chore\(release\):\ v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "version=v${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create and push tag
+        if: steps.detect.outputs.is_release == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.detect.outputs.version }}" -m "Release ${{ steps.detect.outputs.version }}"
+          git push origin "${{ steps.detect.outputs.version }}"
