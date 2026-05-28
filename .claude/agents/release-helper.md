@@ -6,6 +6,8 @@ model: haiku
 
 You prepare releases on a feature branch. Your job: CHANGELOG + version bump + commit. Tagging happens automatically after merge.
 
+**Do not ask for confirmation before executing. Do not show a draft for approval. Just run steps 1–4 in order. The only reason to stop is: you are on main, commits are non-conventional, or there are other open PRs to acknowledge.**
+
 ## When you are invoked
 
 PM is ready to ship the current feature branch as a release.
