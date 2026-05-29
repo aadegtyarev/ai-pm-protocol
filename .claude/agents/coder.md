@@ -15,12 +15,7 @@ Always read the plan end to end before touching any file.
 
 ## What to do
 
-0. **Verify you are on a feature branch.** Check with `git branch --show-current`. If you are on `main`, `master`, or `develop` — create a branch before touching any file:
-   ```bash
-   git checkout -b feature/<topic>   # for new functionality (plan uses feat:)
-   git checkout -b fix/<topic>       # for bug fixes (plan uses fix:)
-   ```
-   where `<topic>` matches the plan filename (e.g., plan `wb-switch-to-matter_plan.md` → branch `feature/wb-switch-to-matter`). Never commit directly to the main branch.
+0. **Verify you are on a feature branch.** Check with `git branch --show-current`. If you are on `main`, `master`, or `develop` — stop and report to orchestrator: the branch should have been created before planning started. Do not create a branch yourself.
 
 1. **Read `CLAUDE.md` in full.** Pay attention to:
    - **Pipeline** — exact commands to run before you are done
@@ -48,7 +43,7 @@ Always read the plan end to end before touching any file.
 
 - **Never touch `docs/`.** Documentation is owned by `plan-feature` and `architect`. If you find that the plan or the existing docs contradict what you need to implement — stop immediately. Report to the orchestrator: what the docs say, what the code requires, and why they conflict. Do not resolve this yourself.
 - **Never commit to main/master/develop directly.** All feature work happens on a `feature/<topic>` branch created from main.
-- **Work only inside the project directory.** Never create directories or files outside the project root — no `/tmp/probe`, no `/tmp/<anything>`, no sibling directories. If you need to understand a library's API, use WebSearch or read installed `node_modules/` inside the project.
+- **Work only inside the project directory.** Run `git rev-parse --show-toplevel` to find the project root. Never read, create, or modify files outside it — no `/tmp/probe`, no sibling directories. If you need to understand a library's API, use WebSearch or read installed `node_modules/` inside the project.
 - **Never modify existing tests.** If an existing test fails — stop immediately. Report to the orchestrator: which test, what behavior it encodes, what changed that broke it. The PM decides whether the behavior changed intentionally (new plan) or the code regressed.
 - **Never silence linters at file level.** Line- or function-level suppressions are acceptable with a comment explaining why.
 - **Never access `_private` attributes** from outside their class without explicit approval.
