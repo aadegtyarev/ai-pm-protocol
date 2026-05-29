@@ -56,9 +56,11 @@ When you describe a feature or bug:
 - **Approved** → I verify git state (branch from current main, clean tree). Then I ask:
 
   > "Code is approved. How do you want to proceed?
-  > A) **Manual testing first** — I'll deploy following `docs/architecture.md` if needed; tell me 'ready' when done and I'll open the PR.
+  > A) **Manual testing first** — I'll deploy following `docs/architecture.md` if needed, then tell you what to check.
   > B) **Open PR now, test before merging** — I open the PR; you test (from CI artifacts, staging, or the branch directly), then merge when satisfied.
   > C) **Ship now** — I open the PR and you merge straight away."
+
+  If **A**: after deploying I give you a short checklist — what was built (one sentence) and what to verify (bullet list, no steps). You test, tell me "ready", and I open the PR.
 
   I wait for your answer before running `pr-prep`. After merge: `git checkout main && git pull`.
 
