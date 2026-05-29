@@ -56,8 +56,8 @@ When you describe a feature or bug:
 - **Approved** → I verify git state (branch from current main, clean tree). Then I ask:
 
   > "Code is approved. How do you want to proceed?
-  > A) **Test on real hardware first** — I'll wait; tell me 'ready' when done and I'll open the PR.
-  > B) **Open PR now, test from CI artifacts** — I open the PR; you test from the build, then merge when satisfied.
+  > A) **Manual testing first** — I'll wait; tell me 'ready' when done and I'll open the PR.
+  > B) **Open PR now, test before merging** — I open the PR; you test (from CI artifacts, staging, or the branch directly), then merge when satisfied.
   > C) **Ship now** — I open the PR and you merge straight away."
 
   I wait for your answer before running `pr-prep`. After merge: `git checkout main && git pull`.
