@@ -7,20 +7,24 @@ These agents are part of this project's workflow (from `.claude/agents/`). Use o
 | `architect` | Structural choice in the plan — where does new code live? |
 | `coder` | Implement the plan |
 | `reviewer` | Review after implementation |
-| `pr-prep` | Squash branch and open PR |
-| `release-helper` | Cut a release — analyzes commits, bumps version, generates CHANGELOG |
+| `pr-prep` | Bump version, generate CHANGELOG, push branch, open or update PR |
 | `/research` | Research existing solutions and analogues — at project start or when a feature might benefit from existing libraries |
 
 **Project boundary rule (applies to all agents):** every agent must stay within the project root (`git rev-parse --show-toplevel`). Never search, read, or write outside it — no parent directories, no sibling repositories. When the orchestrator spawns an agent, include the absolute project root in the prompt if the working directory may be a subdirectory.
 
-**Git branch rule:** branches are short-lived. The correct cycle is:
-1. `git checkout main && git pull` — start from current main
-2. `git checkout -b feature/<topic>` — cut a fresh branch
-3. Implement, commit, release-helper, pr-prep
-4. Merge on GitHub → branch deleted
-5. `git checkout main && git pull` — back to main, ready for the next branch
+**Git workflow — orchestrator owns this, not subagents:**
 
-Never reuse a branch across multiple PRs. Never commit "resolve merge conflicts" — if a conflict appears, the branch is stale; cut a fresh one.
+```
+git checkout main && git pull          # always start from current main
+git checkout -b feature/<topic>        # fresh branch — one branch per PR
+                                       # (may contain one or several features)
+... implement, commit ...
+pr-prep                                # CHANGELOG + version + push + PR
+merge on GitHub                        # GitHub squashes
+git checkout main && git pull          # back to main, ready for next branch
+```
+
+Never reuse a branch across multiple PRs. Never commit "resolve merge conflicts" — if conflicts appear, the branch is stale; cut a fresh one from main.
 
 ---
 
@@ -49,7 +53,7 @@ When you describe a feature or bug:
 
 **Step 5 — Reviewer checks.** Plan compliance, code quality, security, infrastructure. I surface the verdict to you in plain language:
 
-- **Approved** → I run `pr-prep`: squashes feature branch commits into one clean commit and opens a PR. CI runs on the PR. I give you the PR link — you merge it on GitHub, branch gets deleted.
+- **Approved** → I verify git state (branch from current main, clean tree), then run `pr-prep`: bumps version, writes CHANGELOG, pushes branch, opens PR. I give you the PR link — you merge it on GitHub. After merge: `git checkout main && git pull`.
 - **Request changes** → I tell you what was found and why it matters (no code). Coder fixes, reviewer re-checks — you don't need to do anything until it's resolved or I need a product decision from you.
 
 If the reviewer found **notes** (non-blocking observations), I present each one to you in plain language and ask: fix now, add to backlog, or ignore? I never add anything to the backlog without your explicit yes. "Fix now" goes to coder before the PR. "Backlog" gets added to `docs/backlog.md` with context. "Ignore" is dropped.
@@ -58,7 +62,7 @@ If the reviewer found **notes** (non-blocking observations), I present each one 
 
 After you merge: pull main locally and we're ready for the next feature.
 
-**When you're ready to ship** — say "release". I'll show you what's in main since the last release, propose a version number, draft the CHANGELOG. You say ok — I tag and push. GitHub publishes the release automatically.
+**When you're ready to ship** — say "release". I verify git state, run `pr-prep` (version bump + CHANGELOG + PR). You merge — GitHub auto-tags and publishes the release.
 
 I involve you when:
 - Architectural fork (new technology, breaks a constraint, changes public API)
