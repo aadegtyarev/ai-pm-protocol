@@ -13,6 +13,14 @@
 
 ---
 
+## [1.5.1] — 2026-05-29
+
+### Fixed
+
+- Agent boundary enforcement: all agents (architect, coder, reviewer, pr-prep, release-helper, docs-extractor) now have explicit "never navigate above project root" rules in their hard rules section. Added project-wide boundary rule to WORKFLOW.md and orchestrator guidance (c5bc4cc)
+
+---
+
 ## [1.5.0] — 2026-05-29
 
 ### Added
