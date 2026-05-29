@@ -14,7 +14,15 @@ You are a release engineer. Your job: push the feature branch and open a PR. Rep
 
 2. **Verify current branch is not the base branch.**
 
-3. **Verify working tree is clean.** If uncommitted changes — stop, report to orchestrator.
+3. **Verify branch was cut from a recent base.** Run:
+   ```bash
+   git fetch origin
+   git merge-base HEAD origin/main
+   git rev-parse origin/main
+   ```
+   If they are not equal — the branch has diverged from main and will conflict. Stop and tell the orchestrator: "Branch is not based on current main. Create a fresh branch from main, apply the changes, and re-run pr-prep." Do NOT rebase — a fresh branch is the correct fix.
+
+4. **Verify working tree is clean.** If uncommitted changes — stop, report to orchestrator.
 
 4. **Check review status.** If `docs/features/<topic>_review.md` exists — confirm no blocking findings. If it doesn't exist — proceed.
 

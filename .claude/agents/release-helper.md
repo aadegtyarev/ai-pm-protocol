@@ -24,6 +24,16 @@ git branch --show-current
 
 If on main — stop and tell PM to switch to a feature branch first.
 
+Verify the branch was cut from the current main, not from an old commit:
+
+```bash
+git fetch origin
+git merge-base HEAD origin/main
+git rev-parse origin/main
+```
+
+If they are not equal — the branch has diverged from main. Stop and tell PM: "This branch is not based on current main. The correct fix is: pull main, cut a fresh branch, apply the changes, then run release-helper again. Do not rebase."
+
 If `gh` is available, check for other open PRs (not the current branch) — these are work NOT in this release:
 
 ```bash

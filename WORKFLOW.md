@@ -13,6 +13,15 @@ These agents are part of this project's workflow (from `.claude/agents/`). Use o
 
 **Project boundary rule (applies to all agents):** every agent must stay within the project root (`git rev-parse --show-toplevel`). Never search, read, or write outside it — no parent directories, no sibling repositories. When the orchestrator spawns an agent, include the absolute project root in the prompt if the working directory may be a subdirectory.
 
+**Git branch rule:** branches are short-lived. The correct cycle is:
+1. `git checkout main && git pull` — start from current main
+2. `git checkout -b feature/<topic>` — cut a fresh branch
+3. Implement, commit, release-helper, pr-prep
+4. Merge on GitHub → branch deleted
+5. `git checkout main && git pull` — back to main, ready for the next branch
+
+Never reuse a branch across multiple PRs. Never commit "resolve merge conflicts" — if a conflict appears, the branch is stale; cut a fresh one.
+
 ---
 
 ## How I work
