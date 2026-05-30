@@ -59,7 +59,7 @@ Then create from templates:
 
 After `stack-researcher` returns:
 - Take its "New validators" list and add each command to the `Pipeline` block in `CLAUDE.md` — these are mandatory gates alongside `<test command>` and `<lint command>`.
-- Take its "Integration contracts" findings and reflect them in `docs/architecture.md` deploy / infrastructure section (e.g., "schema delivered via Debian package to /usr/share/wb-mqtt-confed/schemas/").
+- Take its "Integration contracts" findings and reflect them in `docs/architecture.md` deploy / infrastructure section (e.g., "schema delivered via package postinst to the system's standard schema directory", "manifest applied via CI step", "config rendered into platform-expected path").
 - Take its "Open questions" list and surface to PM as a brief technical caveats block (one sentence each, plain language) — PM does not have to act on them now, but they exist on record.
 
 Then ask PM: "Want to research existing solutions — libraries, ready products, analogues? Useful at the start so you don't build what already exists. Run /research?"

@@ -18,11 +18,11 @@ The findings you produce protect the project from the most common AI-coding fail
 ## Input
 
 A list of components and the project context. Each component is one of:
-- Language / runtime (e.g., TypeScript, Node.js 20)
-- Framework (e.g., NestJS, Django)
-- Library taking a load-bearing role (e.g., matter.js, mqtt.js)
-- Target platform / host (e.g., Wiren Board controller, Kubernetes cluster)
-- Integration system (e.g., wb-mqtt-confed, systemd, Prometheus)
+- Language / runtime (e.g., TypeScript, Node.js 20, Go 1.22, Python 3.12)
+- Framework (e.g., NestJS, Django, ASP.NET Core, FastAPI)
+- Library taking a load-bearing role (a protocol implementation, an SDK, a domain library the project leans on)
+- Target platform / host (e.g., Kubernetes cluster, embedded Linux board, browser, serverless runtime, mobile OS)
+- Integration system (e.g., systemd, Prometheus, a platform-provided config editor, a CI/CD platform)
 
 If invoked from bootstrap — `docs/architecture.md` already lists components, read it. If invoked from plan-feature — caller passes the components touched by the feature.
 
@@ -35,9 +35,9 @@ If invoked from bootstrap — `docs/architecture.md` already lists components, r
 2. **For each component** — research, do not assume:
 
    - **Find the canonical docs URL.** The page the maintainers point at, not a third-party tutorial.
-   - **Find the spec / reference.** For protocol-bound components (Matter, Modbus, MQTT, OAuth, HTTP) — the actual spec, not a blog post about it. Anchor URLs when possible.
+   - **Find the spec / reference.** For protocol-bound components — the actual spec (RFC, IEEE, ISO, vendor-published normative document, framework reference manual), not a blog post about it. Anchor URLs when possible.
    - **Identify required validators.** Native tools that prove an artifact is correct before runtime: `<tool> validate`, `<tool> --dry-run`, schema validators, type-checkers configured for strict mode, audit commands. For each — the exact command line and what it gates.
-   - **Extract idioms and constraints.** Rules the docs state and the maintainers expect users to follow. Be specific — "currentLevel MUST NOT be 0" not "follow Matter spec". Each rule needs a source URL.
+   - **Extract idioms and constraints.** Rules the docs state and the maintainers expect users to follow. Be specific — quote the rule as the docs phrase it (a concrete bounded statement), not a vague "follow the spec". Each rule needs a source URL.
    - **Find known gotchas.** Real-world traps. Read issue tracker for closed-and-fixed bugs, look for FAQ entries, search for "common mistakes" pages. Each gotcha needs a source URL.
    - **Identify integration contracts.** If this component is an external system the project must deliver an artifact to (schema file, unit file, manifest) — capture the artifact format, the delivery mechanism the system documents (apt package, COPY in Dockerfile, volume mount, CRD apply), and the end-to-end validator (the command that proves the artifact was accepted).
 

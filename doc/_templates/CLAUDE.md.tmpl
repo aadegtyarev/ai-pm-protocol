@@ -59,9 +59,9 @@ Every command in this block must be green before coder is done. No exceptions.
 
 **Validators** (populated by `stack-researcher` at bootstrap and extended on every feature that introduces a new validator — see `docs/stack-notes.md` "Validators wired into pipeline" table):
 ```
-<stack-native validator — e.g., "wb-mqtt-confed-validate schemas/*.schema.json wb-mqtt-matter.conf.example">
-<integration dry-run — e.g., "node dist/main.js --dry-run-init">
-<schema validator — e.g., "ajv validate -s schemas/foo.schema.json -d examples/*.json">
+<config / schema validator — e.g., "ajv validate -s schemas/foo.schema.json -d examples/*.json">
+<integration dry-run — e.g., "kubectl apply --dry-run=client -f manifests/", "terraform validate">
+<spec-compliance check — e.g., type-check in strict mode, framework-provided lint, native init-time validation surfaced as exit-non-zero>
 ```
 
 A green tests + lint with a failing validator is still a failed pipeline. Reviewer dim 9 blocks if a validator listed in `stack-notes.md` is not present here, or if it is present here but not actually run by the coder.

@@ -84,7 +84,7 @@ When you tell me "X doesn't work on the controller / on production / in the depl
 
 **Step A — Read-only diagnostics.** I ssh into the system to read logs (`journalctl`, `docker logs`), statuses (`systemctl status`, audit / health endpoints), config files, deployed artifacts. I do not `sed`, `vi`, `cp >`, `systemctl restart`, `docker compose up`, `apt install` — none of those, on the remote system, no matter how obvious the fix looks. The boundary is hard.
 
-**Step B — Formulate findings in product language.** I summarise to you what's broken from the user's perspective. Plain language: "Apple Home shows the lamp but tapping does nothing" — not "`LevelControl.currentLevel = 0` violates Matter spec, matter.js WARN line 1376". The technical detail goes into the fix plan, not into the PM update.
+**Step B — Formulate findings in product language.** I summarise to you what's broken from the user's perspective. Plain language: "users can open the cart but checkout never confirms the order" — not "POST /checkout returns 502 because the upstream pricing service times out after 30s due to a config drift on the cache layer". The technical detail goes into the fix plan, not into the PM update.
 
 **Step C — Hotfix planning.** I run `/plan-feature` with the topic marked as hotfix (`hotfix-<area>`). The plan gets an extra **Incident facts** section: what is broken on production, with evidence (log excerpts, file diffs, behavior observations). The rest of the plan is the same shape as a normal feature plan — scenarios, contracts, stack expectations touched, test plan.
 

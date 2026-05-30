@@ -47,7 +47,7 @@ Include any doc updates as explicit steps in the plan — coder does not touch d
 Before drafting the plan, identify which stack components this feature touches. A component touch is any of:
 - writing or changing code that uses a library / framework / runtime API
 - producing or modifying an artifact consumed by an external system (schema, manifest, unit file, config file)
-- speaking to an external protocol (MQTT, HTTP, Modbus, Matter, Zigbee, …)
+- speaking to an external protocol or standard (any wire protocol, RPC contract, public API standard)
 - changing how the project is built, packaged, or deployed
 
 For each touched component, check `docs/stack-notes.md`:

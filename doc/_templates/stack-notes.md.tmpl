@@ -56,7 +56,7 @@ For each external system the project integrates with — what local artifact car
 
 | External system | Local artifact in repo | Delivery mechanism | Validator |
 |---|---|---|---|
-| <e.g., wb-mqtt-confed> | `schemas/*.schema.json` | `<COPY in Dockerfile / Debian package / volume mount>` | `<command that proves the artifact is accepted by the external system>` |
+| <name of the external system> | `<path/in/repo/to/artifact>` | `<COPY in Dockerfile / Debian postinst / Helm chart / volume mount / CRD apply / ...>` | `<command that proves the artifact is accepted by the external system>` |
 
 Missing rows here for a system the project actually talks to is a defect — reviewer dim 8 blocks on it.
 

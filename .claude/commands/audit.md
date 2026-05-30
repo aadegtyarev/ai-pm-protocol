@@ -81,7 +81,7 @@ Present each note to PM: "Fix now, add to backlog, or ignore?" — never add to 
 
 Audit is read-only — it finds gaps, it does not close them. Closure is the job of the standard pipeline. When PM says **"Fix now"** for a finding, the orchestrator:
 
-1. Opens `/plan-feature` with topic `audit-fixup-<short-area>` (e.g., `audit-fixup-stack-notes-matter`).
+1. Opens `/plan-feature` with topic `audit-fixup-<short-area>` (e.g., `audit-fixup-missing-stack-notes`, `audit-fixup-schema-delivery`).
 2. Plan includes the audit finding verbatim in an **Audit reference** section — same shape as the "Incident facts" section used for prod incidents.
 3. Standard pipeline runs: plan → coder → reviewer → pr-prep → PR → merge → deployment script.
 4. PM sees the PR, approves merge.
