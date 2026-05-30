@@ -5,7 +5,7 @@ These agents are part of this project's workflow (from `.claude/agents/`). Use o
 | Agent | When |
 |---|---|
 | `stack-researcher` | Auto-spawn from `/bootstrap` (initial stack onboarding) or from `/plan-feature` (when a feature touches a stack component not yet in `docs/stack-notes.md`). Reads canonical docs + spec, writes cited rules into stack-notes |
-| `architect` | Structural choice in the plan — where does new code live? |
+| `architect` | Structural choice in the plan — where does new code live? Plus: owns canonical `docs/architecture.md` (creates at bootstrap, refreshes when audit-fixup requires, updates on architectural decisions). |
 | `coder` | Implement the plan |
 | `reviewer` | Review after implementation |
 | `pr-prep` | Bump version, generate CHANGELOG, push branch, open or update PR |
