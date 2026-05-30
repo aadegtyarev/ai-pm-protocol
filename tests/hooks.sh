@@ -4,12 +4,19 @@
 # would pipe to the hook on stdin (per the PreToolUse contract in
 # doc/stack-notes.md § "Claude Code hooks API": `{tool_name, tool_input}`),
 # extracts the hook command from settings.json with jq, runs it under
-# `bash -c`, and checks the produced hookSpecificOutput.permissionDecision.
+# `bash -c`, and checks the produced hookSpecificOutput.
+#
+# For positive cases (deny/ask) the full hookSpecificOutput shape is asserted:
+# hookEventName == "PreToolUse", permissionDecision == expected enum value,
+# permissionDecisionReason is a non-empty string. Negative cases (pass) only
+# assert the no-output invariant — they do not produce hookSpecificOutput.
 #
 # Stack rules respected (citations in doc/stack-notes.md):
 #   * PreToolUse stdin contract — `tool_name` + `tool_input` fields.
 #     Source: https://code.claude.com/docs/en/hooks
-#   * `permissionDecision` enum values "allow" / "ask" / "deny".
+#   * hookSpecificOutput shape — `hookEventName: "PreToolUse"`,
+#     `permissionDecision` enum "allow" / "ask" / "deny",
+#     `permissionDecisionReason` string shown to the user.
 #     Source: https://code.claude.com/docs/en/hooks
 #   * jq `-r` for raw output, `// empty` for absent-field safety.
 #     Source: https://jqlang.org/manual/
@@ -64,6 +71,18 @@ get_hook_cmd() {
 # run_case <label> <expected_decision: deny|ask|pass> <hook_jq_path> <input_json>
 # Runs the hook command on the supplied stdin JSON, parses the output, and
 # compares the decision. "pass" means the hook produced no output (exit 0).
+#
+# For positive cases (expected = deny|ask) the full hookSpecificOutput shape
+# is asserted per doc/stack-notes.md § Claude Code hooks API:
+#   * hookEventName == "PreToolUse" (literal)
+#   * permissionDecision == expected enum value
+#   * permissionDecisionReason is a non-empty string
+# If any of the three fails, the case prints `FAIL: <case> — missing <field>`
+# and FAIL_COUNT is incremented. Exact reason wording is not asserted (would
+# lock the test to current message text).
+#
+# For negative cases (expected = pass) only the no-output invariant is checked
+# — those cases do not produce hookSpecificOutput at all.
 run_case() {
     label="$1"
     expected="$2"
@@ -90,13 +109,40 @@ run_case() {
         fi
     fi
 
-    if [ "$actual" = "$expected" ]; then
-        echo "PASS: $label"
-        PASS_COUNT=$((PASS_COUNT + 1))
-    else
+    if [ "$actual" != "$expected" ]; then
         echo "FAIL: $label — expected=$expected actual=$actual"
         FAIL_COUNT=$((FAIL_COUNT + 1))
+        return
     fi
+
+    # Negative ("pass") cases produce no output — nothing more to assert.
+    if [ "$expected" = "pass" ]; then
+        echo "PASS: $label"
+        PASS_COUNT=$((PASS_COUNT + 1))
+        return
+    fi
+
+    # Positive case: assert full hookSpecificOutput shape per
+    # doc/stack-notes.md § Claude Code hooks API.
+    event_name=$(printf '%s' "$output" | jq -r '.hookSpecificOutput.hookEventName // empty' 2>/dev/null)
+    if [ "$event_name" != "PreToolUse" ]; then
+        echo "FAIL: $label — missing hookEventName"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        return
+    fi
+
+    reason=$(printf '%s' "$output" | jq -r '.hookSpecificOutput.permissionDecisionReason // empty' 2>/dev/null)
+    # Non-empty AND non-blank: jq -r yields a string; strip whitespace via
+    # POSIX parameter-expansion-free `printf | tr -d` then test for emptiness.
+    reason_stripped=$(printf '%s' "$reason" | tr -d ' \t\n\r')
+    if [ -z "$reason_stripped" ]; then
+        echo "FAIL: $label — missing permissionDecisionReason"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        return
+    fi
+
+    echo "PASS: $label"
+    PASS_COUNT=$((PASS_COUNT + 1))
 }
 
 # Helper to build a PreToolUse-shaped JSON with a file_path field (Read).
