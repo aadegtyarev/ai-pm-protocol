@@ -9,6 +9,7 @@ This skill runs in the main session — planning is a conversation with the PM, 
 Read these first:
 - `CLAUDE.md` — architecture constraints, security constraints
 - `docs/architecture.md` — stack, decisions, constraints
+- `docs/stack-notes.md` — stack idioms, constraints, validators, integration contracts (mandatory; see "Stack component check" below)
 - `docs/user-journeys.md` — existing scenarios (identifies regression risk)
 - `docs/features/` — existing plans (context for what's already built)
 - `docs/backlog.md` — if it exists, match items against the feature topic: same module, same user journey, same data model, or same area of code
@@ -41,6 +42,21 @@ Also flag anything this feature makes outdated:
 
 Include any doc updates as explicit steps in the plan — coder does not touch docs.
 
+## Stack component check (mandatory, no PM questions)
+
+Before drafting the plan, identify which stack components this feature touches. A component touch is any of:
+- writing or changing code that uses a library / framework / runtime API
+- producing or modifying an artifact consumed by an external system (schema, manifest, unit file, config file)
+- speaking to an external protocol (MQTT, HTTP, Modbus, Matter, Zigbee, …)
+- changing how the project is built, packaged, or deployed
+
+For each touched component, check `docs/stack-notes.md`:
+
+- **Component already present** with current `Last reviewed` date → read the section, plan must respect its idioms and constraints.
+- **Component missing or stale** (no entry, or entry older than 6 months without re-review) → spawn `stack-researcher` for that component **before** continuing planning. Wait for it to extend `stack-notes.md`. Take its "New validators" list — add to the plan's "Docs to update" section as `CLAUDE.md` Pipeline extension.
+
+Never plan against a missing or stale stack-notes entry. This is not a PM question — PM never sees this step. If a researcher run takes time, tell PM one sentence ("checking stack docs before planning, one moment") and continue.
+
 ## Planning conversation
 
 Ask clarifying questions as needed — grounded in what you read. Typical questions:
@@ -72,22 +88,35 @@ Stop asking when you have enough to write the plan.
 (new or changed APIs, data shapes, config keys — omit section if none)
 - `<name>(args) → return` — what it does, error modes
 
+## Stack expectations touched
+(from docs/stack-notes.md — what stack-level rules this feature must respect)
+- **<component>**: <quoted rule from stack-notes>. Source: <URL>
+- **<component>**: <quoted constraint>. Source: <URL>
+- **<integration>**: artifact `<path>` delivered via `<mechanism>`, validated by `<command>`
+
 ## Test plan
 - Existing tests that must pass: <list or "all existing tests">
 - New tests:
   - `<test name>`: <one sentence — what scenario this verifies, given/when/then>
   - `<test name>`: <what scenario>
+- Stack-spec tests (one per stack expectation above):
+  - `<test name>`: verifies the code respects "<rule from stack-notes>" — not just self-consistent mapping
 
 ## Docs to update
 (omit if none)
 - `docs/user-journeys.md`: <what changes — which journey, how>
 - `docs/architecture.md`: <what new constraint or decision to add>
+- `CLAUDE.md` Pipeline section: add `<validator command>` (if stack-researcher discovered a new validator for this feature's components)
 
 ## Out of scope
 - <explicitly what this plan does NOT touch>
 ```
 
 **Test plan rule:** each new test must have a one-sentence behavior description — what scenario it verifies (given/when/then style). Not just a file name. This is what reviewer and coder use to write and verify the test.
+
+**Stack-spec test rule:** for every entry in "Stack expectations touched", at least one test must verify behavior against the cited rule, not against the coder's own mapping. Self-consistent property-based tests (e.g., round-trip over the coder's own range) do not count — they can freeze a spec violation as a contract. Stack-spec tests must reference the source URL in a comment.
+
+**"Stack expectations touched" rule:** if the feature touches any stack component listed in `docs/stack-notes.md` and the plan omits this section — plan is incomplete. Reviewer dim 1 will block on missing section.
 
 ## Retrospective check
 
