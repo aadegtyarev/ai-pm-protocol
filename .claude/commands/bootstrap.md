@@ -62,8 +62,9 @@ Then create from templates:
 
 After `stack-researcher` returns:
 - Take its "New validators" list and add each command to the `Pipeline` block in `CLAUDE.md` — these are mandatory gates alongside `<test command>` and `<lint command>`.
-- Take its "Integration contracts" findings and reflect them in `docs/architecture.md` deploy / infrastructure section (e.g., "schema delivered via package postinst to the system's standard schema directory", "manifest applied via CI step", "config rendered into platform-expected path").
 - Take its "Open questions" list and surface to PM as a brief technical caveats block (one sentence each, plain language) — PM does not have to act on them now, but they exist on record.
+
+**Spawn `architect` (Section A — canonical architecture.md).** Architect reads PM's stack answers, the freshly-written `docs/stack-notes.md`, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. It walks every template section (Tech stack, Architectural decisions, Architectural constraints, File layout, Integration contract, Release flow), marking N/A sections explicitly (Security, Code conventions, Deploy if not applicable). It cites the bootstrap conversation for each decision rationale. The result replaces the placeholder content created from the template. This is the new owner of `docs/architecture.md` — orchestrator no longer writes architecture inline.
 
 Then ask PM: "Want to research existing solutions — libraries, ready products, analogues? Useful at the start so you don't build what already exists. Run /research?"
 
