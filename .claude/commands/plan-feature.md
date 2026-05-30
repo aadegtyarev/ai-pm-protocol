@@ -42,6 +42,27 @@ Also flag anything this feature makes outdated:
 
 Include any doc updates as explicit steps in the plan — coder does not touch docs.
 
+## Categorical scope check (mandatory, surfaces a product question to PM)
+
+Before drafting the plan, scan the feature description for **categorical words** — any noun that names a kind, type, mode, role, state, operation, category, tier, level, or other element of a classification.
+
+For each categorical word, ask one question:
+
+> **Is this the full set, or one element of a set?**
+
+If it is **one element** — the feature is implicitly choosing one and ignoring the rest. That choice belongs to the PM, not to the agent. Before going further:
+
+1. List the sibling elements visible in the project's existing context (`docs/architecture.md`, `docs/user-journeys.md`, `docs/stack-notes.md`, prior features in `docs/features/`).
+2. Surface the choice to PM as a product question in plain language:
+   > "Your feature mentions <element>. In your system, that is one of <siblings>. Do you want this feature to cover all of them, or focus on <element> with siblings handled separately later?"
+3. PM decides. Two valid outcomes:
+   - **All of them** → plan covers the full set, scenarios and tests span all siblings.
+   - **One element** → plan covers only the chosen element, and the **Out of scope** section explicitly lists each sibling with one line on why it is separate (e.g., "different downstream behavior, will be its own plan").
+
+Never silently widen the chosen element's semantics to cover sibling cases at implementation time — that is what the coder rule forbids. The scope decision belongs in the plan.
+
+If the feature description has no categorical words — skip this step.
+
 ## Stack component check (mandatory, no PM questions)
 
 Before drafting the plan, identify which stack components this feature touches. A component touch is any of:
@@ -110,6 +131,7 @@ Stop asking when you have enough to write the plan.
 
 ## Out of scope
 - <explicitly what this plan does NOT touch>
+- **Sibling elements of categorical choices** — for every categorical element the plan focuses on (a chosen type, mode, role, state, operation), list each sibling that was considered and excluded, with one line on why it is a separate plan
 ```
 
 **Test plan rule:** each new test must have a one-sentence behavior description — what scenario it verifies (given/when/then style). Not just a file name. This is what reviewer and coder use to write and verify the test.

@@ -35,6 +35,10 @@ Every scenario in the plan must be implemented and have a test. Missing scenario
 - If the feature touches any stack component listed in `docs/stack-notes.md` and the plan omits the "Stack expectations touched" section — plan is incomplete, **blocking**. Verdict: request-changes with note "plan must list touched stack expectations before implementation can be reviewed".
 - If the plan has "Stack expectations touched" but lacks source URLs for each cited rule — **blocking**. Unsourced rules cannot be verified.
 
+**Categorical coverage sub-check.** For every categorical element the plan focuses on (a chosen type, mode, role, state, operation, category), the plan must either treat the full set or list each excluded sibling under Out of scope with a one-line reason. In the diff:
+- A sibling case implemented as a permissive variant of the chosen element (enum that accepts more than the plan says, optional / empty field that silently flips behavior, conditional branch that handles a case the plan placed Out of scope) — **blocking**. The fix is a plan update, not a code tweak.
+- An Out of scope sibling appearing in tests, fixtures, or example configs without a plan change — **blocking** by the same rule.
+
 ### 2. Test quality
 For each new test — find its description in the plan's "Test plan" and verify it actually exercises that scenario. Flag as blocking if: no assertions, only checks "no exception", mocks away the very thing being tested. Verify no existing test was deleted or weakened without a plan that explicitly changes that behavior.
 
