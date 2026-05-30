@@ -12,7 +12,7 @@ These agents are part of this project's workflow (from `.claude/agents/`). Use o
 | `reviewer` | Review after implementation |
 | `pr-prep` | Bump version, generate CHANGELOG, push branch, open or update PR |
 | `docs-extractor` | Auto-spawn from `/bootstrap` legacy full mode; reads existing codebase and writes `docs/architecture.md` + `docs/user-journeys.md` |
-| `auditor` | Auto-spawn from `/audit`; read-only project-wide sweep across the 11 dimensions, writes `docs/audit-<YYYY-MM-DD>.md` and returns a structured summary |
+| `auditor` | Auto-spawn from `/audit`; read-only project-wide sweep across the 8 dimensions, writes `docs/audit-<YYYY-MM-DD>.md` and returns a structured summary |
 | `/research` | Research existing solutions and analogues (build vs use). PM-facing pros/cons output. Different from `stack-researcher` (which is agent-facing canonical citations). |
 | `/audit` | PM-initiated project-wide health check. Spawns `auditor`, then drives a PM-facing flow over the findings (one decision per blocking: fix now / next sprint / accept-with-context). Fix-now closures go through `/plan-feature audit-fixup-*` |
 
