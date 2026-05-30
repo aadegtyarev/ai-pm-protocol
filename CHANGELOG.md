@@ -13,6 +13,18 @@
 
 ---
 
+## [1.10.1] — 2026-05-30
+
+### Fixed
+
+- `CHANGELOG.md` — backfilled missing `## [1.6.0]` entry for the orphan tag (released without a CHANGELOG entry or GitHub Release at the time) and added a `## [1.6.0 → 1.7.0 intermediate work]` aggregate block for PRs #142–#145 that landed on `main` between the two tags without their own intermediate version tags. v1.6.0 entry covers 9 commits (Added / Fixed / Changed split per actual ranges from `git log v1.5.1..v1.6.0`). No existing entry mutated. Closes task #26 (audit-fixup-changelog-backfill). Plan + review trail (v1 request-changes → v2 approve after attribution fix) in `doc/features/changelog-backfill_plan.md`, `doc/features/changelog-backfill_review.md`, `doc/features/changelog-backfill_review.v2.md`. (aecf82f, 8f5eddf, e85e82d)
+
+### Notes
+
+- Surfaced by `pr-prep` on PR #146. GitHub Release for v1.6.0 not backfilled retroactively — out of scope; release notes live in CHANGELOG.
+
+---
+
 ## [1.10.0] — 2026-05-30
 
 ### Added
@@ -86,6 +98,46 @@
 ### Added
 
 - `doc/stack-notes.md` for 6 self-* components (architect, planner, coder, reviewer, pr-prep, auditor): documents the protocol's own stack — markdown spec, agent persona conventions, hook scripts, install layout. Closes finding #2 of `doc/features/audit-2026-05-30.md`. First of 7 self-* audit-fixup plans in meta-audit priority order. (4f71ab0)
+
+---
+
+## [1.6.0] — 2026-05-29
+
+### Added
+
+- Require `AskUserQuestion` tool for all PM decisions; plain-text questions no longer allowed in the orchestrator dialog (b94b1d2)
+- Pre-PR checkpoint — ask PM how to proceed after approve (manual testing / open PR test before merge / ship now) (c86fb00)
+- After-deploy checklist for option A — give PM short list of what to verify (7b1a05f)
+
+### Fixed
+
+- PM reports findings after testing, no longer forced to say 'ready' (bf84440)
+- Deploy in option A follows `docs/architecture.md` deploy section (596939f)
+- Offer deployment help in manual-testing option A (b642b4c)
+- Pre-PR checkpoint wording made generic — any project, not hardware-specific (1352ed7)
+- `architect` agent — do not search filesystem for external reference projects (#140, 14dcd0d)
+
+### Changed
+
+- Install instructions: explicit `settings.json` symlink line added (#141, 2626106)
+
+### Note
+
+This release was tagged at the time but never had a CHANGELOG entry or
+GitHub Release published. Backfilled in v1.10.1 — see audit-fixup-changelog-backfill plan.
+
+---
+
+## [1.6.0 → 1.7.0 intermediate work] — 2026-05-29 to 2026-05-30
+
+The following PRs landed on `main` between the `v1.6.0` tag and the
+`v1.7.0` release without their own intermediate version tags. Their
+changes are part of the v1.7.0 baseline; recorded here for traceability.
+
+- Protocol integrity + stack literacy — close 5 structural gaps (#142, 6e1bf14)
+- /audit spawns auditor subagent instead of reading in main (#143, cf889c6)
+- Post-cycle lessons: notes split, edit ownership, pr-prep flexibility (#144, 9f81f64)
+- Hook-level enforcement: ssh-edit boundary + force-push + no-verify (#145, ac5827a)
 
 ---
 
