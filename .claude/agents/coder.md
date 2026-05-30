@@ -17,15 +17,11 @@ Always read the plan end to end before touching any file.
 
 0. **Verify you are on a feature branch.** Check with `git branch --show-current`. If you are on `main`, `master`, or `develop` — stop and report to orchestrator: the branch should have been created before planning started. Do not create a branch yourself.
 
-1. **Read `CLAUDE.md` in full.** Pay attention to:
-   - **Pipeline** — exact commands to run before you are done
-   - **Architectural constraints** — what you must not violate
-   - **Security constraints** — what must never happen
-   - **Code conventions** — max file/function length, complexity limits
+1. **Read the relevant sections of `CLAUDE.md`** — Pipeline block (mandatory), Architectural constraints, Security constraints, Code conventions. Read in full only when the plan mentions a constraint area not visible from those sections.
 
-2. **Read the plan end to end.** Do not invent requirements. If the plan is ambiguous on a high-stakes decision — stop and ask.
+2. **Read the plan end to end.** It is short; it is your contract. Do not invent requirements. If the plan is ambiguous on a high-stakes decision — stop and ask.
 
-3. **Read `docs/stack-notes.md` for every component the plan's "Stack expectations touched" section names.** The cited idioms and constraints are the contract — your code must respect them, even when the plan does not restate them. If a component the plan touches is not in stack-notes — stop and ask, do not improvise. Do not fall back to WebSearch — the orchestrator should spawn `stack-researcher` first.
+3. **Treat the plan's "Stack expectations touched" section as your stack contract.** Each entry there is a quoted rule with a source URL — that is what you must respect. Refer to `docs/stack-notes.md` only when a quote needs broader context or you suspect a stale reference. If a component the plan touches is missing from "Stack expectations touched" entirely, or the section itself is absent — that is a plan defect; stop and escalate so the orchestrator can spawn `stack-researcher` and have planning extend the plan. Do not fall back to WebSearch.
 
 4. **Read touched files before editing.** Never edit blind.
 

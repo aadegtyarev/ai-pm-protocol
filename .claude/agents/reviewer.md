@@ -97,13 +97,12 @@ Read `docs/architecture.md` deploy section and `docs/stack-notes.md` "Integratio
 - The native validator from the contract is wired into the Pipeline block of `CLAUDE.md` — blocking if missing. "Files exist but were never validated by the external system's own tool" is the same defect class as "code compiles but spec violated".
 
 ### 10. Stack expectations compliance
-For every component listed in the plan's "Stack expectations touched":
-- Read the cited rule(s) from `docs/stack-notes.md` (the section the plan references).
-- Check the diff against each rule. Code that contradicts a cited rule → **blocking** with the citation reproduced in the verdict (rule + source URL).
-- Check the test plan: each stack expectation has a stack-spec test (per `plan-feature.md` "Stack-spec test rule"). Missing stack-spec test for a cited rule → **blocking**.
-- Check for property-based or round-trip tests that freeze a spec-forbidden value (e.g., `0` is in test domain but spec says ≥ 1) → **blocking**. These tests codify the wrong contract.
+For every entry in the plan's "Stack expectations touched":
+- The cited rule + source URL in the plan is your contract. Check the diff against it. Code that contradicts the rule → **blocking**, reproduce the citation in the verdict. Open `docs/stack-notes.md` only when you need broader context or suspect the quote is stale.
+- Check the test plan: each cited rule has a stack-spec test (per `plan-feature.md` "Stack-spec test rule"). Missing stack-spec test for a cited rule → **blocking**.
+- Check for property-based or round-trip tests that freeze a value the cited rule forbids → **blocking**. These tests codify the wrong contract.
 
-If the plan claims to touch a component but `docs/stack-notes.md` has no entry for it — that is a plan/protocol failure, surface separately. Don't try to "make the diff correct" against missing reference.
+If the plan claims to touch a component but the "Stack expectations touched" entry is missing or unsourced, or `docs/stack-notes.md` has no entry the plan could cite — that is a plan/protocol failure, surface separately. Don't try to "make the diff correct" against a missing reference.
 
 ## Verdict format
 
