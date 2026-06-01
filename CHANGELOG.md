@@ -13,6 +13,31 @@
 
 ---
 
+## [2.0.0] — 2026-06-01
+
+### Breaking changes
+
+- Все агенты и команды переименованы с префиксом `pm-`: `auditor` → `pm-auditor`, `reviewer` → `pm-plan-checker`, `coder` → `pm-coder`, `architect` → `pm-architect`, `stack-researcher` → `pm-stack-researcher`, `docs-extractor` → `pm-legacy-reader`, `pr-prep` → `pm-pr-prep`. Команды: `plan-feature` → `pm-plan`, `audit` → `pm-audit`, `bootstrap` → `pm-bootstrap`, `fixup` → `pm-fixup`, `research` → `pm-research`. Устраняет коллизии с другими тулсетами.
+- `docs-extractor` переименован в `pm-legacy-reader` — отражает реальную роль (читает легаси-кодовую базу). Роль разделена: pm-legacy-reader пишет черновик `architecture.md`, pm-architect финализирует до канонического формата и владеет файлом.
+- `plan-feature` переименован в `pm-plan` — команда планирует не только фичи, но и хотфиксы и рефакторы.
+- Все операционные артефакты протокола перенесены из `docs/` в `.ai-pm/`: `docs/audits/` → `.ai-pm/audits/`, `docs/backlog.md` → `.ai-pm/backlog.md`, `docs/research.md` → `.ai-pm/research/`, `docs/features/*_review.md` → `.ai-pm/reviews/`, `docs/features/*_arch.md` → `.ai-pm/arch/`. `docs/` теперь содержит только документацию проекта: `architecture.md`, `stack-notes.md`, `user-journeys.md`, `features/*_plan.md`.
+
+### Changed
+
+- **Аудит переработан** — из 9-мерного технического code review в 5-мерную проверку соответствия протоколу: артефакты есть (план, ревью, контракт)? план совпадает с реализацией? реализация покрыта планом? контракты актуальны? docs свежи? Технический код-ревью — работа pm-plan-checker + встроенного `code-review` per feature.
+- **`pm-plan-checker`** (бывший `reviewer`) урезан до единственной ответственности — соответствие плану: сценарии реализованы, контракт соблюдён, interaction scenarios покрыты тестами, DoD выполнен. Технические dims 2–9 убраны — их делает встроенный `code-review` skill.
+- **Review loop** перестроен: два последовательных прохода полностью скрыты от PM. Pass 1 — pm-plan-checker (plan compliance), замечания → pm-coder → повтор. Pass 2 — `code-review` (technical quality), оркестратор записывает findings в `.ai-pm/reviews/<topic>_review.md`, pm-coder читает и правит → повтор. PM слышит только финальное "готово" + product notes.
+- **`pm-audit`** автоматически выбирает scope (diff/full) по дате последнего аудита и количеству фич — PM не выбирает параметры. При full scope предлагает запустить `code-review ultra` — PM решает. Pre-protocol-migration артефакты группируются в одно finding, принимаются массово.
+- **`pm-plan`** добавил обязательный раздел **Interaction scenarios**: фичи с разделяемым состоянием, async-операциями или внешним I/O обязаны описать конкурентные и постусловные сценарии и покрыть их тестами. pm-plan-checker блокирует при отсутствии. Триггеры универсальные (не привязаны к конкретному стеку).
+- **Retrospective check** в `pm-plan` теперь считает фичи с последнего аудита и предлагает `/pm-audit` — вместо подсчёта фич с последнего обновления `architecture.md`.
+- **pm-architect (Section A)** — явное разделение greenfield vs legacy finalization режимов. В legacy режиме черновик pm-legacy-reader является источником правды о фактах; pm-architect не изобретает, не перезаписывает, ставит `[?]` там где нет данных без кода.
+
+### Added
+
+- **Interaction scenarios** — новый обязательный раздел плана для фич с разделяемым состоянием. Включает тесты конкурентных сценариев в test plan. pm-plan-checker и pm-auditor проверяют наличие.
+
+---
+
 ## [1.13.0] — 2026-05-31
 
 ### Added
