@@ -76,14 +76,14 @@ Before drafting the plan, identify which stack components this feature touches. 
 For each touched component, check `docs/stack-notes.md`:
 
 - **Component already present** with current `Last reviewed` date → read the section, plan must respect its idioms and constraints.
-- **Component missing or stale** (no entry, or entry older than 6 months without re-review) → spawn `stack-researcher` for that component **before** continuing planning. Wait for it to extend `stack-notes.md`. Take its "New validators" list — add to the plan's "Docs to update" section as `CLAUDE.md` Pipeline extension.
+- **Component missing or stale** (no entry, or entry older than 6 months without re-review) → spawn `pm-stack-researcher` for that component **before** continuing planning. Wait for it to extend `stack-notes.md`. Take its "New validators" list — add to the plan's "Docs to update" section as `CLAUDE.md` Pipeline extension.
 
 Never plan against a missing or stale stack-notes entry. This is not a PM question — PM never sees this step. If a researcher run takes time, tell PM one sentence ("checking stack docs before planning, one moment") and continue.
 
 **Deployment path trigger (mandatory when applicable).** If the plan touches any of: deployment paths, packaging, system-level config file placement, service unit target directories, container image paths, or partition-specific locations on an embedded/opinionated platform — before writing any path in the plan, explicitly check `docs/stack-notes.md` for a "Platform filesystem layout" section (or equivalent) that documents which paths survive system resets, firmware flashes, or OS upgrades.
 
 - **Section present and covers the path in question** → cite the rule in the plan's "Stack expectations touched" section. If the platform rule constrains the path, the plan must use the correct path, not the convenient one.
-- **Section missing or does not cover the specific constraint** → this is not a PM question. Spawn `stack-researcher` to document the platform filesystem layout before continuing. If `stack-researcher` cannot resolve it (platform-specific knowledge requiring human input), add as **the first task in the plan**:
+- **Section missing or does not cover the specific constraint** → this is not a PM question. Spawn `pm-stack-researcher` to document the platform filesystem layout before continuing. If `pm-stack-researcher` cannot resolve it (platform-specific knowledge requiring human input), add as **the first task in the plan**:
   > `[ ] Document <platform> partition layout and path survival rules in docs/stack-notes.md before implementing any file placement`
 
   Never write a path placement into a plan without a platform-level reference in stack-notes.
@@ -95,11 +95,11 @@ Before writing the plan, identify shared state and external events that can occu
 For each intersection, write one interaction scenario in the plan's **Interaction scenarios** section.
 
 A feature is **not** provably isolated if it touches any of:
-- Network I/O (connects, reconnects, disconnects)
-- Connection or session state
-- Shared device state (commissioning status, pairing records, device lists)
-- MQTT subscriptions or publish state
-- Timers or polling loops that can fire during another operation
+- Shared mutable state (objects or data accessible from multiple code paths)
+- Asynchronous operations (callbacks, event handlers, message queues, pub/sub)
+- External I/O (network, filesystem, database, hardware interfaces)
+- Timers, polling loops, or scheduled operations
+- Events or signals that can arrive during an ongoing operation
 
 If the feature is provably isolated — no shared state, no concurrent operations, no adjacent feature interference — state this explicitly as `Provably isolated: <reason>` and omit the section.
 
@@ -121,7 +121,7 @@ Before forming an AskUserQuestion, write down the question and check: *would a n
 
 Stop asking when you have enough to write the plan.
 
-**Research trigger (optional):** If the feature area might benefit from existing libraries or established patterns (e.g., new protocol integration, new data format, new external service) — suggest `/research` before planning: "Worth searching for existing solutions for X? Takes 5 minutes and could save a week of development." PM decides.
+**Research trigger (optional):** If the feature area might benefit from existing libraries or established patterns (e.g., new protocol integration, new data format, new external service) — suggest `/pm-research` before planning: "Worth searching for existing solutions for X? Takes 5 minutes and could save a week of development." PM decides.
 
 ## Plan format
 
@@ -183,17 +183,18 @@ Stop asking when you have enough to write the plan.
 
 ## Retrospective check
 
-Count the number of files in `docs/features/`. If 5 or more have been added since the last time architecture.md was meaningfully updated (check git log on that file), suggest to PM:
+Count `feat:` and `fix:` commits since the most recent `docs/audits/audit-*.md` (check file listing by date). If `docs/audits/` does not exist — count all features since project start.
 
-> "We've built N features. It might be worth a quick architectural retrospective — reviewing whether the codebase still matches architecture.md and whether any patterns have drifted. Do you want to do that now or after this feature?"
+If **5 or more** features have accumulated since the last audit:
+> "We've completed N features since the last protocol check. Worth a quick audit before we continue — takes a few minutes. Run now?"
 
-If PM says now:
-1. Read the current codebase top-level structure and compare to `docs/architecture.md`.
-2. Report gaps: decisions that changed, patterns that drifted, constraints that are no longer accurate.
-3. Save findings to `docs/retro-<YYYY-MM-DD>.md`.
-4. Ask PM which gaps to fix: update `docs/architecture.md` to match reality, or file a plan to bring code back in line. Don't implement fixes — just report and let PM decide.
+If PM says yes → run `/pm-audit` before proceeding with this feature.
+If PM says no or later → continue with this feature.
 
-Don't implement fixes, just report.
+If **no audit has ever been run** (docs/audits/ empty or missing):
+> "This project hasn't had a protocol check yet. Want to run one before we plan this feature? It verifies that all previous work is properly documented."
+
+Don't implement fixes, don't block planning. PM decides.
 
 ## Architect check
 
@@ -205,7 +206,7 @@ After PM approves the plan, check architect criteria before handing off to coder
 
 If **yes to any** — suggest to PM: "This plan has a structural choice about where the new code lives. I can run an architecture review (5-10 min) to map the options and risks before coding starts. Worth doing?"
 
-If PM says yes — invoke `architect` agent with the plan, then hand off to coder with both plan and arch notes.
+If PM says yes — invoke `pm-architect` agent with the plan, then hand off to coder with both plan and arch notes.
 If PM says no — hand off to coder with plan only.
 If **none apply** — hand off to coder directly without mentioning architect.
 

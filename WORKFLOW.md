@@ -6,20 +6,21 @@ These agents are part of this project's workflow (from `.claude/agents/`). Use o
 
 | Agent | When |
 |---|---|
-| `stack-researcher` | Auto-spawn from `/bootstrap` (initial stack onboarding) or from `/plan-feature` (when a feature touches a stack component not yet in `docs/stack-notes.md`). Reads canonical docs + spec, writes cited rules into stack-notes |
-| `architect` | Structural choice in the plan — where does new code live? Plus: owns canonical `docs/architecture.md` (creates at bootstrap, refreshes on audit findings, updates on architectural decisions). |
-| `coder` | Implement the plan |
-| `reviewer` | Review after implementation |
-| `pr-prep` | Bump version, generate CHANGELOG, push branch, open or update PR |
-| `docs-extractor` | Auto-spawn from `/bootstrap` legacy full mode; reads existing codebase and writes `docs/architecture.md` + `docs/user-journeys.md` |
-| `auditor` | Auto-spawn from `/audit`; protocol compliance sweep — checks artifact completeness, plan↔implementation parity, contract currency, docs currency. Writes `docs/audits/audit-<YYYY-MM-DD>.md` and returns a structured summary. Does NOT review technical code quality — that is the reviewer's job per feature. |
-| `/research` | Research existing solutions and analogues (build vs use). PM-facing pros/cons output. Different from `stack-researcher` (which is agent-facing canonical citations). |
-| `/audit` | PM-initiated protocol compliance check. Spawns `auditor` with `scope=full` (default — all merged features) or `scope=diff` (only branches merged since the last audit). Drives a PM-facing flow over the findings (one decision per blocking: fix now / next sprint / accept-with-context). Fix-now remediations use the appropriate protocol step per finding type (missing plan → `/plan-feature`, missing contract → contract creation, stale docs → `docs-extractor`). Full scope recommended quarterly. |
-| `/fixup` | Fast path for trivial changes (≤ 50 lines, no behavior change, no stack-notes touch, no new code file). Skips plan-feature; goes directly to coder + reviewer in trivial mode. Falls back to `/plan-feature` if any condition fails. |
+| `pm-stack-researcher` | Auto-spawn from `/pm-bootstrap` (initial stack onboarding) or from `/pm-plan-feature` (when a feature touches a stack component not yet in `docs/stack-notes.md`). Reads canonical docs + spec, writes cited rules into stack-notes |
+| `pm-architect` | Structural choice in the plan — where does new code live? Plus: owns canonical `docs/architecture.md` (creates at bootstrap, refreshes on audit findings, updates on architectural decisions). |
+| `pm-coder` | Implement the plan |
+| `pm-reviewer` | Review after implementation |
+| `pm-pr-prep` | Bump version, generate CHANGELOG, push branch, open or update PR |
+| `pm-docs-extractor` | Auto-spawn from `/pm-bootstrap` legacy full mode; reads existing codebase and writes `docs/architecture.md` + `docs/user-journeys.md` |
+| `pm-auditor` | Auto-spawn from `/pm-audit`; protocol compliance sweep — checks artifact completeness, plan↔implementation parity, contract currency, docs currency. Writes `docs/audits/audit-<YYYY-MM-DD>.md` and returns a structured summary. Does NOT review technical code quality — that is the reviewer's job per feature. |
+| `/pm-research` | Research existing solutions and analogues (build vs use). PM-facing pros/cons output. Different from `pm-stack-researcher` (which is agent-facing canonical citations). |
+| `/pm-audit` | PM-initiated protocol compliance check. Spawns `pm-auditor` with `scope=full` (default — all merged features) or `scope=diff` (only branches merged since the last audit). Drives a PM-facing flow over the findings (one decision per blocking: fix now / next sprint / accept-with-context). Fix-now remediations use the appropriate protocol step per finding type (missing plan → `/pm-plan-feature`, missing contract → contract creation, stale docs → `pm-docs-extractor`). Full scope recommended quarterly. |
+| `code-review` (built-in) | Full technical quality sweep of the project — bugs, security, dead code. Use `ultra` level for deep multi-agent review. Offered automatically after `/pm-audit full`; can also be run on demand. Not a pm-* agent — part of Claude Code built-in skills. |
+| `/pm-fixup` | Fast path for trivial changes (≤ 50 lines, no behavior change, no stack-notes touch, no new code file). Skips plan-feature; goes directly to coder + reviewer in trivial mode. Falls back to `/pm-plan-feature` if any condition fails. |
 
 **Project boundary rule (applies to all agents):** every agent must stay within the project root (`git rev-parse --show-toplevel`). Never search, read, or write outside it — no parent directories, no sibling repositories. When the orchestrator spawns an agent, include the absolute project root in the prompt if the working directory may be a subdirectory.
 
-**Edit-ownership rule (applies to the orchestrator inside the local repo):** the orchestrator does not edit **content artefacts** directly. Content artefacts are anything that captures the project's design, code, contracts or canon — source code, schemas, manifests, `docs/architecture.md`, `docs/user-journeys.md`, `docs/stack-notes.md`, plan / arch / review files under `docs/features/`, audit reports under `docs/audits/`. Each of those has an agent that owns it (`coder`, `architect`, `stack-researcher`, `docs-extractor`, `auditor`, `reviewer`, `plan-feature` as a command). When a content artefact needs to change — even by one line — the orchestrator respawns the responsible agent with a focused prompt, not picks up the editor itself.
+**Edit-ownership rule (applies to the orchestrator inside the local repo):** the orchestrator does not edit **content artefacts** directly. Content artefacts are anything that captures the project's design, code, contracts or canon — source code, schemas, manifests, `docs/architecture.md`, `docs/user-journeys.md`, `docs/stack-notes.md`, plan / arch / review files under `docs/features/`, audit reports under `docs/audits/`. Each of those has an agent that owns it (`pm-coder`, `pm-architect`, `pm-stack-researcher`, `pm-docs-extractor`, `pm-auditor`, `pm-reviewer`, `pm-plan-feature` as a command). When a content artefact needs to change — even by one line — the orchestrator respawns the responsible agent with a focused prompt, not picks up the editor itself.
 
 **Orchestration artefacts** are different: they are the by-products of the orchestrator's own job of talking to the PM and routing work. `docs/backlog.md` entries, recording PM decisions, choosing remediation order for audit findings, kicking off git operations (commits, branches, tags, push), and invoking the project's own deployment script — all of these are normal orchestrator work. Spawning a separate "backlog-curator" agent for these would be overhead with no upside.
 
@@ -40,11 +41,11 @@ The line: if it captures product design or technical canon, an agent writes it. 
 
 The bright line: **if the file you're about to touch on a remote system has a sibling in the repo, the change goes through git first.** Otherwise it's a runtime / deployment action — proceed with the usual product caution (back up before destructive ops, ask PM before anything irreversible).
 
-**Audit-to-fix transition rule.** After `/audit` completes, the orchestrator must not silently load `/plan-feature` and start planning. Two valid paths:
-- PM goes through the per-finding loop (step 4 in `audit.md`): one question per finding → explicit "fix now / next sprint / accept-with-context" → then plan-feature for each "fix now" in order.
+**Audit-to-fix transition rule.** After `/pm-audit` completes, the orchestrator must not silently load `/pm-plan-feature` and start planning. Two valid paths:
+- PM goes through the per-finding loop (step 4 in `pm-audit.md`): one question per finding → explicit "fix now / next sprint / accept-with-context" → then /pm-plan-feature for each "fix now" in order.
 - PM gives a blanket "fix it" / "исправь" / "go ahead" after the summary → orchestrator confirms the full list ("I'll fix N findings in order: 1. X, 2. Y, 3. Z. Starting with #1.") and proceeds in priority order.
 
-In both cases the PM sees what will be fixed before the first `/plan-feature` loads. What is forbidden: loading `/plan-feature` without showing PM the finding list — that removes PM from the triage decision entirely.
+In both cases the PM sees what will be fixed before the first `/pm-plan-feature` loads. What is forbidden: loading `/pm-plan-feature` without showing PM the finding list — that removes PM from the triage decision entirely.
 
 **Hook-level enforcement.** The rules above are also enforced as Claude Code `PreToolUse` hooks shipped in `.claude/settings.json`, so they hold even if a future session does not re-read this file:
 
@@ -107,7 +108,7 @@ When you describe a feature or bug:
 
   If **A**: after deploying I give you a short checklist — what was built (one sentence) and what to verify (bullet list, no steps). You test and tell me what you found — issues or go-ahead.
 
-  I wait for your answer before running `pr-prep`. After merge: `git checkout main && git pull`.
+  I wait for your answer before running `pm-pr-prep`. After merge: `git checkout main && git pull`.
 
 - **Request changes** → I tell you what was found and why it matters (no code). Coder fixes, reviewer re-checks — you don't need to do anything until it's resolved or I need a product decision from you.
 
@@ -122,7 +123,7 @@ I never add anything to `docs/backlog.md` without an explicit yes from you (prod
 
 After you merge: pull main locally and we're ready for the next feature.
 
-**When you're ready to ship** — say "release". I verify git state, run `pr-prep` (version bump + CHANGELOG + PR). You merge — GitHub auto-tags and publishes the release.
+**When you're ready to ship** — say "release". I verify git state, run `pm-pr-prep` (version bump + CHANGELOG + PR). You merge — GitHub auto-tags and publishes the release.
 
 ---
 
@@ -135,13 +136,13 @@ Different change types impose different overhead. This table is the single sourc
 | User-facing feature (new behavior, new UI, new public API) | required, update each step | required (create or update + Product Impact Report from coder) | yes, all 7 items | required if stack touched |
 | Backend refactor / infrastructure / build / CI | required, update each step | skip with one-line reason in commit message | yes, items 1, 2, 4, 5, 7 | required if stack touched |
 | Docs-only fix (typo, wording, README, plan, review trail) | optional (set Status: done at end) | skip | yes, items 1, 4, 7 | skip |
-| Trivial fixup (see `/fixup` rules) | skip | skip | trivial DoD: scope + pipeline + docs landed | skip |
+| Trivial fixup (see `/pm-fixup` rules) | skip | skip | trivial DoD: scope + pipeline + docs landed | skip |
 
 **"Skip with one-line reason"** means coder writes in the commit message `Skips Product Contract: backend-only refactor, no user-visible behavior change`. Reviewer dim 1 accepts the skip if the line is present and honest; absence of the line on a backend change → blocking.
 
 **"Set Status: done at end"** means coder writes the state file once in the closing commit, doesn't update it mid-task. For docs-only fixes the state is essentially a record that the change happened.
 
-Trivial-fixup rules and the `/fixup` command are in `.claude/commands/fixup.md`.
+Trivial-fixup rules and the `/pm-fixup` command are in `.claude/commands/fixup.md`.
 
 ---
 
@@ -179,7 +180,7 @@ When you tell me "X doesn't work on the controller / on production / in the depl
 
 **Step B — Formulate findings in product language.** I summarise to you what's broken from the user's perspective. Plain language: "users can open the cart but checkout never confirms the order" — not "POST /checkout returns 502 because the upstream pricing service times out after 30s due to a config drift on the cache layer". The technical detail goes into the fix plan, not into the PM update.
 
-**Step C — Hotfix planning.** I run `/plan-feature` with the topic marked as hotfix (`hotfix-<area>`). The plan gets an extra **Incident facts** section: what is broken on production, with evidence (log excerpts, file diffs, behavior observations). The rest of the plan is the same shape as a normal feature plan — scenarios, contracts, stack expectations touched, test plan.
+**Step C — Hotfix planning.** I run `/pm-plan-feature` with the topic marked as hotfix (`hotfix-<area>`). The plan gets an extra **Incident facts** section: what is broken on production, with evidence (log excerpts, file diffs, behavior observations). The rest of the plan is the same shape as a normal feature plan — scenarios, contracts, stack expectations touched, test plan.
 
 **Step D — Standard pipeline.** Coder → reviewer → pr-prep → PR. You merge when reviewer approves. Deployment goes through whatever the project's deployment script in the repo says — never by ssh into the prod box.
 

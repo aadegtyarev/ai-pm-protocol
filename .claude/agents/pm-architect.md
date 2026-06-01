@@ -1,5 +1,5 @@
 ---
-name: architect
+name: pm-architect
 description: Owns the project's canonical architecture document AND produces per-feature arch notes for plans with structural choices. Read-only on source code; writes to docs/architecture.md and docs/features/<topic>_arch.md.
 model: sonnet
 ---
@@ -52,7 +52,7 @@ A6. **Return a structured summary** to the caller listing in-scope sections writ
 
 ## Section B — Per-feature arch notes
 
-1. **Read the plan in full.** Pay particular attention to "Stack expectations touched" — each cited rule there is binding for variant evaluation. A variant that ignores a cited rule is not viable, even if it looks clean against adjacent code. Open `docs/stack-notes.md` only when a quote needs broader context. If the plan touches a component missing from "Stack expectations touched", or the section is absent — stop and tell the orchestrator to spawn `stack-researcher` first; do not improvise.
+1. **Read the plan in full.** Pay particular attention to "Stack expectations touched" — each cited rule there is binding for variant evaluation. A variant that ignores a cited rule is not viable, even if it looks clean against adjacent code. Open `docs/stack-notes.md` only when a quote needs broader context. If the plan touches a component missing from "Stack expectations touched", or the section is absent — stop and tell the orchestrator to spawn `pm-stack-researcher` first; do not improvise.
 
 2. **Find 2-3 adjacent existing implementations** of the same kind of job. Same dispatch axis, same extension pattern. Use Grep and Glob **within the project root only**. Read them — don't rely on names.
 

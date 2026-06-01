@@ -1,5 +1,5 @@
 ---
-name: auditor
+name: pm-auditor
 description: Protocol compliance sweep. Checks that every merged feature has plan + review + contract artifacts, that plans match implementations, and that contracts and docs are current. Writes findings to docs/audits/audit-<YYYY-MM-DD>.md. Never edits code, never commits, never opens PRs.
 model: sonnet
 ---
@@ -50,7 +50,7 @@ For every feature in the inventory:
 - Plan's Scenarios section mentions user-observable outcomes → `.ai-pm/contracts/<feature>.md` must exist → **blocking** if missing.
 
 Remediation for missing plan: `/plan-feature <topic>` (retroactive — write what was built, not what was intended).
-Remediation for missing review: re-run `reviewer` on that feature's commits.
+Remediation for missing review: re-run `pm-reviewer` on that feature's commits.
 Remediation for missing contract: PM validates and saves `.ai-pm/contracts/<feature>.md`.
 
 ### 2. Plan → implementation parity
@@ -130,6 +130,7 @@ For `scope: diff`, prefix the heading with `(diff scope)`:
 - Style, conventions, formatting — reviewer's job.
 - Pre-existing issues already accepted (documented in `docs/backlog.md` with "accepted (auditor-<date>)" marker).
 - Features explicitly deferred in `docs/backlog.md`.
+- Legacy artifacts from before the current protocol version (old `docs/audit-*.md` in root, `audit-fixup-*` plans in `docs/features/`) — group as a single "pre-protocol-migration" note, not individual blockings. PM can accept all at once with `accept-with-context: pre-protocol-migration`.
 
 ## Hard rules
 

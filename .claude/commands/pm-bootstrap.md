@@ -46,11 +46,11 @@ Ask the PM these questions (one conversation, not a form):
 
 Then create from templates:
 
-- `CLAUDE.md` from `CLAUDE.md.tmpl` — fill in all placeholders. Pipeline section is left with `<test command>` and `<lint command>` as placeholders for now — extended after `stack-researcher` runs.
+- `CLAUDE.md` from `CLAUDE.md.tmpl` — fill in all placeholders. Pipeline section is left with `<test command>` and `<lint command>` as placeholders for now — extended after `pm-stack-researcher` runs.
 - `README.md` from `README.md.tmpl`
 - `docs/architecture.md` from `architecture.md.tmpl`
 - `docs/user-journeys.md` from `user-journeys.md.tmpl` — leave as guided skeleton for PM to fill
-- `docs/stack-notes.md` from `stack-notes.md.tmpl` — empty shell; `stack-researcher` fills the components on the next step
+- `docs/stack-notes.md` from `stack-notes.md.tmpl` — empty shell; `pm-stack-researcher` fills the components on the next step
 - `docs/ui-guide.md` from `ui-guide.md.tmpl` — only if **custom** UI (case 1 above)
 - `docs/threat-model.md` from `threat-model.md.tmpl` — only if security requirements mentioned
 - `docs/features/` directory
@@ -58,17 +58,17 @@ Then create from templates:
 - `.ai-pm/state/archive/` directory — completed task states get archived here
 - `.ai-pm/contracts/` directory — Product Contracts get created here as features are planned (one file per user-facing feature)
 
-**Stack literacy onboarding (mandatory, no PM questions).** Spawn the `stack-researcher` subagent with the stack components from PM's answers (language, runtime, framework, database, key libraries, target platform). The agent reads canonical docs and spec, writes `docs/stack-notes.md` with cited idioms, constraints, validators and integration contracts.
+**Stack literacy onboarding (mandatory, no PM questions).** Spawn the `pm-stack-researcher` subagent with the stack components from PM's answers (language, runtime, framework, database, key libraries, target platform). The agent reads canonical docs and spec, writes `docs/stack-notes.md` with cited idioms, constraints, validators and integration contracts.
 
-After `stack-researcher` returns:
+After `pm-stack-researcher` returns:
 - Take its "New validators" list and add each command to the `Pipeline` block in `CLAUDE.md` — these are mandatory gates alongside `<test command>` and `<lint command>`.
 - Take its "Open questions" list and surface to PM as a brief technical caveats block (one sentence each, plain language) — PM does not have to act on them now, but they exist on record.
 
-**Spawn `architect` (Section A — canonical architecture.md).** Architect reads PM's stack answers, the freshly-written `docs/stack-notes.md`, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. It walks every template section (Tech stack, Architectural decisions, Architectural constraints, File layout, Integration contract, Release flow), marking N/A sections explicitly (Security, Code conventions, Deploy if not applicable). It cites the bootstrap conversation for each decision rationale. The result replaces the placeholder content created from the template. This is the new owner of `docs/architecture.md` — orchestrator no longer writes architecture inline.
+**Spawn `pm-architect` (Section A — canonical architecture.md).** Architect reads PM's stack answers, the freshly-written `docs/stack-notes.md`, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. It walks every template section (Tech stack, Architectural decisions, Architectural constraints, File layout, Integration contract, Release flow), marking N/A sections explicitly (Security, Code conventions, Deploy if not applicable). It cites the bootstrap conversation for each decision rationale. The result replaces the placeholder content created from the template. This is the new owner of `docs/architecture.md` — orchestrator no longer writes architecture inline.
 
 Then ask PM: "Want to research existing solutions — libraries, ready products, analogues? Useful at the start so you don't build what already exists. Run /research?"
 
-If yes — run `/research` before any feature planning.
+If yes — run `/pm-research` before any feature planning.
 
 Present a brief to PM summarizing what was captured. Follow the PM communication rules from WORKFLOW.md: plain language, user perspective, no code, no unexplained technical terms.
 
@@ -121,7 +121,7 @@ Write minimal docs — enough to start adding features:
 - `.ai-pm/state/archive/` and `.ai-pm/contracts/` directories
 - Optional docs — skip; create only if code clearly requires them (e.g., obvious security constraints)
 
-**Stack literacy onboarding (mandatory, no PM questions).** Once stack components are identified from the code, spawn `stack-researcher` with that list. It fills `docs/stack-notes.md`. Take its "New validators" list and add commands to the Pipeline block in `CLAUDE.md`. Take its "Open questions" — surface to PM as caveats.
+**Stack literacy onboarding (mandatory, no PM questions).** Once stack components are identified from the code, spawn `pm-stack-researcher` with that list. It fills `docs/stack-notes.md`. Take its "New validators" list and add commands to the Pipeline block in `CLAUDE.md`. Take its "Open questions" — surface to PM as caveats.
 
 Present findings to PM. Follow the PM communication rules from WORKFLOW.md: plain language, user perspective, no code, no unexplained technical terms.
 
@@ -141,12 +141,12 @@ Do not ask PM to fill the gaps in detail — `[?]` items get resolved naturally 
 
 ### Full (complete documentation)
 
-Invoke the `docs-extractor` subagent (defined in `.claude/agents/docs-extractor.md`) using the Agent tool. It reads all significant modules at defined depth and writes `docs/architecture.md`, `docs/user-journeys.md`, and optional docs (`ui-guide.md`, `threat-model.md`). Wait for it to complete and read its summary output.
+Invoke the `pm-docs-extractor` subagent (defined in `.claude/agents/docs-extractor.md`) using the Agent tool. It reads all significant modules at defined depth and writes `docs/architecture.md`, `docs/user-journeys.md`, and optional docs (`ui-guide.md`, `threat-model.md`). Wait for it to complete and read its summary output.
 
 After the extractor finishes:
-- Write `CLAUDE.md` from `.ai-pm/tooling/doc/_templates/CLAUDE.md.tmpl` — fill in all placeholders using the stack and architecture the extractor documented. Pipeline section left as placeholders until `stack-researcher` runs.
+- Write `CLAUDE.md` from `.ai-pm/tooling/doc/_templates/CLAUDE.md.tmpl` — fill in all placeholders using the stack and architecture the extractor documented. Pipeline section left as placeholders until `pm-stack-researcher` runs.
 - Create `docs/stack-notes.md` from `.ai-pm/tooling/doc/_templates/stack-notes.md.tmpl` (empty shell).
-- Spawn `stack-researcher` with the stack components the extractor put in `architecture.md` (mandatory, no PM questions). After it returns: extend the Pipeline block in `CLAUDE.md` with its "New validators"; reflect "Integration contracts" in `architecture.md` deploy section; record "Open questions" for the PM brief below.
+- Spawn `pm-stack-researcher` with the stack components the extractor put in `architecture.md` (mandatory, no PM questions). After it returns: extend the Pipeline block in `CLAUDE.md` with its "New validators"; reflect "Integration contracts" in `architecture.md` deploy section; record "Open questions" for the PM brief below.
 - Create `docs/features/` directory if it doesn't exist
 - Create `.ai-pm/state/current.md` from template (`Status: idle`), `.ai-pm/state/archive/`, `.ai-pm/contracts/` (the docs-extractor already drafted contracts into the contracts/ directory — surface their count and `(needs PM validation)` markers in the PM brief)
 
@@ -164,7 +164,7 @@ Present to PM. Follow the PM communication rules from WORKFLOW.md: plain languag
 
 Then ask: "Does this match how you understand the system? What's wrong or missing?"
 
-PM's role is validation only — confirming accuracy, not filling gaps. If PM points out something wrong — re-invoke `docs-extractor` with a focused prompt: "Re-read [module], current docs say X but PM says Y."
+PM's role is validation only — confirming accuracy, not filling gaps. If PM points out something wrong — re-invoke `pm-docs-extractor` with a focused prompt: "Re-read [module], current docs say X but PM says Y."
 
 Result: docs complete enough to plan porting without opening the legacy codebase again.
 
