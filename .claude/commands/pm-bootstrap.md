@@ -143,7 +143,7 @@ Do not ask PM to fill the gaps in detail — `[?]` items get resolved naturally 
 
 ### Full (complete documentation)
 
-Invoke the `pm-docs-extractor` subagent (defined in `.claude/agents/docs-extractor.md`) using the Agent tool. It reads all significant modules at defined depth and writes `docs/architecture.md`, `docs/user-journeys.md`, and optional docs (`ui-guide.md`, `threat-model.md`). Wait for it to complete and read its summary output.
+Invoke the `pm-legacy-reader` subagent (defined in `.claude/agents/docs-extractor.md`) using the Agent tool. It reads all significant modules at defined depth and writes `docs/architecture.md`, `docs/user-journeys.md`, and optional docs (`ui-guide.md`, `threat-model.md`). Wait for it to complete and read its summary output.
 
 After the extractor finishes:
 - Write `CLAUDE.md` from `.ai-pm/tooling/doc/_templates/CLAUDE.md.tmpl` — fill in all placeholders using the stack and architecture the extractor documented. Pipeline section left as placeholders until `pm-stack-researcher` runs.
@@ -166,7 +166,7 @@ Present to PM. Follow the PM communication rules from WORKFLOW.md: plain languag
 
 Then ask: "Does this match how you understand the system? What's wrong or missing?"
 
-PM's role is validation only — confirming accuracy, not filling gaps. If PM points out something wrong — re-invoke `pm-docs-extractor` with a focused prompt: "Re-read [module], current docs say X but PM says Y."
+PM's role is validation only — confirming accuracy, not filling gaps. If PM points out something wrong — re-invoke `pm-legacy-reader` with a focused prompt: "Re-read [module], current docs say X but PM says Y."
 
 Result: docs complete enough to plan porting without opening the legacy codebase again.
 

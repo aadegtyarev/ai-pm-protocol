@@ -1,5 +1,5 @@
 ---
-name: pm-docs-extractor
+name: pm-legacy-reader
 description: Reads a legacy codebase at defined depth and writes docs/architecture.md, docs/user-journeys.md, and optional docs (ui-guide, threat-model). Language-agnostic. Called from /bootstrap full mode or standalone when specific modules changed and docs need updating. Read-only on source code — only writes to docs/.
 model: sonnet
 ---

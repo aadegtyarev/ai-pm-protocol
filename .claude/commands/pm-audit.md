@@ -1,6 +1,6 @@
 # pm-audit — project health check
 
-Run when PM says "check the project", "audit", "review the project", or "is everything ok?". Also triggered automatically from `/pm-plan-feature` when N features have accumulated since the last audit.
+Run when PM says "check the project", "audit", "review the project", or "is everything ok?". Also triggered automatically from `/pm-plan` when N features have accumulated since the last audit.
 
 ## Auto-scope decision (orchestrator decides, not PM)
 
@@ -56,12 +56,12 @@ PM can redirect naturally: "just a quick one" → `diff`; "go deep" / "everythin
    > "Note <n>: <short title>. **Fix now / backlog / ignore?**"
 
 6. **Run the chosen remediations** in priority order. One at a time:
-   - Missing plan → `/pm-plan-feature <topic>` (retroactive)
+   - Missing plan → `/pm-plan <topic>` (retroactive)
    - Missing review → respawn `pm-plan-checker` on that feature's commits
    - Missing contract → PM validates; orchestrator drafts `.ai-pm/contracts/<feature>.md`
    - Stale contract → PM validates update; orchestrator updates the contract
-   - Orphaned implementation → `/pm-plan-feature <topic>` (retroactive)
-   - Stale docs → spawn `pm-docs-extractor` or `pm-architect`
+   - Orphaned implementation → `/pm-plan <topic>` (retroactive)
+   - Stale docs → spawn `pm-legacy-reader` or `pm-architect`
 
    Doc-only remediations (missing plan for already-correct code, stale docs) do not require `pm-coder`.
 

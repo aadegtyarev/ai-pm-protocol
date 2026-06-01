@@ -72,7 +72,7 @@ If any item is unchecked → DoD fails → `request-changes`.
 ## Trivial mode (`--mode=trivial`)
 
 When invoked from `/pm-fixup`:
-1. Re-validate the four conditions (≤ 50 LOC, no user-visible change, no stack-notes touch, no new source file). Any failure → `request-changes: trivial-fixup violation — escalate to /pm-plan-feature`.
+1. Re-validate the four conditions (≤ 50 LOC, no user-visible change, no stack-notes touch, no new source file). Any failure → `request-changes: trivial-fixup violation — escalate to /pm-plan`.
 2. Trivial DoD: scope respected + pipeline green + docs updated.
 3. Skip all other checks.
 4. Write `.ai-pm/reviews/fixup-<short-topic>_review.md` with condition check, trivial DoD, `Verdict: approve | request-changes`. Keep it short.
