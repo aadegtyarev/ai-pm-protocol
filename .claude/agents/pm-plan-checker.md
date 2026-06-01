@@ -106,9 +106,14 @@ Write to `docs/features/<topic>_review.md`:
 
 ## Verdict
 approve | request-changes
+
+## Code review
+(filled by orchestrator after code-review pass completes)
 ```
 
 **Routing rule:** blocking findings and technical notes go to `pm-coder` automatically — no PM involvement. Only product notes surface to PM.
+
+**File ownership:** pm-plan-checker writes everything except the `## Code review` section — that line is appended by the orchestrator after the built-in `code-review` pass clears. The file is the single review artifact for pm-auditor to verify.
 
 ## Hard rules
 

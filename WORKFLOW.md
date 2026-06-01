@@ -97,12 +97,17 @@ When you describe a feature or bug:
 - How to try it yourself step by step
 - Anything that needs your attention
 
-**Step 5 — Review loop.** Plan compliance (`pm-plan-checker`) and technical quality (`code-review`) run after implementation. You don't see this loop — it runs until both pass:
+**Step 5 — Review loop.** Two sequential passes. You don't see either — they run until both pass, then you hear the result.
 
-- Any finding (blocking or technical note) → coder fixes → both re-run → repeat.
-- You are not notified about review iterations. Technical detail stays inside the loop.
+**Pass 1 — Plan compliance** (`pm-plan-checker`): are all plan scenarios implemented and tested? contracts honored? interaction scenarios covered? DoD satisfied? Writes `docs/features/<topic>_review.md`.
+- Blocking → `pm-coder` fixes → pass 1 re-runs. Repeat until clean.
 
-Once both pass, I surface only what requires a product decision:
+**Pass 2 — Technical quality** (`code-review`): bugs, security, dead code, simplifications. Only starts after pass 1 is clean.
+- Findings → `pm-coder` fixes → pass 2 re-runs. Repeat until clean.
+- After pass 2 clears, orchestrator appends one line to `docs/features/<topic>_review.md`:
+  `## Code review: <date> — <level> — passed`
+
+Once both passes clear, I surface only what requires a product decision:
 
 - **Product notes** (something that affects what the user sees or changes scope) — I present each one: fix now, add to backlog, or ignore?
 - **Nothing to decide** → I go straight to step 6.
