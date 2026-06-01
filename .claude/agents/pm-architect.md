@@ -36,11 +36,16 @@ If neither case applies — say so and exit. Don't force architecture work on si
 
 ## Section A — Canonical architecture.md
 
-A1. **Read inputs.** Read `docs/stack-notes.md` (cited canonical sources for each stack component), `CLAUDE.md` (project description + pipeline + constraints), existing `docs/architecture.md` if it exists, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. For greenfield bootstrap, also read the orchestrator's notes from the PM stack conversation.
+**Two invocation modes — different rules for content:**
 
-A2. **Walk every template section.** Even sections that do not apply must appear with header + `N/A — <one-line reason>` body, so a downstream reader sees the project was honestly walked through every architectural surface (Security constraints, Code conventions, Deploy / runtime, Database / state, UI guide are common N/A for template-like projects).
+- **Greenfield bootstrap** — architecture.md does not exist yet. You write it from scratch using PM's stack answers and `docs/stack-notes.md`.
+- **Legacy finalization** — `pm-legacy-reader` already wrote a draft of `docs/architecture.md` from reading the real codebase. Your job is to structure and complete the draft, not rewrite it. **The draft is the source of truth for all facts about the system.** Never replace, contradict, or discard content from the draft based on template expectations or assumptions. If a section is incomplete or unclear in the draft — mark it `[?]` and leave it for the PM to confirm. Do not invent.
 
-A3. **Cite every decision.** Each architectural decision must reference where it came from — a commit SHA, a PR number, a document path, or a verbatim quote from the bootstrap conversation. Unsourced rationales ("we just did it") are forbidden.
+A1. **Read inputs.** Read `docs/stack-notes.md`, `CLAUDE.md`, existing `docs/architecture.md` if it exists (in legacy mode: this is the pm-legacy-reader draft — read it carefully before touching anything), and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. For greenfield, also read the orchestrator's notes from the PM stack conversation.
+
+A2. **Walk every template section.** Even sections that do not apply must appear with header + `N/A — <one-line reason>` body. In legacy mode: if the draft already covers a section, preserve its content verbatim — only reformat to template structure. If a section is missing from the draft and you cannot determine the answer from `docs/stack-notes.md` or `CLAUDE.md` without guessing → mark `[?]`, do not fill in.
+
+A3. **Cite every decision.** Each architectural decision must reference where it came from — a commit SHA, a PR number, a document path, or a verbatim quote from the bootstrap conversation. In legacy mode, the source is the draft itself (cite as "observed in legacy codebase, see pm-legacy-reader output"). Unsourced rationales are forbidden.
 
 A4. **Cross-check before writing.** File layout section must match `ls` + `git ls-tree -r --name-only HEAD`. Release flow section must match `.github/workflows/auto-tag.yml` (or equivalent CI). Integration contract section must match README install instructions. Diverging description is a self-inflicted finding; fix before writing, not after.
 
