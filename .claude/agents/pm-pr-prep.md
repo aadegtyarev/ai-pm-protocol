@@ -26,7 +26,7 @@ Three cases — every later step branches on this:
 
 Also detect whether `gh` is on PATH and whether it is authenticated — needed only for the GitHub case. If `gh` is missing or unauthenticated and the remote is GitHub, fall back to the non-GitHub flow and report this explicitly.
 
-### 2. Warn about other open PRs (GitHub-only)
+### 2. Note other open PRs (GitHub-only)
 
 If the remote is GitHub and `gh` is available, list other open PRs (not the current branch):
 
@@ -35,7 +35,7 @@ gh pr list --state open --json number,title,headRefName \
   --jq '.[] | "#\(.number) \(.headRefName) — \(.title)"'
 ```
 
-If others exist, tell PM: "Other open PRs not in this release: [list]. They ship separately. Say ok to continue." Wait for confirmation.
+If others exist, include in the final report (step 6) under "Notes for PM": "Other open PRs not in this release: [list]. They ship separately." Do not wait for confirmation — continue immediately.
 
 For non-GitHub or no-remote cases, skip this step.
 

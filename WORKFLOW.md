@@ -1,22 +1,34 @@
 > **This file is the canonical orchestration spec** — read by agents and downstream `CLAUDE.md` via `@.ai-pm/tooling/WORKFLOW.md`. For a friendlier overview of the protocol (Russian, marketing-level) see `README.md`. When the two documents disagree, this one wins.
 
-## Workflow agents
+## Workflow agents and commands
 
-These agents are part of this project's workflow (from `.claude/agents/`). Use only these — do not substitute with similarly-named agents from other toolsets:
+### Agents (`.claude/agents/`)
+
+Spawned by the orchestrator — do not run manually. Use only these — do not substitute with similarly-named agents from other toolsets:
 
 | Agent | When |
 |---|---|
 | `pm-stack-researcher` | Auto-spawn from `/pm-bootstrap` (initial stack onboarding) or from `/pm-plan` (when a feature touches a stack component not yet in `docs/stack-notes.md`). Reads canonical docs + spec, writes cited rules into stack-notes |
-| `pm-architect` | Structural choice in the plan — where does new code live? Plus: owns canonical `docs/architecture.md` (creates at bootstrap, refreshes on audit findings, updates on architectural decisions). |
+| `pm-architect` | Structural choice in the plan — where does new code live? Plus: owns canonical `docs/architecture.md` (creates at bootstrap, refreshes on audit findings, updates on architectural decisions, fills doc gaps spawned from `/pm-plan`). |
 | `pm-coder` | Implement the plan |
 | `pm-plan-checker` | Plan compliance after implementation — verifies all scenarios implemented, contracts honored, interaction scenarios tested, DoD satisfied |
 | `pm-pr-prep` | Bump version, generate CHANGELOG, push branch, open or update PR |
-| `pm-legacy-reader` | Auto-spawn from `/pm-bootstrap` legacy full mode; reads existing codebase and writes `docs/architecture.md` + `docs/user-journeys.md` |
-| `pm-auditor` | Auto-spawn from `/pm-audit`; protocol compliance sweep — checks artifact completeness, plan↔implementation parity, contract currency, docs currency. Writes `.ai-pm/audits/audit-<YYYY-MM-DD>.md` and returns a structured summary. Does NOT review technical code quality — that is pm-plan-checker + code-review skill per feature. |
+| `pm-legacy-reader` | Auto-spawn from `/pm-bootstrap` legacy full mode; reads existing codebase and writes `docs/architecture.md` + `docs/user-journeys.md`. Also spawned standalone when `docs/user-journeys.md` has gaps. |
+| `pm-auditor` | Auto-spawn from `/pm-audit`; protocol compliance sweep — checks artifact completeness, plan↔implementation parity, contract currency, docs currency. Writes `.ai-pm/audits/audit-<YYYY-MM-DD>.md` and returns a structured summary. Does NOT review technical code quality — that is pm-plan-checker + code-review per feature. |
+
+### Commands (`.claude/commands/`)
+
+Run in the main orchestrator session:
+
+| Command | When |
+|---|---|
+| `/pm-bootstrap` | Initialize a new or legacy project — create docs structure, spawn pm-stack-researcher and pm-architect. |
+| `/pm-plan` | Plan a feature, fix, or non-trivial change. Initializes execution state; handles hotfix mode. |
 | `/pm-research` | Research existing solutions and analogues (build vs use). PM-facing pros/cons output. Different from `pm-stack-researcher` (which is agent-facing canonical citations). |
-| `/pm-audit` | PM-initiated protocol compliance check. Spawns `pm-auditor` with `scope=full` (default — all merged features) or `scope=diff` (only branches merged since the last audit). Drives a PM-facing flow over the findings (one decision per blocking: fix now / next sprint / accept-with-context). Fix-now remediations use the appropriate protocol step per finding type (missing plan → `/pm-plan`, missing contract → contract creation, stale docs → `pm-legacy-reader`). Full scope recommended quarterly. |
-| `code-review` (built-in) | Full technical quality sweep of the project — bugs, security, dead code. Use `ultra` level for deep multi-agent review. Offered automatically after `/pm-audit full`; can also be run on demand. Not a pm-* agent — part of Claude Code built-in skills. |
-| `/pm-fixup` | Fast path for trivial changes (≤ 50 lines, no behavior change, no stack-notes touch, no new code file). Skips plan-feature; goes directly to coder + reviewer in trivial mode. Falls back to `/pm-plan` if any condition fails. |
+| `/pm-audit` | PM-initiated protocol compliance check. Orchestrator auto-decides scope: full (all features) or diff (since last audit) — based on last audit date and feature count; never asks PM. Spawns `pm-auditor`, drives a PM-facing finding loop (fix now / next sprint / accept-with-context). Full scope offered after `/pm-audit` completes as optional `code-review ultra`. |
+| `/pm-fixup` | Fast path for trivial changes (≤ 50 lines, no behavior change, no stack-notes touch, no new code file). Skips `/pm-plan`; goes directly to `pm-coder` + `pm-plan-checker` in trivial mode. Falls back to `/pm-plan` if any condition fails. |
+
+`code-review` (built-in Claude Code skill) — full technical quality sweep: bugs, security, dead code. Use `ultra` level for deep multi-agent review. Runs automatically as Pass 2 in the review loop after every feature; offered as optional deep sweep after `/pm-audit`.
 
 **Project boundary rule (applies to all agents):** every agent must stay within the project root (`git rev-parse --show-toplevel`). Never search, read, or write outside it — no parent directories, no sibling repositories. When the orchestrator spawns an agent, include the absolute project root in the prompt if the working directory may be a subdirectory.
 
@@ -92,7 +104,11 @@ When you describe a feature or bug:
 
 **Step 3 — I show you the architecture decision (if one was needed).** If the plan had a structural question (where does new code live?), I'll explain what was decided and why — in plain language, with a diagram if it helps. You can push back.
 
-**Step 4 — Coder implements.** Works on a feature branch, commits atomically as it goes, runs pipeline, never touches existing tests. After coder finishes, I tell you:
+**Step 4 — Coder implements.** Works on a feature branch, commits atomically as it goes, runs pipeline, never touches existing tests.
+
+If the plan's **Docs to update** section is non-empty — before starting the review loop, spawn the owning agent with a focused prompt: `pm-architect` for `docs/architecture.md` changes, `pm-legacy-reader` for `docs/user-journeys.md` changes. This satisfies DoD item 8 before pm-plan-checker runs.
+
+After coder (and any doc agents) finish, I tell you:
 - What the feature now does (user perspective, no code)
 - How to try it yourself step by step
 - Anything that needs your attention
@@ -148,17 +164,17 @@ Different change types impose different overhead. This table is the single sourc
 | Docs-only fix (typo, wording, README, plan, review trail) | optional (set Status: done at end) | skip | yes, items 1, 4, 7 | skip |
 | Trivial fixup (see `/pm-fixup` rules) | skip | skip | trivial DoD: scope + pipeline + docs landed | skip |
 
-**"Skip with one-line reason"** means coder writes in the commit message `Skips Product Contract: backend-only refactor, no user-visible behavior change`. Reviewer dim 1 accepts the skip if the line is present and honest; absence of the line on a backend change → blocking.
+**"Skip with one-line reason"** means coder writes in the commit message `Skips Product Contract: backend-only refactor, no user-visible behavior change`. `pm-plan-checker` accepts the skip if the line is present and honest; absence of the line on a backend change → blocking.
 
 **"Set Status: done at end"** means coder writes the state file once in the closing commit, doesn't update it mid-task. For docs-only fixes the state is essentially a record that the change happened.
 
-Trivial-fixup rules and the `/pm-fixup` command are in `.claude/commands/fixup.md`.
+Trivial-fixup rules and the `/pm-fixup` command are in `.claude/commands/pm-fixup.md`.
 
 ---
 
 ## How state is kept
 
-One file — `.ai-pm/state/current.md` — holds the live snapshot of the active task: Status, what's Done, what's Remaining, Touched files, Next step, Validation command. Every coder run reads it first and updates it last. Every plan-feature run initializes it.
+One file — `.ai-pm/state/current.md` — holds the live snapshot of the active task: Status, what's Done, what's Remaining, Touched files, Next step, Validation command. Every coder run reads it first and updates it last. Every `/pm-plan` run initializes it.
 
 This means: if you pause for a week, come back, and re-enter Claude Code, my first move is to open that file and continue. You do not need to re-explain. You can open the file yourself to see where we are, but you don't write to it — agents do.
 

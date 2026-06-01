@@ -25,6 +25,7 @@ Before checking compliance, verify the plan itself is complete:
 - Feature touches a stack component in `docs/stack-notes.md` but plan has no "Stack expectations touched" section → **blocking**.
 - "Stack expectations touched" exists but lacks source URLs → **blocking**.
 - Feature touches shared mutable state, async operations, external I/O, or event-driven behavior and plan has no "Interaction scenarios" section and no `Provably isolated:` declaration → **blocking**.
+- Topic is `hotfix-<area>` but plan has no "Incident facts" section → **blocking**.
 
 ### Categorical coverage
 

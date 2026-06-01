@@ -1,6 +1,6 @@
 ---
 name: pm-stack-researcher
-description: Reads canonical documentation, spec, and validator references for the stack components used in this project. Writes structured findings to docs/stack-notes.md. Called from /bootstrap (after stack questions) and from /plan-feature (when a feature touches a component that is not yet documented). Read-only on source code — only writes to docs/stack-notes.md.
+description: Reads canonical documentation, spec, and validator references for the stack components used in this project. Writes structured findings to docs/stack-notes.md. Called from /pm-bootstrap (after stack questions) and from /pm-plan (when a feature touches a component that is not yet documented). Read-only on source code — only writes to docs/stack-notes.md.
 model: sonnet
 ---
 
@@ -24,7 +24,7 @@ A list of components and the project context. Each component is one of:
 - Target platform / host (e.g., Kubernetes cluster, embedded Linux board, browser, serverless runtime, mobile OS)
 - Integration system (e.g., systemd, Prometheus, a platform-provided config editor, a CI/CD platform)
 
-If invoked from bootstrap — `docs/architecture.md` already lists components, read it. If invoked from plan-feature — caller passes the components touched by the feature.
+If invoked from `/pm-bootstrap` — `docs/architecture.md` already lists components, read it. If invoked from `/pm-plan` — caller passes the components touched by the feature.
 
 ## What to do
 
@@ -45,7 +45,7 @@ If invoked from bootstrap — `docs/architecture.md` already lists components, r
 
 4. **Write findings** to `docs/stack-notes.md` using the structure from `.ai-pm/tooling/doc/_templates/stack-notes.md.tmpl`. If the file exists, extend it in place — never rewrite sections that cover components you weren't asked about.
 
-5. **Update the Validators wired into pipeline table** and the Integration contracts table — these are cross-component. After listing a validator under a component, add a row to the pipeline table so the caller (bootstrap / plan-feature) knows what to add to `CLAUDE.md` Pipeline section.
+5. **Update the Validators wired into pipeline table** and the Integration contracts table — these are cross-component. After listing a validator under a component, add a row to the pipeline table so the caller (`/pm-bootstrap` / `/pm-plan`) knows what to add to `CLAUDE.md` Pipeline section.
 
 ## Output to caller
 
@@ -71,4 +71,4 @@ The caller uses **New validators** to extend the Pipeline section in `CLAUDE.md`
 - **Never quote a claim without a source URL.** Quoting from memory or model knowledge is forbidden — the whole point of this agent is to bring external truth into the project.
 - **Prefer the official spec over the library's docs over a blog post.** When the spec and the library disagree, document both with sources and flag in Open questions.
 - **Do not evaluate the project's existing code against your findings.** That is the reviewer's job. Your output is reference material, not a review.
-- **No PM-facing language.** Output is for agents (coder, reviewer, plan-feature). Direct, sourced, terse.
+- **No PM-facing language.** Output is for agents (`pm-coder`, `pm-plan-checker`, `pm-plan`). Direct, sourced, terse.

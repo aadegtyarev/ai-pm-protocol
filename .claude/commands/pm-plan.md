@@ -29,9 +29,9 @@ While reading docs/, identify whether this feature touches areas that are incomp
 
 Three cases — handle each differently:
 
-**1. Documentation missing or marked `[?]`** — read the relevant code yourself, write what you find into `docs/architecture.md` or `docs/user-journeys.md`. Facts only, no interpretation. Do this before writing the plan.
+**1. Documentation missing or marked `[?]`** — do not write to `docs/` directly. Spawn the owning agent with a focused prompt: `pm-architect` for gaps in `docs/architecture.md`, `pm-legacy-reader` for gaps in `docs/user-journeys.md`. Wait for the agent to complete before writing the plan.
 
-**2. Documentation exists but incomplete** — supplement with what's missing from code. Do not rewrite what's already there.
+**2. Documentation exists but incomplete** — same: spawn the owning agent with a focused prompt to fill the missing section. Do not rewrite what's already there.
 
 **3. Documentation exists and contradicts what the plan would need** — do not touch the docs. Stop and surface to PM:
 > "The existing docs say X, but this feature would require Y. This is a product decision — should the behavior change, or should the feature stay within what's documented?"
@@ -42,7 +42,7 @@ Also flag anything this feature makes outdated:
 - Does this feature change an existing user journey? → note the update needed in `docs/user-journeys.md`
 - Does this feature add a new architectural constraint or decision? → note the update needed in `docs/architecture.md`
 
-Include any doc updates as explicit steps in the plan — coder does not touch docs.
+Include any doc updates as explicit steps in the plan — coder does not touch docs. After pm-coder finishes and before spawning pm-plan-checker: if the plan's "Docs to update" section names `docs/architecture.md` — spawn `pm-architect` with a focused prompt to update that section; if it names `docs/user-journeys.md` — spawn `pm-legacy-reader` standalone with a focused prompt. This satisfies DoD item 8 before the review loop runs.
 
 ## Categorical scope check (mandatory, surfaces a product question to PM)
 
@@ -123,6 +123,19 @@ Stop asking when you have enough to write the plan.
 
 **Research trigger (optional):** If the feature area might benefit from existing libraries or established patterns (e.g., new protocol integration, new data format, new external service) — suggest `/pm-research` before planning: "Worth searching for existing solutions for X? Takes 5 minutes and could save a week of development." PM decides.
 
+## Hotfix mode
+
+When the topic is `hotfix-<area>` (set by the orchestrator following the production incident flow in WORKFLOW.md), add this section to the plan immediately after `## Scenarios`:
+
+```markdown
+## Incident facts
+- What is broken: <symptom visible to user>
+- Evidence: <log excerpts, error codes, reproduction steps from read-only diagnostics>
+- Scope: <affected users, services, or scenarios>
+```
+
+Everything else follows the normal plan format. The Incident facts section is the only difference. Treat it as a required section — pm-plan-checker blocks on missing Incident facts for hotfix-* plans.
+
 ## Plan format
 
 ```markdown
@@ -175,11 +188,11 @@ Stop asking when you have enough to write the plan.
 
 **Test plan rule:** each new test must have a one-sentence behavior description — what scenario it verifies (given/when/then style). Not just a file name. This is what reviewer and coder use to write and verify the test.
 
-**Interaction scenario test rule:** each interaction scenario requires a test that sets up the concurrent or post-condition state and verifies the expected outcome. Omitting a test for an interaction scenario is the same protocol violation as omitting a test for a regular scenario. Reviewer dim 2 will block on missing interaction scenario tests.
+**Interaction scenario test rule:** each interaction scenario requires a test that sets up the concurrent or post-condition state and verifies the expected outcome. Omitting a test for an interaction scenario is the same protocol violation as omitting a test for a regular scenario. `pm-plan-checker` will block on missing interaction scenario tests.
 
 **Stack-spec test rule:** for every entry in "Stack expectations touched", at least one test must verify behavior against the cited rule, not against the coder's own mapping. Self-consistent property-based tests (e.g., round-trip over the coder's own range) do not count — they can freeze a spec violation as a contract. Stack-spec tests must reference the source URL in a comment.
 
-**"Stack expectations touched" rule:** if the feature touches any stack component listed in `docs/stack-notes.md` and the plan omits this section — plan is incomplete. Reviewer dim 1 will block on missing section.
+**"Stack expectations touched" rule:** if the feature touches any stack component listed in `docs/stack-notes.md` and the plan omits this section — plan is incomplete. `pm-plan-checker` will block on missing section.
 
 ## Retrospective check
 
@@ -200,7 +213,7 @@ Don't implement fixes, don't block planning. PM decides.
 
 After PM approves the plan, check architect criteria before handing off to coder:
 
-- Does the change add a new axis of extension (new device type, new event kind, new protocol handler alongside existing ones)?
+- Does the change add a new axis of extension (new entity type, new event kind, new handler of a kind already treated as a category in the codebase)?
 - Are there multiple plausible homes for the new logic in existing abstractions?
 - Does the plan contain a structural choice about internal layout rather than public API?
 

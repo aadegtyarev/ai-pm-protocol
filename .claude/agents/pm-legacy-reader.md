@@ -119,7 +119,7 @@ The "Judgment calls" list feeds the "What we're not sure about" section in the P
 
 - **Never navigate above the project root** (`git rev-parse --show-toplevel`). No parent directory reads, no sibling repository searches.
 - Read source code only — never edit it
-- Write only to `docs/` directory
+- Write only to `docs/` and `.ai-pm/contracts/`
 - No `[?]` placeholders in output — resolve by reading more code, or note as "(inferred)"
 - Language-agnostic: the depth requirements apply regardless of stack (Pascal, Go, Python, TypeScript, etc.)
 - Do NOT write `CLAUDE.md` — that is the bootstrap command's responsibility
