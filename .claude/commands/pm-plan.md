@@ -241,6 +241,13 @@ Show the draft to PM. Iterate until PM says ok.
 
 Save to `docs/features/<topic>_plan.md`.
 
+**Update feature index.** Add or update the row for this feature in `docs/features/_index.md`:
+- Status: `active`
+- Description: first scenario from `## Scenarios`, shortened to one line
+- Create the index file if it doesn't exist (header + table header + this row)
+
+After `pm-plan-checker` returns `Verdict: approve` — update the row status to `done`.
+
 **Initialize Execution State.** Update `.ai-pm/state/current.md`:
 - `Task`: <one-sentence plan summary>
 - `Status`: `planning` → `coding` (after handoff)
