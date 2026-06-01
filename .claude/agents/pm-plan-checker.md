@@ -107,13 +107,17 @@ Write to `docs/features/<topic>_review.md`:
 ## Verdict
 approve | request-changes
 
+<!-- orchestrator appends after code-review pass: -->
+## Code review findings
+(populated by orchestrator from code-review output; pm-coder reads and fixes these)
+
 ## Code review
-(filled by orchestrator after code-review pass completes)
+(updated by orchestrator to "passed — <date>" when code-review clears)
 ```
 
 **Routing rule:** blocking findings and technical notes go to `pm-coder` automatically — no PM involvement. Only product notes surface to PM.
 
-**File ownership:** pm-plan-checker writes everything except the `## Code review` section — that line is appended by the orchestrator after the built-in `code-review` pass clears. The file is the single review artifact for pm-auditor to verify.
+**File ownership:** pm-plan-checker writes everything through `## Verdict`. The orchestrator owns `## Code review findings` and `## Code review` — it appends findings before spawning pm-coder for pass 2, and updates to "passed" when clean. This file is the single persistent artifact for both review passes; pm-coder always reads it to know what to fix.
 
 ## Hard rules
 

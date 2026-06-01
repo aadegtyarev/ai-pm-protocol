@@ -103,9 +103,10 @@ When you describe a feature or bug:
 - Blocking → `pm-coder` fixes → pass 1 re-runs. Repeat until clean.
 
 **Pass 2 — Technical quality** (`code-review`): bugs, security, dead code, simplifications. Only starts after pass 1 is clean.
-- Findings → `pm-coder` fixes → pass 2 re-runs. Repeat until clean.
-- After pass 2 clears, orchestrator appends one line to `docs/features/<topic>_review.md`:
-  `## Code review: <date> — <level> — passed`
+- Orchestrator runs `code-review`, takes findings from the output, and appends them to `docs/features/<topic>_review.md` as `## Code review findings` — so `pm-coder` has a persistent artifact to read.
+- `pm-coder` reads `docs/features/<topic>_review.md`, fixes the code-review findings, commits.
+- Orchestrator re-runs `code-review` to verify clean. Repeat until no findings.
+- When clean: orchestrator updates the section to `## Code review: <date> — passed`.
 
 Once both passes clear, I surface only what requires a product decision:
 
