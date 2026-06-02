@@ -13,6 +13,13 @@
 
 ---
 
+## [2.2.1] — 2026-06-02
+
+### Changed
+- Docs: updating the template can be requested in plain language ("обнови шаблон" / "bump ai-pm-protocol to vX.Y") — documented in README and WORKFLOW.md as orchestrator chore work (submodule bump on a branch + any pending migration), no `/pm-plan` needed.
+
+---
+
 ## [2.2.0] — 2026-06-02
 
 Realignment of the protocol around best-in-class built-in skills/tools, a contract-centric product map, and a PM-authorized diagnostic-probe mode.
