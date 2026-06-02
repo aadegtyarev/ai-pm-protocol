@@ -67,6 +67,8 @@ In both cases the PM sees what will be fixed before the first `/pm-plan` loads. 
 - `git commit --no-verify / --no-gpg-sign` — **asked** (bypasses pre-commit / signing).
 - Spawning a `wb-*` role agent or loading a `wb-*` role skill that occupies a protocol seat (`wb-development:coder` / `code-reviewer` / `design-review` / `pr-prep` / `plan-feature`, `wb-git:workflow`) — **denied** automatically, with a pointer to the `pm-*` equivalent. This is the mechanical form of the "use only these agents" rule above. It is a **named deny-list, never an "everything but `pm-*`" block**: built-in engines (`code-review`, `deep-research`) and `wb-*` knowledge skills (`codestyle`, `package-bootstrap`, platform skills) are explicitly not gated — the protocol delegates engines and platform knowledge to them on purpose.
 
+On every change-intent prompt a `UserPromptSubmit` hook injects a one-paragraph reminder of this route (Step 0 → `/pm-plan` → coder → review → pr-prep; orchestrator does not edit content artefacts; use `pm-*`, not `wb-*` role skills). It stays silent on ordinary conversation. This is the soft, every-turn counterpart to the hard PreToolUse guard above — it keeps the protocol asserted without depending on a session re-reading this file.
+
 Read-only ssh diagnostics (`cat` for reading, `ls`, `journalctl`, `systemctl status`, `docker logs`, `docker ps`, native status / audit / info commands) are not gated. Local mutating commands (anything not over ssh) are not gated either — they are normal dev work.
 
 Hooks themselves are tested by `tests/hooks.sh`, gated by `.github/workflows/lint-hooks.yml` on every PR that touches the hooks or their tests. A regex regression now fails CI rather than silently degrading the gate.

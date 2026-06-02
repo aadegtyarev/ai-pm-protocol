@@ -166,6 +166,35 @@ mk_input_skill() {
     jq -nc --arg s "$1" '{tool_name:"Skill", tool_input:{skill:$s}}'
 }
 
+# Helper to build a UserPromptSubmit-shaped JSON with a prompt field.
+mk_input_prompt() {
+    jq -nc --arg p "$1" '{prompt:$p}'
+}
+
+# run_ups_case <label> <expected: inject|silent> <input_json>
+# UserPromptSubmit hooks emit hookSpecificOutput.additionalContext rather
+# than a permissionDecision, so they need their own assertion path.
+run_ups_case() {
+    label="$1"
+    expected="$2"
+    input_json="$3"
+    cmd=$(get_hook_cmd "$UPS_HOOK")
+    output=$(printf '%s' "$input_json" | bash -c "$cmd" 2>/dev/null)
+    if [ -z "$output" ]; then
+        actual="silent"
+    else
+        ctx=$(printf '%s' "$output" | jq -r '.hookSpecificOutput.additionalContext // empty' 2>/dev/null)
+        if [ -n "$ctx" ]; then actual="inject"; else actual="malformed"; fi
+    fi
+    if [ "$actual" != "$expected" ]; then
+        echo "FAIL: $label — expected=$expected actual=$actual"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        return
+    fi
+    echo "PASS: $label"
+    PASS_COUNT=$((PASS_COUNT + 1))
+}
+
 READ_HOOK='.hooks.PreToolUse[0].hooks[0].command'
 FIND_HOOK='.hooks.PreToolUse[1].hooks[0].command'
 SSH_EDIT_HOOK='.hooks.PreToolUse[1].hooks[1].command'
@@ -173,6 +202,7 @@ SSH_MUT_HOOK='.hooks.PreToolUse[1].hooks[2].command'
 GIT_PUSH_HOOK='.hooks.PreToolUse[1].hooks[3].command'
 GIT_COMMIT_HOOK='.hooks.PreToolUse[1].hooks[4].command'
 AGENT_GUARD_HOOK='.hooks.PreToolUse[2].hooks[0].command'
+UPS_HOOK='.hooks.UserPromptSubmit[0].hooks[0].command'
 
 # ----------------------------------------------------------------------
 # Read boundary hook — denies file paths outside the project root.
@@ -366,6 +396,23 @@ run_case "guard: skill wb-git:pr-author -> pass (deferred until PR-review capabi
     "pass" "$AGENT_GUARD_HOOK" "$(mk_input_skill wb-git:pr-author)"
 run_case "guard: skill wb-git:pr-review -> pass (no protocol seat)" \
     "pass" "$AGENT_GUARD_HOOK" "$(mk_input_skill wb-git:pr-review)"
+
+# ----------------------------------------------------------------------
+# UserPromptSubmit route reminder — injects the protocol route on
+# change-intent prompts (RU + EN), stays silent on chit-chat so it does
+# not pollute ordinary conversation.
+# ----------------------------------------------------------------------
+
+run_ups_case "ups: 'поправь баг в коде' -> inject" \
+    "inject" "$(mk_input_prompt 'поправь баг в коде')"
+run_ups_case "ups: 'please implement the feature' -> inject" \
+    "inject" "$(mk_input_prompt 'please implement the feature')"
+run_ups_case "ups: 'добавь поле в форму' -> inject" \
+    "inject" "$(mk_input_prompt 'добавь поле в форму')"
+run_ups_case "ups: 'спасибо, отлично' (chit-chat) -> silent" \
+    "silent" "$(mk_input_prompt 'спасибо, отлично')"
+run_ups_case "ups: 'как это устроено?' (question) -> silent" \
+    "silent" "$(mk_input_prompt 'как это устроено?')"
 
 # ----------------------------------------------------------------------
 # Summary
