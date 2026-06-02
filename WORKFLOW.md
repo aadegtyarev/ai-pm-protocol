@@ -137,6 +137,8 @@ After the loop clears, I tell you:
 - How to try it yourself (step by step)
 - Any product notes that need your answer
 
+**Step 5.5 — Optional: run it for real.** When the feature is runnable locally, before ship I can invoke the built-in `verify` / `run` skill to actually launch the app and exercise the new behaviour — confirming it *works*, not just that tests pass. This catches the "green tests, broken feature" class. I report what I observed. For features that need real hardware or your specific environment I skip this and give you the checklist instead (Step 6 option A).
+
 **Step 6 — Ship.** I verify git state, then ask:
 
 > "Ready to open the PR. How do you want to proceed?
