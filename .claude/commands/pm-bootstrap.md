@@ -40,13 +40,30 @@ Check what exists:
 
 On an already-initialized project, before confirming-and-exiting, check whether a template upgrade (`git submodule update --remote`) left a migration to run. Trigger on PM request ("migrate", "обнови шаблон", "мигрируй на v2.2") or proactively when detected.
 
-- **v2.2 — feature index → product map.** If `docs/features/_index.md` exists, or `docs/product.md` is missing:
+- **v2.2 — feature index → product map.** If `docs/features/_index.md` exists (the pre-v2.2 index that this migration replaces):
   1. **Backfill `Built/changed by` from the index first.** Pre-v2.2 contracts have no `Built/changed by` list, so a naive generation would drop every feature into the Infrastructure bucket. The mapping already exists in the index's `Contract` column: read `docs/features/_index.md`, and for each feature row that links a contract, append `- [<topic>](../../docs/features/<topic>_plan.md)` to that contract's `Built/changed by` section. Features with no contract link correctly fall into the Infrastructure bucket.
-  2. Generate `docs/product.md` from the contracts / plans / reviews using the **Product map generation procedure** below.
-  3. `git rm docs/features/_index.md` — its content is now rendered, contract-centric, in `docs/product.md`.
-  4. Tell the PM in plain language: "Updated the project map to the new format — `docs/product.md` now shows what the system does, organized by what each feature guarantees. The old feature list is gone; nothing else changed."
+  2. Generate `docs/product-map.md` from the contracts / plans / reviews using the **Product map generation procedure** below. (Pre-v2.3 the target was `docs/product.md`; the v2.3 migration below splits that into the authored front door plus this generated map. If you run both migrations on a project that still has a generated `docs/product.md`, run the v2.3 rename first.)
+  3. `git rm docs/features/_index.md` — its content is now rendered, contract-centric, in `docs/product-map.md`.
+  4. Tell the PM in plain language: "Updated the project map to the new format — `docs/product-map.md` now shows what the system does, organized by what each feature guarantees. The old feature list is gone; nothing else changed."
 
-  If the project is backend-only (no user-facing contracts), `docs/product.md` renders with a single `## Infrastructure (no user-facing contract)` section — that is correct, not an error.
+  If the project is backend-only (no user-facing contracts), `docs/product-map.md` renders with a single `## Infrastructure (no user-facing contract)` section — that is correct, not an error.
+
+- **v2.3 — `product.md` split into authored front door + generated map.** The single generated `docs/product.md` is split into an **authored** `docs/product.md` (PM front door, owned by `pm-architect`) and a **generated** `docs/product-map.md` (the contract→features map). Detect and migrate:
+
+  **Detection (pre-split state) — BOTH must hold:**
+  1. `docs/product.md` exists AND its content carries the frozen pre-split generator signature line:
+
+     > `> Source of truth = contracts. One contract, many features. Generated, not hand-filled.`
+
+     **This literal string is a frozen historical artifact** — it is the exact header the pre-split generator emitted. Do NOT "tidy" or normalize it to match the new map header; the detection of already-deployed projects depends on this exact pre-split text. (The new generator no longer emits it; that is intentional and what makes the two states distinguishable.)
+  2. `docs/product-map.md` does **not** exist.
+
+  If either guard fails — do nothing (no-op). This makes the migration idempotent two ways: after a successful run `product-map.md` exists (guard 2 fails on re-run), and an authored `product.md` never carries the signature line (guard 1 fails — e.g. a greenfield-before-first-feature project with a hand-authored funnel is left untouched, no clobber).
+
+  **Steps when pre-split:**
+  1. `git mv docs/product.md docs/product-map.md` — the old generated content is preserved verbatim as the map; no data loss. (The next auditor/`/pm-plan` run rebuilds it wholesale in the new format, signature line included or not is irrelevant — it is overwritten.)
+  2. Scaffold a fresh authored `docs/product.md` from `.ai-pm/tooling/doc/_templates/product.md.tmpl` (the funnel skeleton: Зачем / Что умеет сегодня / Документы / Функции), written **without** any generator signature line. Then spawn `pm-architect` to fill the funnel (or leave the skeleton for the next `pm-architect` run if the PM is not ready).
+  3. Tell the PM in plain language: "The capability map moved to `docs/product-map.md` (same content, now in the new format). `docs/product.md` is now your authored product front door — I scaffolded a skeleton for you to fill (why it exists, what it does today, where the docs are)."
 
 ---
 
@@ -57,6 +74,14 @@ Ask the PM these questions (one conversation, not a form):
 1. What does this product do? (one sentence)
 2. Who uses it? (be specific — role, context)
 3. What problem does it replace or eliminate?
+
+**Product front-door Q&A** (mirrors the stack Q&A below — its answers feed `pm-architect`, which authors `docs/product.md`):
+
+- **Why does this exist?** (the problem, and for whom — in product language)
+- **What is deliberately out of scope for now?** (what you are *not* building yet — e.g. "only dimmable lights so far, no RGB", "single-user, no teams yet")
+
+(`pm-architect` derives "what it does today" from the contracts and architecture itself — you do not need to enumerate features here.)
+
 4. Does your company or team have technology standards? (approved languages, forbidden dependencies, codestyle guide — link or describe key rules)
 5. Tech stack? (language, framework, database — and why each choice)
 6. Does the project have a UI? Three cases:
@@ -76,17 +101,8 @@ Then create from templates:
 - `docs/ui-guide.md` from `ui-guide.md.tmpl` — only if **custom** UI (case 1 above)
 - `docs/threat-model.md` from `threat-model.md.tmpl` — only if security requirements mentioned
 - `docs/features/` directory
-- `docs/product.md` — empty product map (no features yet). Read `docs/architecture.md` to extract component names; create one `## <Component>` section per component plus a final `## Infrastructure (no user-facing contract)` section. No contracts/rows yet — they appear as features are planned. See **Product map generation procedure** below.
-
-  ```markdown
-  # Product — what the system does
-
-  > Source of truth = contracts. One contract, many features. Generated, not hand-filled.
-
-  ## <Component>
-
-  ## Infrastructure (no user-facing contract)
-  ```
+- `docs/product.md` — the **authored** product front door. Scaffold from `product.md.tmpl` (the funnel skeleton: `## Зачем это нужно`, `## Что умеет сегодня`, `## Документы`, `## Функции`). It is **not** generated and carries **no** generator signature line. `pm-architect` fills it from the PM's product Q&A answers (see below) — the orchestrator does not hand-write the prose.
+- `docs/product-map.md` — the **generated** contract→features map. On a fresh greenfield project there are no contracts yet, so it renders with just the component sections (from `docs/architecture.md`) plus a final `## Infrastructure (no user-facing contract)` section; rows appear as features are planned. Generate via the **Product map generation procedure** below.
 - `.ai-pm/state/current.md` from `state.md.tmpl` — initial state set to `Status: idle`; updated by every coder run thereafter
 - `.ai-pm/state/archive/` directory — completed task states get archived here
 - `.ai-pm/reviews/` directory — review artifacts (plan compliance + code review findings)
@@ -101,7 +117,9 @@ After `pm-stack-researcher` returns:
 - Take its "New validators" list and add each command to the `Pipeline` block in `CLAUDE.md` — these are mandatory gates alongside `<test command>` and `<lint command>`.
 - Take its "Open questions" list and surface to PM as a brief technical caveats block (one sentence each, plain language) — PM does not have to act on them now, but they exist on record.
 
-**Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A — canonical architecture.md).** Architect reads PM's stack answers, the freshly-written `docs/stack-notes.md`, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. It walks every template section (Tech stack, Architectural decisions, Architectural constraints, File layout, Integration contract, Release flow), marking N/A sections explicitly (Security, Code conventions, Deploy if not applicable). It cites the bootstrap conversation for each decision rationale. The result replaces the placeholder content created from the template. This is the new owner of `docs/architecture.md` — orchestrator no longer writes architecture inline.
+**Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A — canonical architecture.md + authored product.md).** Architect reads PM's stack answers, the freshly-written `docs/stack-notes.md`, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. It walks every template section (Tech stack, Architectural decisions, Architectural constraints, File layout, Integration contract, Release flow), marking N/A sections explicitly (Security, Code conventions, Deploy if not applicable). It cites the bootstrap conversation for each decision rationale. The result replaces the placeholder content created from the template. This is the new owner of `docs/architecture.md` — orchestrator no longer writes architecture inline.
+
+In the same spawn, **pass the PM's product front-door Q&A answers** (why / for whom / deliberately-out-of-scope-for-now). pm-architect authors `docs/product.md` — the funnel front door — from those answers, deriving `## Что умеет сегодня` from existing contracts (their `## User value`) and architecture components. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`.
 
 Then ask PM: "Want to research existing solutions — libraries, ready products, analogues? Useful at the start so you don't build what already exists. Run /pm-research?"
 
@@ -154,12 +172,15 @@ Write minimal docs — enough to start adding features:
 - `docs/architecture.md` — stack and key decisions extracted from code; mark gaps as `[?]`
 - `docs/user-journeys.md` — write only what's visible from entry points and module names; leave the rest as `[?]`
 - `docs/stack-notes.md` from `stack-notes.md.tmpl` — empty shell
-- `docs/product.md` — generate using the **Product map generation procedure** below.
+- `docs/product.md` — scaffold the **authored** front door from `product.md.tmpl` (funnel skeleton, no generator signature line). `pm-architect` fills it (see below); the orchestrator does not hand-write the prose.
+- `docs/product-map.md` — the **generated** map; generate using the **Product map generation procedure** below.
 - `.ai-pm/state/current.md` from `state.md.tmpl` — initial state `Status: idle`
 - `.ai-pm/state/archive/`, `.ai-pm/contracts/`, `.ai-pm/reviews/`, `.ai-pm/arch/`, `.ai-pm/audits/`, `.ai-pm/research/` directories
 - Optional docs — skip; create only if code clearly requires them (e.g., obvious security constraints)
 
 **Stack literacy onboarding (mandatory, no PM questions).** Once stack components are identified from the code, spawn `pm-stack-researcher` (`subagent_type: "pm-stack-researcher"`) with that list. It fills `docs/stack-notes.md`. Take its "New validators" list and add commands to the Pipeline block in `CLAUDE.md`. Take its "Open questions" — surface to PM as caveats.
+
+**Authored front door.** Before presenting findings, ask the PM the two product front-door questions (why this exists / what is deliberately out of scope for now), then spawn `pm-architect` (`subagent_type: "pm-architect"`) to author `docs/product.md` from those answers, deriving `## Что умеет сегодня` from existing contracts and the architecture. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`. If the PM is not ready, leave the scaffolded skeleton for a later `pm-architect` run.
 
 Present findings to PM. Follow the PM communication rules from WORKFLOW.md: plain language, user perspective, no code, no unexplained technical terms.
 
@@ -185,9 +206,10 @@ After the extractor finishes:
 - Write `CLAUDE.md` from `.ai-pm/tooling/doc/_templates/CLAUDE.md.tmpl` — fill in all placeholders using the stack and architecture the extractor documented. Pipeline section left as placeholders until `pm-stack-researcher` runs.
 - Create `docs/stack-notes.md` from `.ai-pm/tooling/doc/_templates/stack-notes.md.tmpl` (empty shell).
 - Spawn `pm-stack-researcher` (`subagent_type: "pm-stack-researcher"`) with the stack components the extractor put in `architecture.md` (mandatory, no PM questions). After it returns: extend the Pipeline block in `CLAUDE.md` with its "New validators"; reflect "Integration contracts" in `architecture.md` deploy section; record "Open questions" for the PM brief below.
-- **Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A)** to finalize `docs/architecture.md` to canonical format. `pm-legacy-reader` produces a raw draft — `pm-architect` is the owner and must walk every template section, fill gaps from `stack-notes.md`, mark N/A sections explicitly, and cite each decision. Wait for it to complete before presenting to PM.
+- **Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A)** to finalize `docs/architecture.md` to canonical format, and — passing the PM's product front-door answers (ask the two product questions: why this exists / deliberately out of scope for now) — to author `docs/product.md`. `pm-legacy-reader` produces a raw architecture draft — `pm-architect` is the owner and must walk every template section, fill gaps from `stack-notes.md`, mark N/A sections explicitly, and cite each decision. For `docs/product.md`, it authors the funnel from the PM answers, deriving `## Что умеет сегодня` from the drafted contracts and architecture. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`. Wait for it to complete before presenting to PM.
 - Create `docs/features/` directory if it doesn't exist
-- Create `docs/product.md` — generate using the **Product map generation procedure** below.
+- Create `docs/product.md` — the **authored** front door. Scaffold from `product.md.tmpl` (no generator signature line) so `pm-architect` (above) can author it.
+- Create `docs/product-map.md` — the **generated** map; generate using the **Product map generation procedure** below.
 - Create `.ai-pm/state/current.md` from template (`Status: idle`), `.ai-pm/state/archive/`, `.ai-pm/contracts/`, `.ai-pm/reviews/`, `.ai-pm/arch/`, `.ai-pm/audits/`, `.ai-pm/research/` (pm-legacy-reader already drafted contracts into the contracts/ directory — surface their count and `(needs PM validation)` markers in the PM brief)
 
 Present to PM. Follow the PM communication rules from WORKFLOW.md: plain language, user perspective, no code, no unexplained technical terms. Structure as follows:
@@ -267,29 +289,42 @@ Same UI note and initial commit rules as greenfield apply.
 
 ## Product map generation procedure
 
-Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product.md` — the PM-facing, contract-centric map of what the application does. It is **generated, never hand-filled**: every run rebuilds it from the source files (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git). `docs/product.md` lives at the docs root, so links are `features/<topic>_plan.md` and `../.ai-pm/...`.
+Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product-map.md` — the PM-facing, contract-centric map of what the application does. It is **generated, never hand-filled**: every run rebuilds it from the source files (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git). `docs/product-map.md` lives at the docs root, so links are `features/<topic>_plan.md` and `../.ai-pm/...`.
+
+> **This procedure writes only `docs/product-map.md`; it never creates or edits the authored `docs/product.md`.** The authored front door is owned by `pm-architect`; this generated map and that authored funnel are separate files that never share a writer.
 
 ### Structure: group → contract → features
 
 1. **Group** — read `docs/architecture.md`, extract the major components/subsystems. Each becomes a `## <Component>` section.
 2. **Contracts** — for each `.ai-pm/contracts/<name>.md`, place a block under the component it serves (match by the contract's subject / architecture component):
-   - Heading `### <Contract name> · <status> · ../.ai-pm/contracts/<name>.md` — status `live` (default) or `deprecated` if the contract says so.
-   - `Guarantees:` one line from the contract's first **Must work** item.
+   - Heading is a **clickable markdown link** to the contract file followed by the status label: `### [<Contract name>](../.ai-pm/contracts/<name>.md) — <status>` — status `live` (default) or `deprecated` if the contract says so. Do not print a raw backtick path; the name itself is the link.
+   - `Guarantees:` one line taken from the contract's `## User value` section (the human, product-language promise — **not** the technical first `Must work` item).
    - A table of the features that built or changed it, read from the contract's **Built/changed by** list. `Done` = `git log --follow --diff-filter=A --format="%Y-%m-%d" -- .ai-pm/reviews/<topic>_review.md` (else `—`); `Review` = `[R](../.ai-pm/reviews/<topic>_review.md)` if it exists, else `—`.
 3. **Infrastructure bucket** — a final `## Infrastructure (no user-facing contract)` section listing every `*_plan.md` in `docs/features/` not referenced by any contract's Built/changed by list (backend / infra features). Same table, no Guarantees line.
 4. Sort contracts alphabetically within a component; sort feature rows by `Done` (newest last).
+5. **One feature, many contracts — render once.** A single feature can appear in several contracts' `Built/changed by` lists (it built or changed all of them). Render that feature's row **fully once** under the first contract (alphabetical order) where it appears; under every subsequent contract, render the feature as a single marked line `↑ та же работа` instead of a repeated full row, so the PM sees the shared work without duplicate Done/Review columns.
+
+### Status legend
+
+The map opens with a one-line legend so the status labels are self-explanatory (no bare jargon):
+
+```markdown
+> Status: **live** — contract is in force · **deprecated** — superseded, kept for history.
+```
+
+Do **not** print a generator-mechanics header ("Source of truth = contracts. Generated, not hand-filled.") — that is internal plumbing, not PM-facing.
 
 ### Output format
 
 ```markdown
-# Product — what the system does
+# Product map — what the system does, by contract
 
-> Source of truth = contracts. One contract, many features. Generated, not hand-filled.
+> Status: **live** — contract is in force · **deprecated** — superseded, kept for history.
 
 ## <Component>
 
-### <Contract name> · live · `../.ai-pm/contracts/<name>.md`
-Guarantees: <one line from the contract's first Must work item>
+### [<Contract name>](../.ai-pm/contracts/<name>.md) — live
+Guarantees: <one line from the contract's `## User value` section>
 
 | Feature | Done | Review |
 |---|---|---|
@@ -300,6 +335,39 @@ Guarantees: <one line from the contract's first Must work item>
 | Feature | Done | Review |
 |---|---|---|
 | [build-pipeline](features/build-pipeline_plan.md) | 2025-09-02 | [R](../.ai-pm/reviews/build-pipeline_review.md) |
+```
+
+### Worked example
+
+Two contracts (`dimmer-control`, `scene-recall`) live under a "Lighting" component; one feature (`bus-failover`) is backend-only. The feature `scene-engine` built **both** `dimmer-control` and `scene-recall`, so it is rendered fully under `dimmer-control` (alphabetically first) and marked `↑ та же работа` under `scene-recall`:
+
+```markdown
+# Product map — what the system does, by contract
+
+> Status: **live** — contract is in force · **deprecated** — superseded, kept for history.
+
+## Lighting
+
+### [dimmer-control](../.ai-pm/contracts/dimmer-control.md) — live
+Guarantees: A user can smoothly dim any connected dimmable light from the app, and the brightness it shows always matches the lamp.
+
+| Feature | Done | Review |
+|---|---|---|
+| [dimmer-mvp](features/dimmer-mvp_plan.md) | 2025-09-10 | [R](../.ai-pm/reviews/dimmer-mvp_review.md) |
+| [scene-engine](features/scene-engine_plan.md) | 2025-10-15 | [R](../.ai-pm/reviews/scene-engine_review.md) |
+
+### [scene-recall](../.ai-pm/contracts/scene-recall.md) — live
+Guarantees: A user can save the current lighting as a named scene and bring it back with one tap.
+
+| Feature | Done | Review |
+|---|---|---|
+| [scene-engine](features/scene-engine_plan.md) — ↑ та же работа |  |  |
+
+## Infrastructure (no user-facing contract)
+
+| Feature | Done | Review |
+|---|---|---|
+| [bus-failover](features/bus-failover_plan.md) | 2025-09-02 | [R](../.ai-pm/reviews/bus-failover_review.md) |
 ```
 
 ---

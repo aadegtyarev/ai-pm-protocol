@@ -241,15 +241,15 @@ Show the draft to PM. Iterate until PM says ok.
 
 Save to `docs/features/<topic>_plan.md`.
 
-**Update the product map.** Regenerate `docs/product.md` using the **Product map generation procedure** in `pm-bootstrap.md`. The map is generated from the source files (contracts + plans + reviews + git), not hand-filled:
+**Update the product map.** Regenerate `docs/product-map.md` using the **Product map generation procedure** in `pm-bootstrap.md`. This procedure writes only `docs/product-map.md`; it never creates or edits the authored `docs/product.md` (that front door is owned by `pm-architect`). The map is generated from the source files (contracts + plans + reviews + git), not hand-filled:
 
 - On plan creation: if this feature creates a contract, that contract appears under its component as soon as the contract file exists. A backend-only feature (no contract) will surface in the `## Infrastructure (no user-facing contract)` bucket once approved.
-- If `docs/product.md` doesn't exist — create it via the same procedure.
+- If `docs/product-map.md` doesn't exist — create it via the same procedure.
 
 After `pm-plan-checker` returns `Verdict: approve`:
 
 1. **Append the feature to its contract's Built/changed by list** — in `.ai-pm/contracts/<name>.md` add `- [<topic>](../../docs/features/<topic>_plan.md)`. Skip for a backend-only feature with no contract (it surfaces in the Infrastructure bucket instead).
-2. **Regenerate `docs/product.md`** via the Product map generation procedure — the feature now appears under its contract (or Infrastructure) with its Done date and review link.
+2. **Regenerate `docs/product-map.md`** via the Product map generation procedure — the feature now appears under its contract (or Infrastructure) with its Done date and review link. This writes only `docs/product-map.md`; it never touches the authored `docs/product.md`.
 
 **Initialize Execution State.** Update `.ai-pm/state/current.md`:
 - `Task`: <one-sentence plan summary>

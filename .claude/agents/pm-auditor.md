@@ -103,13 +103,17 @@ For every `.ai-pm/contracts/<feature>.md`:
 
 - `docs/architecture.md`: does it list the major components visible in the codebase? Significant component missing → **note**.
 - `docs/user-journeys.md`: does it cover user-facing flows that are implemented? Missing journey for an implemented user-facing feature → **note**.
-- `docs/product.md`: must exist and be current — the PM-facing contract→features map. Re-derive it from source (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git); do not trust the existing file. Check:
-  - Map missing → **note** (remediation: generate via Product map generation procedure in `pm-bootstrap.md`).
+- `docs/product-map.md` (**generated** map): must exist and be current — the PM-facing contract→features map. **The auditor only re-derives and compares `docs/product-map.md`; it never regenerates or writes it (read/compare only), and never touches the authored `docs/product.md`.** Re-derive the map from source (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git); do not trust the existing file. Check:
+  - Map missing → **note** (remediation: generate via Product map generation procedure in `pm-bootstrap.md`). On a legitimately feature-less greenfield project (no contracts and no plans yet) a missing map is **not** a finding — skip.
   - A contract in `.ai-pm/contracts/` not rendered under any component → **note** (stale map).
   - A feature plan in `docs/features/` appearing neither under a contract's table nor in the `## Infrastructure (no user-facing contract)` bucket → **note** (stale map).
   - A contract's `Built/changed by` list out of sync with the features that actually touched it → **note**.
   - A `Review` link pointing to a non-existent file, or a missing `Done` date for a feature that has a review → **note**.
   - A contract grouped under a component that doesn't match `docs/architecture.md` → **note**.
+- `docs/product.md` (**authored** front door) — **structure-only check.** The auditor only existence-checks this file and verifies its funnel sections; it **never** regenerates it. Check:
+  - File missing or empty → **note**.
+  - Missing any of the four funnel headers (`## Зачем это нужно`, `## Что умеет сегодня`, `## Документы`, `## Функции`) → **note**.
+  - **Never validate the prose content** — product intent is the PM's, not the auditor's. The auditor cannot know whether "Зачем" is right or whether "Что умеет сегодня" is complete, and must not flag stale-looking prose; refreshing the funnel on coverage changes is `pm-architect`'s job, not a finding here.
 
 Notes, not blocking — docs can lag slightly, but the same gap flagged in two consecutive full audits upgrades to blocking.
 
