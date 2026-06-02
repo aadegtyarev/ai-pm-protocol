@@ -35,6 +35,7 @@ Realignment of the protocol around best-in-class built-in skills/tools, a contra
 - `pm-coder` may load `wb-*` knowledge skills (codestyle, packaging, platform); WebSearch is tool-locked out.
 - `pm-auditor` dimension 5 checks `docs/product.md` currency instead of the feature index.
 - `pm-bootstrap` / `pm-plan` generate and maintain `docs/product.md`.
+- `README.md` synced to v2.2.0 (product map, diagnostic-probe mode, mechanical route discipline, built-in delegation).
 
 ### Removed
 - `docs/features/_index.md` (feature index) — replaced by the contract-centric `docs/product.md`.
