@@ -64,15 +64,16 @@ Then create from templates:
 - `docs/ui-guide.md` from `ui-guide.md.tmpl` — only if **custom** UI (case 1 above)
 - `docs/threat-model.md` from `threat-model.md.tmpl` — only if security requirements mentioned
 - `docs/features/` directory
-- `docs/features/_index.md` — empty feature index (no features yet). Read `docs/architecture.md` to extract component names; create one `## <Component>` section per component, each with the column header below. No rows yet.
+- `docs/product.md` — empty product map (no features yet). Read `docs/architecture.md` to extract component names; create one `## <Component>` section per component plus a final `## Infrastructure (no user-facing contract)` section. No contracts/rows yet — they appear as features are planned. See **Product map generation procedure** below.
 
   ```markdown
-  # Feature index
+  # Product — what the system does
+
+  > Source of truth = contracts. One contract, many features. Generated, not hand-filled.
 
   ## <Component>
 
-  | Feature | Status | Planned | Done | Review | Contract |
-  |---|---|---|---|---|---|
+  ## Infrastructure (no user-facing contract)
   ```
 - `.ai-pm/state/current.md` from `state.md.tmpl` — initial state set to `Status: idle`; updated by every coder run thereafter
 - `.ai-pm/state/archive/` directory — completed task states get archived here
@@ -141,7 +142,7 @@ Write minimal docs — enough to start adding features:
 - `docs/architecture.md` — stack and key decisions extracted from code; mark gaps as `[?]`
 - `docs/user-journeys.md` — write only what's visible from entry points and module names; leave the rest as `[?]`
 - `docs/stack-notes.md` from `stack-notes.md.tmpl` — empty shell
-- `docs/features/_index.md` — generate using the **index generation procedure** below.
+- `docs/product.md` — generate using the **Product map generation procedure** below.
 - `.ai-pm/state/current.md` from `state.md.tmpl` — initial state `Status: idle`
 - `.ai-pm/state/archive/`, `.ai-pm/contracts/`, `.ai-pm/reviews/`, `.ai-pm/arch/`, `.ai-pm/audits/`, `.ai-pm/research/` directories
 - Optional docs — skip; create only if code clearly requires them (e.g., obvious security constraints)
@@ -174,7 +175,7 @@ After the extractor finishes:
 - Spawn `pm-stack-researcher` (`subagent_type: "pm-stack-researcher"`) with the stack components the extractor put in `architecture.md` (mandatory, no PM questions). After it returns: extend the Pipeline block in `CLAUDE.md` with its "New validators"; reflect "Integration contracts" in `architecture.md` deploy section; record "Open questions" for the PM brief below.
 - **Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A)** to finalize `docs/architecture.md` to canonical format. `pm-legacy-reader` produces a raw draft — `pm-architect` is the owner and must walk every template section, fill gaps from `stack-notes.md`, mark N/A sections explicitly, and cite each decision. Wait for it to complete before presenting to PM.
 - Create `docs/features/` directory if it doesn't exist
-- Create `docs/features/_index.md` — generate using the **index generation procedure** below.
+- Create `docs/product.md` — generate using the **Product map generation procedure** below.
 - Create `.ai-pm/state/current.md` from template (`Status: idle`), `.ai-pm/state/archive/`, `.ai-pm/contracts/`, `.ai-pm/reviews/`, `.ai-pm/arch/`, `.ai-pm/audits/`, `.ai-pm/research/` (pm-legacy-reader already drafted contracts into the contracts/ directory — surface their count and `(needs PM validation)` markers in the PM brief)
 
 Present to PM. Follow the PM communication rules from WORKFLOW.md: plain language, user perspective, no code, no unexplained technical terms. Structure as follows:
@@ -252,38 +253,41 @@ Same UI note and initial commit rules as greenfield apply.
 
 ---
 
-## Index generation procedure
+## Product map generation procedure
 
-Used by bootstrap (all modes) and by `/pm-plan` when regenerating the full index.
+Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product.md` — the PM-facing, contract-centric map of what the application does. It is **generated, never hand-filled**: every run rebuilds it from the source files (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git). `docs/product.md` lives at the docs root, so links are `features/<topic>_plan.md` and `../.ai-pm/...`.
 
-### Column values
+### Structure: group → contract → features
 
-| Column | Source |
-|---|---|
-| `Feature` | `[<topic>](<topic>_plan.md)` |
-| `Status` | `done` if `.ai-pm/reviews/<topic>_review.md` exists; `active` if topic matches current task in `.ai-pm/state/current.md`; `planned` otherwise |
-| `Planned` | `git log --follow --diff-filter=A --format="%Y-%m-%d" -- docs/features/<topic>_plan.md` (creation date) |
-| `Done` | `git log --follow --diff-filter=A --format="%Y-%m-%d" -- .ai-pm/reviews/<topic>_review.md` if review exists, else `—` |
-| `Review` | `[R](../../.ai-pm/reviews/<topic>_review.md)` if file exists, else `—` |
-| `Contract` | `[C](../../.ai-pm/contracts/<name>.md)` if a contract file whose name contains the feature topic exists in `.ai-pm/contracts/`, else `—` |
-
-### Grouping
-
-1. Read `docs/architecture.md` — extract the list of major components/subsystems.
-2. For each `*_plan.md` in `docs/features/`, read the plan and match it to the component it primarily touches (by reading the plan's Scenarios and Stack expectations sections).
-3. Group rows under `## <Component>` sections. Features that span multiple components go under the dominant one. Unclassifiable → `## Other`.
-4. Sort within each group: `active` first, then `planned`, then `done`.
+1. **Group** — read `docs/architecture.md`, extract the major components/subsystems. Each becomes a `## <Component>` section.
+2. **Contracts** — for each `.ai-pm/contracts/<name>.md`, place a block under the component it serves (match by the contract's subject / architecture component):
+   - Heading `### <Contract name> · <status> · ../.ai-pm/contracts/<name>.md` — status `live` (default) or `deprecated` if the contract says so.
+   - `Guarantees:` one line from the contract's first **Must work** item.
+   - A table of the features that built or changed it, read from the contract's **Built/changed by** list. `Done` = `git log --follow --diff-filter=A --format="%Y-%m-%d" -- .ai-pm/reviews/<topic>_review.md` (else `—`); `Review` = `[R](../.ai-pm/reviews/<topic>_review.md)` if it exists, else `—`.
+3. **Infrastructure bucket** — a final `## Infrastructure (no user-facing contract)` section listing every `*_plan.md` in `docs/features/` not referenced by any contract's Built/changed by list (backend / infra features). Same table, no Guarantees line.
+4. Sort contracts alphabetically within a component; sort feature rows by `Done` (newest last).
 
 ### Output format
 
 ```markdown
-# Feature index
+# Product — what the system does
+
+> Source of truth = contracts. One contract, many features. Generated, not hand-filled.
 
 ## <Component>
 
-| Feature | Status | Planned | Done | Review | Contract |
-|---|---|---|---|---|---|
-| [topic](topic_plan.md) | done | 2025-10-01 | 2025-10-15 | [R](../../.ai-pm/reviews/topic_review.md) | [C](../../.ai-pm/contracts/feature.md) |
+### <Contract name> · live · `../.ai-pm/contracts/<name>.md`
+Guarantees: <one line from the contract's first Must work item>
+
+| Feature | Done | Review |
+|---|---|---|
+| [topic](features/topic_plan.md) | 2025-10-15 | [R](../.ai-pm/reviews/topic_review.md) |
+
+## Infrastructure (no user-facing contract)
+
+| Feature | Done | Review |
+|---|---|---|
+| [build-pipeline](features/build-pipeline_plan.md) | 2025-09-02 | [R](../.ai-pm/reviews/build-pipeline_review.md) |
 ```
 
 ---
