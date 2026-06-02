@@ -103,13 +103,13 @@ For every `.ai-pm/contracts/<feature>.md`:
 
 - `docs/architecture.md`: does it list the major components visible in the codebase? Significant component missing → **note**.
 - `docs/user-journeys.md`: does it cover user-facing flows that are implemented? Missing journey for an implemented user-facing feature → **note**.
-- `docs/features/_index.md`: must exist and be current. Check:
-  - Index missing → **note** (remediation: generate via index generation procedure in `pm-bootstrap.md`).
-  - Feature plan not listed in any index section → **note** (stale index).
-  - Status mismatch: review file exists but index shows `planned`/`active` → **note**.
-  - `Done` date missing when status is `done` → **note**.
-  - `Review` or `Contract` link points to a non-existent file → **note**.
-  - Feature grouped under a component that doesn't match `docs/architecture.md` (e.g., component was renamed or removed) → **note**.
+- `docs/product.md`: must exist and be current — the PM-facing contract→features map. Re-derive it from source (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git); do not trust the existing file. Check:
+  - Map missing → **note** (remediation: generate via Product map generation procedure in `pm-bootstrap.md`).
+  - A contract in `.ai-pm/contracts/` not rendered under any component → **note** (stale map).
+  - A feature plan in `docs/features/` appearing neither under a contract's table nor in the `## Infrastructure (no user-facing contract)` bucket → **note** (stale map).
+  - A contract's `Built/changed by` list out of sync with the features that actually touched it → **note**.
+  - A `Review` link pointing to a non-existent file, or a missing `Done` date for a feature that has a review → **note**.
+  - A contract grouped under a component that doesn't match `docs/architecture.md` → **note**.
 
 Notes, not blocking — docs can lag slightly, but the same gap flagged in two consecutive full audits upgrades to blocking.
 
