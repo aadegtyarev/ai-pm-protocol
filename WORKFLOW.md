@@ -180,6 +180,7 @@ Different change types impose different overhead. This table is the single sourc
 | Backend refactor / infrastructure / build / CI | required, update each step | skip with one-line reason in commit message | yes, items 1, 2, 4, 5, 7 | required if stack touched |
 | Docs-only fix (typo, wording, README, plan, review trail) | optional (set Status: done at end) | skip | yes, items 1, 4, 7 | skip |
 | Trivial fixup (see `/pm-fixup` rules) | skip | skip | trivial DoD: scope + pipeline + docs landed | skip |
+| Diagnostic probe / spike (PM-authorized, runtime/local only) | skip | skip | skip — throwaway, reverted or followed by a pipelined fix | skip |
 
 **"Skip with one-line reason"** means coder writes in the commit message `Skips Product Contract: backend-only refactor, no user-visible behavior change`. `pm-plan-checker` accepts the skip if the line is present and honest; absence of the line on a backend change → blocking.
 
@@ -221,7 +222,25 @@ If any of the three contradicts the other (e.g., DoD says pass but Impact Report
 
 When you tell me "X doesn't work on the controller / on production / in the deployed environment", I follow a strict diagnose-then-plan flow. I never edit, restart, or re-deploy on the live system in the moment.
 
-**Step A — Read-only diagnostics.** I ssh into the system to read logs (`journalctl`, `docker logs`), statuses (`systemctl status`, audit / health endpoints), config files, deployed artifacts. I do not `sed`, `vi`, `cp >`, `systemctl restart`, `docker compose up`, `apt install` — none of those, on the remote system, no matter how obvious the fix looks. The boundary is hard.
+**Step A — Read-only diagnostics (default).** I ssh in to read logs (`journalctl`, `docker logs`), statuses (`systemctl status`, audit / health endpoints), config files, deployed artifacts. By default I change nothing on the system — no `sed`/`vi` on a repo-owned file, no `systemctl restart`, no `apt install` on my own initiative. The boundary against *silent* changes is hard. The one sanctioned exception is a probe you explicitly authorize — Step A.5.
+
+**Step A.5 — Probe to confirm a hypothesis (only if you authorize it).** Read-only diagnostics usually point to a hypothesis. To confirm it before planning a fix, you can authorize a **diagnostic probe** — a throwaway spike, not the fix.
+
+Before I touch anything I show you a **probe proposal** in plain language and wait for your yes:
+
+> **Problem:** <what's broken, from the user's side>.
+> **My hypothesis:** <the likely cause, plain>.
+> **Probe:** I'll set `<setting>` in `<where>` from `<current value>` to `<new value>` — this controls <plain-language explanation of what that setting does>.
+> **What we'll watch:** <the observable that confirms or refutes the hypothesis>.
+> **After:** I revert it; if it confirms the cause, the real fix goes through the normal pipeline (`/pm-plan` → coder → review → PR → deploy).
+> Authorize this probe?
+
+This is the one place I show you the concrete before→after — you're authorizing a touch on a live system, so you need the specifics — but every technical item gets a plain-language gloss, never a raw dump. Rules of the probe:
+
+- I act only on your explicit yes, and I name it a probe, not the fix.
+- It touches **runtime / local state only** — a runtime setting, a service restart, a value in a live config a redeploy resets, a local dev file. It **never** edits in place a file the repo owns in git (schema, config template, code, unit file); that stays the forbidden silent-fix path even for a probe. The real fix to a repo-owned file always goes through the pipeline.
+- Afterwards I revert it, or — if confirmed — carry the real fix through the pipeline. No silent permanent trace remains.
+- I record what I changed and what I observed; it becomes the plan's **Incident facts**.
 
 **Step B — Formulate findings in product language.** I summarise to you what's broken from the user's perspective. Plain language: "users can open the cart but checkout never confirms the order" — not "POST /checkout returns 502 because the upstream pricing service times out after 30s due to a config drift on the cache layer". The technical detail goes into the fix plan, not into the PM update.
 
