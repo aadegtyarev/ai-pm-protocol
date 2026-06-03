@@ -19,12 +19,12 @@ Makes on-disk artifact strings English-canonical: all scaffolded and regenerated
 
 ### Added
 - **English-canonical artifact strings**: `product.md` funnel headers (`## Why this exists` / `## What it does today` / `## Documents` / `## Features`), product-map labels (`- **User value:**` / `- **Out of scope:**` / `Built by:`, replacing Russian `Что даёт:` / `Границы:` / `Чем построено:`), and `↑ same work` repeat marker — all new scaffolds carry English.
-- **Russian-header product.md migration**: `pm-architect` now offers a headers-only migration (prose preserved, no machine-translation) at `/pm-architect` when an existing `product.md` carries Russian funnel headers, idempotent via detection at `pm-auditor.md:120–122`.
-- **Broadened old-format-map detection** (`pm-bootstrap.md:54`): a product-map triggers format-refresh note if it carries pre-v2.6 `Guarantees:` label **or** v2.6 Russian `- **Что даёт:**` label; regeneration yields English labels automatically.
+- **Russian-header product.md migration**: when an existing downstream `product.md` carries Russian funnel headers, a headers-only migration is offered at `/pm-plan` and `/pm-audit` — `pm-architect` (owner of `product.md`) rewrites the four headers to English, preserving the authored prose verbatim (no machine-translation).
+- **Broadened old-format-map detection** (`pm-bootstrap.md` `### Pending-migration detection`): a product-map triggers the format-refresh note if it carries the pre-v2.6 `Guarantees:` label **or** the v2.6 Russian `- **Что даёт:**` label; regeneration yields English labels automatically.
 - **Language-canon record** (`WORKFLOW.md`, `CLAUDE.md.tmpl`): "Conversation language: the user's. On-disk artifacts (files, code, commits, agent-authored docs): English." Recorded once so all agents and downstream projects inherit the rule.
 
 ### Changed
-- **Product-map generation** (`.claude/commands/pm-bootstrap.md`): output format, procedure, and worked example now emit English labels for new-scaffled projects.
+- **Product-map generation** (`.claude/commands/pm-bootstrap.md`): output format, procedure, and worked example now emit English labels for newly scaffolded projects.
 - **Agent references** (`pm-auditor`, `pm-architect`, `pm-bootstrap`, `pm-plan`, `pm-audit`, `CLAUDE.md.tmpl`, `architecture.md.tmpl`, `doc/architecture.md`): all funnel-header and map-label prose align to English strings and correctly route Russian headers/labels to migration procedures.
 - **Architecture record** (`doc/architecture.md`): documented English-canonical decision and the two-axis rule (conversation ↔ PM's language; on-disk artifacts ↔ English). Owner: `pm-architect`.
 
