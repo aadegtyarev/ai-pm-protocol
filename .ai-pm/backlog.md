@@ -2,6 +2,10 @@
 
 Observations and follow-ups recorded during reviews/audits.
 
+## From product-map-value-first review — 2026-06-03 (this repo)
+
+- **Markdown soft-break sweep: audit every generator/template for adjacent label lines that collapse on GitHub render.** During the `product-map-value-first` feature, code-review caught that two value lines emitted on adjacent source lines (`Что даёт:` then `Границы:`, no blank line between) collapse into **one** paragraph when rendered on GitHub — CommonMark renders a single (soft) line break as a space, so the two labels run together ("Что даёт: … Границы: …"). Fixed there by switching to a markdown bullet list. **Same class of "source ≠ rendered" gotcha that got `<details>` rejected** — and it almost certainly recurs elsewhere. *Action:* sweep all `doc/_templates/*.tmpl` and every generation/render procedure or agent that emits multi-line **labeled** output (product-map generation procedure, `product.md` funnel, `contract.md.tmpl`, `user-journeys.md.tmpl`, `architecture.md.tmpl`, `README.md.tmpl`, `stack-notes.md.tmpl`, `state.md.tmpl`, and any pm-* agent that prints adjacent `Label:` lines) for blocks where two or more non-blank lines sit adjacent and are *intended* to render on separate lines. Convert each to a bullet list, or separate with a blank line / explicit list — never rely on a bare line break. *Why:* these are the PM-facing rendered docs; a run-on label line is invisible in the source diff but breaks the read on the primary surface (GitHub). Mechanical, low-risk, but real. Likely a `/pm-fixup`-sized sweep unless it turns up structural cases.
+
 ## From architect-owns-architecture-md review v1
 
 - ~~Bootstrap full-mode has the orchestrator writing `docs/architecture.md` inline after the docs-extractor; reconcile the legacy/greenfield asymmetry.~~ **Resolved** (self-audit 2026-06-02): `pm-bootstrap.md` legacy-full now spawns `pm-architect` (Section A) to finalize `docs/architecture.md` — no orchestrator inline edit remains; the two paths are symmetric.
