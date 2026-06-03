@@ -139,7 +139,7 @@ After the loop clears, I tell you:
 - How to try it yourself (step by step)
 - Any product notes that need your answer
 
-**Step 5.5 — Optional: run it for real.** When the feature is runnable locally, before ship I can invoke the built-in `verify` / `run` skill to actually launch the app and exercise the new behaviour — confirming it *works*, not just that tests pass. This catches the "green tests, broken feature" class. I report what I observed. For features that need real hardware or your specific environment I skip this and give you the checklist instead (Step 6 option A).
+**Step 5.5 — Optional: run it for real.** When the feature is runnable locally, before ship I can invoke the built-in `verify` / `run` skill to actually launch the app and exercise the new behaviour — confirming it *works*, not just that tests pass. This catches the "green tests, broken feature" class. I report what I observed. For features that need real hardware or your specific environment I skip this and give you the checklist instead (Step 6 option A). Before I exercise anything on real hardware, I run the **Blast-radius preflight** (see "When you say it doesn't work in production"): if the target is coupled to a live external system whose state a local revert won't undo, I stop and surface the blast radius to you before acting — whether I'm about to exercise the behaviour myself or hand over the checklist.
 
 **Step 6 — Ship.** I verify git state, then ask:
 
@@ -182,7 +182,7 @@ Different change types impose different overhead. This table is the single sourc
 | Backend refactor / infrastructure / build / CI | required, update each step | skip with one-line reason in commit message | yes, items 1, 2, 4, 5, 7 | required if stack touched |
 | Docs-only fix (typo, wording, README, plan, review trail) | optional (set Status: done at end) | skip | yes, items 1, 4, 7 | skip |
 | Trivial fixup (see `/pm-fixup` rules) | skip | skip | trivial DoD: scope + pipeline + docs landed | skip |
-| Diagnostic probe / spike (PM-authorized, runtime/local only) | skip | skip | skip — throwaway, reverted or followed by a pipelined fix | skip |
+| Diagnostic probe / spike (PM-authorized, runtime/local only) | skip | skip | skip — throwaway, reverted or followed by a pipelined fix (the Blast-radius preflight still applies — a coupled live target is stop-and-surface, even for a skip-all probe) | skip |
 
 **"Skip with one-line reason"** means coder writes in the commit message `Skips Product Contract: backend-only refactor, no user-visible behavior change`. `pm-plan-checker` accepts the skip if the line is present and honest; absence of the line on a backend change → blocking.
 
@@ -224,9 +224,22 @@ If any of the three contradicts the other (e.g., DoD says pass but Impact Report
 
 When you tell me "X doesn't work on the controller / on production / in the deployed environment", I follow a strict diagnose-then-plan flow. I never edit, restart, or re-deploy on the live system in the moment.
 
+**Blast-radius preflight.** Before any on-hardware or live-system action — exercising a feature on real hardware (Step 5.5), or a diagnostic probe that restarts or structurally mutates a live target (Step A.5) — I stop and ask one question: *does the effect reach an external stateful peer whose state a local revert will not undo?* If the live target is coupled to such a peer, I **stop and surface the blast radius to you before acting**. The trap this guards against: *reversible locally ≠ reversible for a coupled external peer.* A probe's "throwaway / I revert it afterwards" framing assumes a local revert undoes the effect — true for a setting I flip back, false when the side effect lives **outside**, in a paired external system's own record of my target. Reverting my local change or restarting my service does not reach into the peer and undo it.
+
+The worked example is a Wiren Board Matter bridge paired with a live smart-home ecosystem. Exercising a new device type on the bridge while the pairing was active changed the bridge's externally-visible composition; the ecosystem's own device record broke (the lamp vanished from the app) even though the bridge stayed internally correct, and reverting the bridge did not heal the ecosystem record. The principle is domain-agnostic — any live target coupled to an external stateful peer (a paired hub, a registered downstream, a session a remote party holds) carries the same blast radius; the Matter case is only the illustration.
+
+When the preflight finds the target **is** coupled to a live external peer:
+
+- I offer the safe alternatives first — run on a **separate / throwaway target**, or under a **separate identity** — so the user's live target is never the test subject by default.
+- **Structural mutations** — anything that changes the live target's externally-visible composition — never run on the user's live coupled target by default. They go to a separate / throwaway instance.
+- I proceed against the user's live coupled target, or down any recovery path (re-commission / re-pair the external peer), **only on your explicit consent**, and only with that recovery planned as a **mandatory step**, not an afterthought.
+- I minimize repeated restarts of a coupled live target; if a structural change on it is genuinely unavoidable, the recovery step is part of the plan from the start.
+
+This preflight is purely additive: it adds a precondition before acting and relaxes none of the Step A read-only default or the Step A.5 probe rules below.
+
 **Step A — Read-only diagnostics (default).** I ssh in to read logs (`journalctl`, `docker logs`), statuses (`systemctl status`, audit / health endpoints), config files, deployed artifacts. By default I change nothing on the system — no `sed`/`vi` on a repo-owned file, no `systemctl restart`, no `apt install` on my own initiative. The boundary against *silent* changes is hard. The one sanctioned exception is a probe you explicitly authorize — Step A.5.
 
-**Step A.5 — Probe to confirm a hypothesis (only if you authorize it).** Read-only diagnostics usually point to a hypothesis. To confirm it before planning a fix, you can authorize a **diagnostic probe** — a throwaway spike, not the fix.
+**Step A.5 — Probe to confirm a hypothesis (only if you authorize it).** Read-only diagnostics usually point to a hypothesis. To confirm it before planning a fix, you can authorize a **diagnostic probe** — a throwaway spike, not the fix. Before a probe that restarts or structurally mutates a live target I run the **Blast-radius preflight** (above): the "throwaway / I revert it afterwards" framing holds only when a local revert undoes the effect — *reversible locally ≠ reversible for a coupled external peer*. If the target is coupled to a live external system, I stop and surface the blast radius to you first.
 
 Before I touch anything I show you a **probe proposal** in plain language and wait for your yes:
 
@@ -240,6 +253,7 @@ Before I touch anything I show you a **probe proposal** in plain language and wa
 This is the one place I show you the concrete before→after — you're authorizing a touch on a live system, so you need the specifics — but every technical item gets a plain-language gloss, never a raw dump. Rules of the probe:
 
 - I act only on your explicit yes, and I name it a probe, not the fix.
+- If the probe restarts or structurally mutates a live target, the **Blast-radius preflight** runs first — a coupled external peer is a stop-and-surface, not a "throwaway" I can quietly revert.
 - It touches **runtime / local state only** — a runtime setting, a service restart, a value in a live config a redeploy resets, a local dev file. It **never** edits in place a file the repo owns in git (schema, config template, code, unit file); that stays the forbidden silent-fix path even for a probe. The real fix to a repo-owned file always goes through the pipeline.
 - Afterwards I revert it, or — if confirmed — carry the real fix through the pipeline. No silent permanent trace remains.
 - I record what I changed and what I observed; it becomes the plan's **Incident facts**.
