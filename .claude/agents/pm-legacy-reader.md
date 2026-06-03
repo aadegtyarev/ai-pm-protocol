@@ -84,6 +84,8 @@ Required sections:
 
 Only write if security artifacts are present in code: authentication, session handling, payments, PII data fields, encryption, access control.
 
+Write a **populated draft** from `.ai-pm/tooling/doc/_templates/threat-model.md.tmpl` — fill Assets, Adversaries, Threats rows, and the "what we do NOT protect" list from what the code reveals; never leave the `<placeholder>` skeleton. This is a **draft**: `pm-architect` owns `docs/threat-model.md` and finalizes it to canonical form in its legacy-finalization spawn — the same extractor-drafts / architect-owns handoff you already do for the `docs/architecture.md` draft. Mark anything ambiguous `(inferred from code)` rather than inventing.
+
 ### .ai-pm/contracts/<feature>.md
 
 For each user-facing journey discovered, create a draft Product Contract using the template at `.ai-pm/tooling/doc/_templates/contract.md.tmpl`. Map from journey to contract:
