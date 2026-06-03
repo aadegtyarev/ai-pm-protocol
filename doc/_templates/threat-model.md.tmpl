@@ -1,8 +1,12 @@
 # Threat Model
 
-What we protect, from whom, and how. Read by agents before planning any feature that touches auth, data storage, network, or user input.
+**Last reviewed:** <YYYY-MM-DD>
+
+What we protect, from whom, and how. Read by agents before planning any feature that touches a security-relevant surface (see `### Security-relevant surfaces` in `WORKFLOW.md`).
 
 Depth matches project risk: financial / medical / personal safety product → full model. Internal tool → short page.
+
+Owner: `pm-architect`. This is the **risk layer**; the enforceable rules live in `docs/architecture.md` `## Security constraints` (the **rule layer**), referenced from the Threats table below by stable `SCn` ID. `Last reviewed` is bumped whenever this document is drafted or updated; the auditor compares it against the merge date of the most recent security-touching feature to detect staleness.
 
 ---
 
@@ -43,11 +47,13 @@ Where data crosses a boundary — each one needs a defense.
 
 Specific threats to this system. Each gets an ID for cross-referencing.
 
+The **Mitigation** column references the enforceable rule in `docs/architecture.md` `## Security constraints` by its stable `SCn` ID (one-way, ID-keyed — the rule text lives there, not here, and is never copied in). The parenthetical prose is only a human hint; the `SCn` ID is the stable anchor that survives rewording of the rule.
+
 | ID | Threat | Assets | Likelihood | Impact | Mitigation |
 |---|---|---|---|---|---|
-| T01 | <e.g., Password brute force> | user accounts | H | H | rate limiting, bcrypt |
-| T02 | <e.g., SQL injection via search> | all DB data | M | H | parameterized queries |
-| T03 | <…> | | | | |
+| T01 | <e.g., Password brute force> | user accounts | H | H | SC1 (rate limiting, bcrypt) |
+| T02 | <e.g., SQL injection via search> | all DB data | M | H | SC2 (parameterized queries) |
+| T03 | <…> | | | | <SCn> |
 
 Likelihood and Impact: L / M / H
 
@@ -62,8 +68,8 @@ Be honest about out-of-scope threats — without this list, scope creeps.
 
 ## Review
 
-Revisit this document when:
+Bump the **Last reviewed** date at the top whenever this document is drafted or updated. Revisit this document when:
 
-- New feature touches auth, storage, or network
+- A feature touches a `### Security-relevant surfaces` item (see `WORKFLOW.md`)
 - New user role added
 - Security incident occurs
