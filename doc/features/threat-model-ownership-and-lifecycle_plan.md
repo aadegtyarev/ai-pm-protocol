@@ -124,6 +124,12 @@ runtime interaction.
 - **doc/architecture.md** (this repo's own canon) — record the decision: owner-extension
   (no new agent), the single-source surface list, the threat ↔ constraint wiring, and
   soft-enforcement-not-hook. Owner: `pm-architect`.
+- **README.md** (this repo's own front door) — the `## Какие риски шаблон снижает`
+  product-level risk list gains one line for the new capability (security threats left
+  unmodeled are now caught: threat-model owned, drafted at bootstrap, updated per
+  feature, audited). The agent/command lists stay correct (no new agent added).
+  Owner: `pm-coder`. (The general README-currency obligation is a separate protocol
+  gap, recorded in `.ai-pm/backlog.md` — out of scope here.)
 
 ## Out of scope
 
