@@ -15,17 +15,15 @@
 
 ## [2.7.0] — 2026-06-03
 
-Removes the capability list from the README template and establishes a single-source-of-truth for capability documentation in `docs/product.md`, addressing template ownership clarity and multi-document consistency (backlog #6).
-
-### Changed
-- **README template simplification** (`doc/_templates/README.md.tmpl`): removed the `## What it does` section (capability list); replaced with a single pointer line to `docs/product.md`. Quick start, Architecture, Development, and License sections remain unchanged.
-- **Capability ownership** (`doc/architecture.md` §3.1): explicitly recorded that README owns no capability statement; all capability documentation sourced exclusively from `docs/product.md`'s `## Что умеет сегодня` section; README serves as entry funnel only.
+README front-gate (two-layer-docs slice 2): the scaffolded README no longer owns a capability list. `## What it does` is removed from the template and replaced with a single pointer to `docs/product.md`, so `docs/product.md` `## Что умеет сегодня` is the single owner of "what it does / for whom / limits" — eliminating the cause of README↔product.md drift. For existing downstream projects (README is authored, not regenerated), a move-not-copy migration is offered.
 
 ### Added
-- **README migration procedure** (`pm-bootstrap.md` § `Pending-migration detection` + `### Capability-list migration (v2.7)`): when a README with the legacy `## What it does` capability list is detected, the migration offers a move-not-copy reconciliation: step 1 merges capabilities into `docs/product.md` (ownership of `pm-architect`), step 2 removes only the README section after reconciliation is complete. Detection condition ensures no new project is flagged on the new structure.
+- **README template front-gate** (`doc/_templates/README.md.tmpl`): the `## What it does` capability list is removed and replaced with a one-line pointer to `docs/product.md`; Quick start / Architecture / Development / License unchanged. New scaffolds carry no capability list. No status line.
+- **Old-template README migration** (`pm-bootstrap.md` → `### Pending-migration detection` + the README front-gate migration procedure): an existing `README.md` carrying a `## What it does` list is detected (positive presence of the heading; new-structure READMEs not flagged) and offered a **move-not-copy** migration — `pm-architect` reconciles the README's capabilities into `docs/product.md` `## Что умеет сегодня` first, then removes the README list and inserts the pointer. Install / Quick start preserved (pm-architect A4 cross-check stays valid). Precondition: an authored `docs/product.md` must exist (run the v2.3 migration first if absent).
+- **Detection surfaces** (`pm-auditor.md`, `pm-plan.md`, `pm-audit.md`): a non-blocking structure-only note and migration nudge for the old-template README, each referencing `### Pending-migration detection` by name (the condition is not re-encoded).
 
-### Migration (downstream projects)
-After `git submodule update --remote`, the next `/pm-plan` run will surface a non-blocking offer if your README carries the legacy `## What it does` section. PM runs `/pm-bootstrap` to reconcile the list into `docs/product.md` and remove the README section. One pass, safe, move-not-copy ordered to prevent capability loss. See README § "Миграция на v2.7.0".
+### Changed
+- **Architecture record** (`doc/architecture.md`): documented that the README owns no capability statements, `docs/product.md` is the single owner, and existing projects are migrated move-not-copy. Owner: `pm-architect`.
 
 ---
 
