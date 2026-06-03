@@ -13,6 +13,21 @@
 
 ---
 
+## [2.10.0] — 2026-06-03
+
+Extends the two-layer docs split into feature contracts (slice 4). A contract's `## User value` / `## Out of scope` are now the token-free PM layer (plain product language), while machine grammars — topic conventions, `<x>_<y>` id/format grammars, status enums, dotted config keys, `retain` / `QoS` flags, raw wire ranges — are single-owned in `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` and referenced from `## Must work` / `## Must not break`, never restated inline. A structural wire-token lint backs the split, and existing token-laden contracts get a move-not-copy migration that preserves every guarantee. Motivation: caught live on wb-mqtt-matter 2026-06-03 — wire-tokens leaked through a contract's `## Out of scope` into the PM-facing product-map.
+
+### Added
+- **Contract two-layer split** (`doc/_templates/contract.md.tmpl`): `## User value` and `## Out of scope` are marked the **token-free PM layer** (plain product language, no wire-tokens); `## Must work` and `## Must not break` now instruct to **reference** `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` for machine grammars instead of restating them inline.
+- **Structural wire-token lint (non-blocking)** (`.claude/agents/pm-plan-checker.md` on a plan/contract change, `.claude/agents/pm-auditor.md` on the project sweep): flags wire-token *shapes* in a contract's PM-facing sections (`## User value` / `## Out of scope`) and in the generated product-map's `- **User value:**` / `- **Out of scope:**` lines. Wire-tokens are topic paths (leading-slash MQTT-style, e.g. `/devices/.../on`), `<x>_<y>` id/format grammars, dotted config keys (`bridge.*`, `mqtt.socketPath`), protocol flags (`retain` / `QoS`), raw wire ranges (`0..254`). It is a structural pattern match on token shapes — **not prose-policing** — and domain vocabulary (`DimmableLight`, `Matter`, `fabric`) is never flagged. A relative `docs/architecture.md` `## Behavioral contract` reference is the intended token-free form and is never flagged.
+- **Move-not-copy contract migration** (`.claude/commands/pm-bootstrap.md` `### Pending-migration detection`; offered at `.claude/commands/pm-plan.md` and `.claude/commands/pm-audit.md`): for existing token-laden contracts, `pm-architect` relocates grammars into the single-owner `## Behavioral contract` and rephrases the PM sections token-free, preserving every `## Must work` / `## Must not break` guarantee.
+- **Migration guarantee-preservation check (blocking)** (`.claude/agents/pm-plan-checker.md`): on a contract two-layer migration, compares the migrated contract against the original (`git show` the pre-migration version) and **blocks** if any Must-work / Must-not-break guarantee is dropped or weakened.
+
+### Changed
+- **Architecture record** (`doc/architecture.md`): added the "Contracts are two-layer; wire-tokens are single-owned in the Behavioral contract and referenced" decision, recording this as slice 4 of the two-layer-docs sequence (extending slice 3, the Behavioral contract).
+
+---
+
 ## [2.9.1] — 2026-06-03
 
 Two coupled protocol-enforcement fixes. The `UserPromptSubmit` route-reminder trigger vocabulary in `.claude/settings.json` is broadened to cover removal/edit verbs, closing a gap where requests like "убери ..." fired no reminder. And `pm-pr-prep` no longer pins `model: haiku` — it now inherits the session model like every other `pm-*` agent, after pinned Haiku produced factual errors in PM-facing CHANGELOG entries.
