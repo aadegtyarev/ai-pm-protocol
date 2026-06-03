@@ -8,7 +8,7 @@ One contract per user-facing feature. Backend-only changes (refactors, infra) do
 
 ## User value
 
-> **PM layer — token-free.** Write in plain product language only. No wire-tokens: no topic paths (`/devices/.../on`), no `<x>_<y>` id/format grammars (`matter_export_<…>`), no dotted config keys (`bridge.*`, `mqtt.socketPath`), no protocol flags (`retain`, `QoS`), no raw wire value-ranges (`0..254`). Domain vocabulary the PM uses (`DimmableLight`, `Matter`, `fabric`) is fine — it is product language, not a wire-token. Any machine grammar/taxonomy referenced here lives in `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` — reference it, do not restate it.
+> **PM layer — token-free.** Write in plain product language only. No wire-tokens: no topic paths (a leading-slash MQTT-style topic, e.g. `/devices/.../on` — **not** a relative documentation reference like `docs/architecture.md` `## Behavioral contract`, which is the intended token-free form and is never flagged), no `<x>_<y>` id/format grammars (`matter_export_<…>`), no dotted config keys (`bridge.*`, `mqtt.socketPath`), no protocol flags (`retain`, `QoS`), no raw wire value-ranges (`0..254`). Domain vocabulary the PM uses (`DimmableLight`, `Matter`, `fabric`) is fine — it is product language, not a wire-token. Any machine grammar/taxonomy referenced here lives in `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` — reference it, do not restate it.
 
 <one paragraph in plain product language — what value does this feature give the user; why does it exist>
 
@@ -45,7 +45,7 @@ One contract per user-facing feature. Backend-only changes (refactors, infra) do
 
 ## Out of scope
 
-> **PM layer — token-free.** Like `## User value`, write the boundaries in plain product language. No wire-tokens (topic paths, `<x>_<y>` grammars, dotted config keys, protocol flags, raw value-ranges); domain vocabulary (`DimmableLight`, `Matter`, `fabric`) is fine. If a boundary is defined by a machine grammar/taxonomy, reference `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` — do not restate the grammar here.
+> **PM layer — token-free.** Like `## User value`, write the boundaries in plain product language. No wire-tokens (topic paths — leading-slash MQTT-style topics like `/devices/.../on`, **not** a relative `docs/architecture.md` `## Behavioral contract` reference, which is never flagged; `<x>_<y>` grammars, dotted config keys, protocol flags, raw value-ranges); domain vocabulary (`DimmableLight`, `Matter`, `fabric`) is fine. If a boundary is defined by a machine grammar/taxonomy, reference `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` — do not restate the grammar here.
 
 <bulleted list — what the feature explicitly does NOT do. Prevents scope-creep and silent expansion.>
 
