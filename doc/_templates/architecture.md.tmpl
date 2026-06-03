@@ -47,7 +47,7 @@ Things that must not be violated without an explicit PM decision. Agents read th
 
 ## File layout (module map)
 
-Coarse map of the developer/agent-facing source structure: **one row per top-level directory or module → one-line responsibility**. Stay coarse — NOT per-function, NOT a file listing (that drifts the moment code moves). This is the `src/` structure on the *responsibility* axis, distinct from `docs/product.md` "## Документы" (which is PM-facing navigation over `docs/`). This is the section `pm-architect` (A4) cross-checks against `ls` + `git ls-tree -r --name-only HEAD`, and the section `pm-auditor` keys its "major components listed?" check on — keep it honest against the real tree.
+Coarse map of the developer/agent-facing source structure: **one row per top-level directory or module → one-line responsibility**. Stay coarse — NOT per-function, NOT a file listing (that drifts the moment code moves). This is the `src/` structure on the *responsibility* axis, distinct from `docs/product.md` "## Documents" (which is PM-facing navigation over `docs/`). This is the section `pm-architect` (A4) cross-checks against `ls` + `git ls-tree -r --name-only HEAD`, and the section `pm-auditor` keys its "major components listed?" check on — keep it honest against the real tree.
 
 | Directory / module | Responsibility |
 |---|---|

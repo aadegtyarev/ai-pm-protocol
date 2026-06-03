@@ -283,6 +283,8 @@ Or just ask the orchestrator — "update the template" / "bump ai-pm-protocol to
 
 The PM makes product decisions and does not read code. Every message to the PM follows these rules.
 
+**Language canon (two axes).** Conversation = the PM's language. Artifacts written to disk — files, code, commits, and agent-authored doc files like reviews and audit reports — are **English**. When you relay a persisted artifact in chat, translate-on-read into the PM's language; only what lands on disk is English.
+
 **Lead with user impact.** Start with what changes for the user — not what changes in the code.
 > ✓ "After this change, users who go offline will receive missed group messages when they reconnect."
 > ✗ "Implemented message queue with SQLite-backed persistence layer."

@@ -21,7 +21,8 @@ You do not edit source code, do not run tests, do not commit.
 
 **For the authored `docs/product.md` front door** (see Section A's sub-section below) — at least one of:
 - Bootstrap (greenfield or legacy): author the funnel from the PM's product Q&A answers passed in the spawn prompt.
-- A landed feature changes the product's coverage (a new device/entity type, a new contract, or a moved boundary) — refresh `## Что умеет сегодня` and any moved boundary in `docs/product.md`. Touch only the authored sections; never the generated `docs/product-map.md`, and never repoint the `## Функции` link target.
+- A landed feature changes the product's coverage (a new device/entity type, a new contract, or a moved boundary) — refresh `## What it does today` and any moved boundary in `docs/product.md`. Touch only the authored sections; never the generated `docs/product-map.md`, and never repoint the `## Features` link target.
+- A downstream `docs/product.md` still carries the Russian funnel headers (`## Зачем это нужно` / `## Что умеет сегодня` / `## Документы` / `## Функции`) — perform the **product.md header-migration** (see "Product.md header-migration" below): rewrite **only** the four headers to English, preserving the authored prose verbatim.
 
 **For per-feature arch notes** — at least one of:
 - The change adds a new axis of extension (new device type, new event kind, new protocol handler — alongside existing ones the codebase already treats as a category)
@@ -64,12 +65,16 @@ You also own the **authored** product front door `docs/product.md` (in the templ
 **Invariant: pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`.** The two files never share a writer — the map is owned by `pm-auditor` / the Product map generation procedure. The authored `docs/product.md` (and its template `product.md.tmpl`) is written **without** the generated-map signature line; that absence is what distinguishes an authored funnel from a generated map (the bootstrap migration depends on it), so never add it.
 
 **Source of content:**
-- `## Зачем это нужно` and the deliberately-out-of-scope boundary come from the **PM's product Q&A answers** passed in the spawn prompt (why this exists / for whom / what is out of scope for now). Cite the bootstrap conversation as the source.
-- `## Что умеет сегодня` (coverage + boundaries, **including what is not yet supported** — e.g. "only dimmable light so far") you **derive** from `.ai-pm/contracts/` (each contract's `## User value`) plus the components in `docs/architecture.md`. This is the same source-reading discipline Section A uses for architecture facts.
-- `## Документы` is PM-language navigation over `docs/` (link to `architecture.md`, `user-journeys.md`, etc.).
-- `## Функции` links to the generated map `docs/product-map.md`.
+- `## Why this exists` and the deliberately-out-of-scope boundary come from the **PM's product Q&A answers** passed in the spawn prompt (why this exists / for whom / what is out of scope for now). Cite the bootstrap conversation as the source.
+- `## What it does today` (coverage + boundaries, **including what is not yet supported** — e.g. "only dimmable light so far") you **derive** from `.ai-pm/contracts/` (each contract's `## User value`) plus the components in `docs/architecture.md`. This is the same source-reading discipline Section A uses for architecture facts.
+- `## Documents` is PM-language navigation over `docs/` (link to `architecture.md`, `user-journeys.md`, etc.).
+- `## Features` links to the generated map `docs/product-map.md`.
 
-**Authoring rules:** scaffold from `.ai-pm/tooling/doc/_templates/product.md.tmpl` if no file exists. Walk every funnel section; mark `[?]` where the PM answers leave a gap rather than inventing intent. The PM validates one-pass (the markdown is not hand-written by the PM). On the **coverage-changed** trigger, edit only the authored sections (`## Что умеет сегодня` and any moved boundary); never regenerate the map and never repoint `## Функции`.
+**Language canon:** the funnel headers and any other on-disk structure are **English** (per WORKFLOW.md's language canon). You author the prose **in English** going forward; the conversation with the PM stays in the PM's language (translate-on-read). Only what lands on disk is English.
+
+**Authoring rules:** scaffold from `.ai-pm/tooling/doc/_templates/product.md.tmpl` if no file exists. Walk every funnel section; mark `[?]` where the PM answers leave a gap rather than inventing intent. The PM validates one-pass (the markdown is not hand-written by the PM). On the **coverage-changed** trigger, edit only the authored sections (`## What it does today` and any moved boundary); never regenerate the map and never repoint `## Features`.
+
+**Product.md header-migration (headers only, prose preserved).** When invoked on a downstream `docs/product.md` that still carries the pre-English-canonical Russian funnel headers (`## Зачем это нужно` → `## Why this exists`, `## Что умеет сегодня` → `## What it does today`, `## Документы` → `## Documents`, `## Функции` → `## Features`), rewrite **only the four headers** to their English equivalents. **Preserve the authored prose under each header verbatim** — no machine-translation, no content loss; the PM-authored Russian (or any-language) body text is untouched. Soft-break-safe (headers stay blank-line-separated). This is the file-owner half of the bootstrap **product.md header-migration procedure**; you own `docs/product.md`, so you perform the rewrite.
 
 ---
 

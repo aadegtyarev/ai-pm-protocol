@@ -224,10 +224,15 @@ If **no audit has ever been run** (.ai-pm/audits/ empty or missing):
 
 If PM says yes → run the pending `/pm-bootstrap` migration before proceeding with this feature.
 
-There is also the lighter **old-format-map** case in `### Pending-migration detection` (an existing `docs/product-map.md` with at least one contract block still carrying the literal `Guarantees:` label; a contract-less / infra-only map — no contract blocks, no value lines — is **not** old-format and triggers no nudge). When that is the detected condition, the offer is a regeneration, not a structural migration:
+There is also the lighter **old-format-map** case in `### Pending-migration detection` (an existing `docs/product-map.md` with at least one contract block still carrying the literal `Guarantees:` label **or** the pre-English-canonical `Что даёт:` label; a contract-less / infra-only map — no contract blocks, no value lines — is **not** old-format and triggers no nudge). When that is the detected condition, the offer is a regeneration, not a structural migration:
 > "Your product map is in the old format — it leads with a build-history table instead of what each feature gives the user. I can regenerate it to the value-first format now (it's rebuilt from your contracts, nothing else changes). Regenerate before planning?"
 
 If PM says yes → regenerate `docs/product-map.md` via the **Product map generation procedure** in `pm-bootstrap.md` before proceeding. If PM declines, planning proceeds and the `/pm-plan` handoff regenerates the map in the new format anyway.
+
+There is also the **pre-English-canonical `product.md`** case in `### Pending-migration detection` (an existing `docs/product.md` whose funnel still carries the Russian headers `## Зачем это нужно` / `## Что умеет сегодня` / `## Документы` / `## Функции`; a `product.md` already on the English headers is not flagged). When that is the detected condition, offer the product.md header-migration before planning:
+> "Your product front door uses the old section titles. I can update just the titles to the canonical English names — the text you wrote stays exactly as is. Run it before planning?"
+
+If PM says yes → run the **product.md header-migration procedure** in `pm-bootstrap.md` before proceeding (headers only, prose preserved, performed by `pm-architect`).
 
 There is also the **old-template-README** case in `### Pending-migration detection` (an existing `README.md` still carrying a `## What it does` capability list — the pre-front-gate structure; a README with no `## What it does` heading is not flagged). When that is the detected condition, offer the README front-gate migration before planning:
 > "Your README keeps its own 'what it does' list, separate from `docs/product.md` — the two can drift. I can run the README front-gate migration: any capability that's only in the README moves into `docs/product.md` first, then the README's list is replaced with a link to it. Install instructions and everything else stay as-is. Run it before planning?"

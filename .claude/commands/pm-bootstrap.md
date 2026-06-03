@@ -51,9 +51,11 @@ On an already-initialized project, before confirming-and-exiting, check whether 
 
   **This literal string is a frozen historical artifact** — it is the exact header the pre-split generator emitted. Do NOT "tidy" or normalize it; the detection of already-deployed projects depends on this exact pre-split text. (The new generator no longer emits it; that is intentional and what makes the two states distinguishable.) An authored `docs/product.md` never carries the signature line, so a greenfield-before-first-feature project with a hand-authored funnel is correctly **not** detected as un-migrated.
 
-- **Old-format (pre-value-first) generated map:** an existing `docs/product-map.md` that has at least one contract block carrying the literal old-format `Guarantees:` label (the positive anchor — a value-first block leads with `Что даёт:`/`Границы:` bullets and never emits `Guarantees:`). This is a generated map produced before the value-first block format. **A contract-less / infra-only map is NOT old-format:** a backend/infra-only project's map has only the `## Infrastructure (no user-facing contract)` table — no contract blocks, hence no `Guarantees:` label and no value lines — and must not be flagged (regenerating it produces an identical infra-only map). Its remediation is **trivial and not a structural migration**: regenerate `docs/product-map.md` via the **Product map generation procedure** below (idempotent, overwrite-from-source — a no-op on an already-new-format map). There is **no** `git mv` / `git rm` step here — the map is rebuilt wholesale from source, so the new format simply replaces the old one.
+- **Old-format (pre-value-first) generated map:** an existing `docs/product-map.md` that has at least one contract block carrying the literal old-format `Guarantees:` label **or** the pre-English-canonical `Что даёт:` label (either is the positive anchor — a current value-first block leads with `- **User value:**` / `- **Out of scope:**` bullets and never emits `Guarantees:` or `Что даёт:`). This is a generated map produced before the current value-first English block format. **A contract-less / infra-only map is NOT old-format:** a backend/infra-only project's map has only the `## Infrastructure (no user-facing contract)` table — no contract blocks, hence no `Guarantees:` / `Что даёт:` label and no value lines — and must not be flagged (regenerating it produces an identical infra-only map). Its remediation is **trivial and not a structural migration**: regenerate `docs/product-map.md` via the **Product map generation procedure** below (idempotent, overwrite-from-source — a no-op on an already-new-format map). There is **no** `git mv` / `git rm` step here — the map is rebuilt wholesale from source, so the new format simply replaces the old one.
 
-- **Old-template README (front-gate not applied):** an existing downstream `README.md` that still contains a `## What it does` capability list (the pre-front-gate template structure — the README owned a second, drift-prone capability statement parallel to `docs/product.md`'s `## Что умеет сегодня`). The current template carries no `## What it does` section; instead the README has a one-paragraph intro plus a single `docs/product.md` pointer line. Detect by the **positive presence** of a `## What it does` heading in `README.md`. A project already on the new structure (no `## What it does` heading) is **not** flagged. The remediation is the **README front-gate migration procedure** below — a **move-not-copy** reconcile-then-remove, never a blind delete of the authored README.
+- **Pre-English-canonical `product.md` (Russian funnel headers):** an existing downstream `docs/product.md` whose authored funnel still carries the Russian headers (`## Зачем это нужно` / `## Что умеет сегодня` / `## Документы` / `## Функции`) instead of the English canon (`## Why this exists` / `## What it does today` / `## Documents` / `## Features`). Detect by the **positive presence** of any one of the four Russian headers. A `docs/product.md` already on the English headers is **not** flagged; a truly missing/empty `docs/product.md` is the auditor's existing missing-funnel note, not this condition. Remediation is the **product.md header-migration procedure** below — performed by `pm-architect` (owner of `docs/product.md`): rewrite the four headers to English, **prose preserved verbatim**. There is **no** machine-translation of the authored body.
+
+- **Old-template README (front-gate not applied):** an existing downstream `README.md` that still contains a `## What it does` capability list (the pre-front-gate template structure — the README owned a second, drift-prone capability statement parallel to `docs/product.md`'s `## What it does today`). The current template carries no `## What it does` section; instead the README has a one-paragraph intro plus a single `docs/product.md` pointer line. Detect by the **positive presence** of a `## What it does` heading in `README.md`. A project already on the new structure (no `## What it does` heading) is **not** flagged. The remediation is the **README front-gate migration procedure** below — a **move-not-copy** reconcile-then-remove, never a blind delete of the authored README.
 
 The migration procedures themselves are below; they are unchanged.
 
@@ -71,20 +73,27 @@ The migration procedures themselves are below; they are unchanged.
 
   **Steps when pre-split:**
   1. `git mv docs/product.md docs/product-map.md` — the old generated content is preserved verbatim as the map; no data loss. (The next auditor/`/pm-plan` run rebuilds it wholesale in the new format, signature line included or not is irrelevant — it is overwritten.)
-  2. Scaffold a fresh authored `docs/product.md` from `.ai-pm/tooling/doc/_templates/product.md.tmpl` (the funnel skeleton: Зачем / Что умеет сегодня / Документы / Функции), written **without** any generator signature line. Then spawn `pm-architect` to fill the funnel (or leave the skeleton for the next `pm-architect` run if the PM is not ready).
+  2. Scaffold a fresh authored `docs/product.md` from `.ai-pm/tooling/doc/_templates/product.md.tmpl` (the funnel skeleton: Why this exists / What it does today / Documents / Features), written **without** any generator signature line. Then spawn `pm-architect` to fill the funnel (or leave the skeleton for the next `pm-architect` run if the PM is not ready).
   3. Tell the PM in plain language: "The capability map moved to `docs/product-map.md` (same content, now in the new format). `docs/product.md` is now your authored product front door — I scaffolded a skeleton for you to fill (why it exists, what it does today, where the docs are)."
 
-- **README front-gate — capability list → `docs/product.md` pointer.** The downstream `README.md` is moved off the old template structure: the `## What it does` capability list is removed and replaced with a single `docs/product.md` pointer line, so the README owns **no** capability statement and `docs/product.md` `## Что умеет сегодня` is the single owner of "what it does / for whom / limits". Detection: see `### Pending-migration detection` above (an existing `README.md` carrying a `## What it does` capability list). When it applies:
+- **README front-gate — capability list → `docs/product.md` pointer.** The downstream `README.md` is moved off the old template structure: the `## What it does` capability list is removed and replaced with a single `docs/product.md` pointer line, so the README owns **no** capability statement and `docs/product.md` `## What it does today` is the single owner of "what it does / for whom / limits". Detection: see `### Pending-migration detection` above (an existing `README.md` carrying a `## What it does` capability list). When it applies:
 
   **This is a move-not-copy migration, not a blind rewrite of the authored README.** `README.md` is hand-maintained, and its `## What it does` bullets may carry a capability not yet reflected in `docs/product.md`. Nothing may be lost in the gap between the two files. The reconcile-and-edit is performed **by `pm-architect`** (the sole owner of `docs/product.md`) — not by the orchestrator and not by a text-delete script.
 
-  **Precondition — an authored `docs/product.md` must exist (the v2.3 split must have run).** The reconcile below targets `docs/product.md` `## Что умеет сегодня`; if `docs/product.md` is absent (the project is still pre-v2.3), there is no valid target. Run the **v2.3 migration first** (it scaffolds the authored `docs/product.md`), then the README front-gate migration.
+  **Precondition — an authored `docs/product.md` must exist (the v2.3 split must have run).** The reconcile below targets `docs/product.md` `## What it does today`; if `docs/product.md` is absent (the project is still pre-v2.3), there is no valid target. Run the **v2.3 migration first** (it scaffolds the authored `docs/product.md`), then the README front-gate migration.
 
-  1. **Reconcile first (pm-architect).** Spawn `pm-architect` (`subagent_type: "pm-architect"`) with the README's current `## What it does` bullets. It reconciles every bullet into `docs/product.md` `## Что умеет сегодня`: any capability present in the README's list but absent from `## Что умеет сегодня` is **added to `docs/product.md` first**. This step writes only `docs/product.md`; the README is not yet touched.
+  1. **Reconcile first (pm-architect).** Spawn `pm-architect` (`subagent_type: "pm-architect"`) with the README's current `## What it does` bullets. It reconciles every bullet into `docs/product.md` `## What it does today`: any capability present in the README's list but absent from `## What it does today` is **added to `docs/product.md` first**. This step writes only `docs/product.md`; the README is not yet touched.
   2. **Then remove the README list (pm-architect, only after step 1).** Once every README capability is reflected in `docs/product.md`, `pm-architect` removes the `## What it does` list from `README.md` and inserts the single pointer line immediately after the intro paragraph: `→ What it does, for whom, and current limits: [\`docs/product.md\`](docs/product.md).` (blank line before and after — soft-break-safe). **Preserve the README's Quick start / install and every other section verbatim** — only the `## What it does` section is removed. This keeps `pm-architect` A4's `Integration contract ↔ README install` cross-check valid (the install instructions are untouched).
   3. Tell the PM in plain language: "Your README no longer keeps a separate 'what it does' list — that lived in two places (README and `docs/product.md`) and drifted. Any capability that was only in the README is now in `docs/product.md`, and the README points there. Install instructions and everything else are unchanged."
 
   No capability is ever dropped: step 1 (add-missing-to-`product.md`) always precedes step 2 (remove-from-README).
+
+- **product.md header-migration — Russian funnel headers → English (headers only, prose preserved).** A downstream authored `docs/product.md` is brought onto the English-canonical funnel headers. Detection: see `### Pending-migration detection` above (an existing `docs/product.md` carrying any of the four Russian funnel headers). When it applies:
+
+  **This is a headers-only rewrite, never a content rewrite.** The PM authored the funnel prose; that body text is preserved **verbatim** — no machine-translation, no content loss. Only the four header lines change. The rewrite is performed **by `pm-architect`** (the sole owner of `docs/product.md`) — not by the orchestrator and not by a text-replace script run outside the owner.
+
+  1. **Rewrite the four headers (pm-architect).** Spawn `pm-architect` (`subagent_type: "pm-architect"`). It rewrites only the four funnel headers in place: `## Зачем это нужно` → `## Why this exists`, `## Что умеет сегодня` → `## What it does today`, `## Документы` → `## Documents`, `## Функции` → `## Features`. The authored prose under each header is left exactly as written (the PM's content, in whatever language). Soft-break-safe (headers stay blank-line-separated). New prose `pm-architect` authors afterward is English (per the language canon).
+  2. Tell the PM in plain language: "Updated your product front door's section titles to the canonical English names — the text you wrote underneath is untouched. Nothing else changed."
 
 ---
 
@@ -122,7 +131,7 @@ Then create from templates:
 - `docs/ui-guide.md` from `ui-guide.md.tmpl` — only if **custom** UI (case 1 above)
 - `docs/threat-model.md` from `threat-model.md.tmpl` — only if security requirements mentioned
 - `docs/features/` directory
-- `docs/product.md` — the **authored** product front door. Scaffold from `product.md.tmpl` (the funnel skeleton: `## Зачем это нужно`, `## Что умеет сегодня`, `## Документы`, `## Функции`). It is **not** generated and carries **no** generator signature line. `pm-architect` fills it from the PM's product Q&A answers (see below) — the orchestrator does not hand-write the prose.
+- `docs/product.md` — the **authored** product front door. Scaffold from `product.md.tmpl` (the funnel skeleton: `## Why this exists`, `## What it does today`, `## Documents`, `## Features`). It is **not** generated and carries **no** generator signature line. `pm-architect` fills it from the PM's product Q&A answers (see below) — the orchestrator does not hand-write the prose.
 - `docs/product-map.md` — the **generated** contract→features map. On a fresh greenfield project there are no contracts yet, so it renders with just the component sections (from `docs/architecture.md`) plus a final `## Infrastructure (no user-facing contract)` section; rows appear as features are planned. Generate via the **Product map generation procedure** below.
 - `.ai-pm/state/current.md` from `state.md.tmpl` — initial state set to `Status: idle`; updated by every coder run thereafter
 - `.ai-pm/state/archive/` directory — completed task states get archived here
@@ -140,7 +149,7 @@ After `pm-stack-researcher` returns:
 
 **Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A — canonical architecture.md + authored product.md).** Architect reads PM's stack answers, the freshly-written `docs/stack-notes.md`, and the template at `.ai-pm/tooling/doc/_templates/architecture.md.tmpl`. It walks every template section (Tech stack, Architectural decisions, Architectural constraints, File layout (module map), Integration contract, Behavioral contract (taxonomies & invariants), Release flow), marking N/A sections explicitly (Security, Code conventions, Deploy if not applicable). It cites the bootstrap conversation for each decision rationale. The result replaces the placeholder content created from the template. This is the new owner of `docs/architecture.md` — orchestrator no longer writes architecture inline.
 
-In the same spawn, **pass the PM's product front-door Q&A answers** (why / for whom / deliberately-out-of-scope-for-now). pm-architect authors `docs/product.md` — the funnel front door — from those answers, deriving `## Что умеет сегодня` from existing contracts (their `## User value`) and architecture components. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`.
+In the same spawn, **pass the PM's product front-door Q&A answers** (why / for whom / deliberately-out-of-scope-for-now). pm-architect authors `docs/product.md` — the funnel front door — from those answers, deriving `## What it does today` from existing contracts (their `## User value`) and architecture components. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`.
 
 Then ask PM: "Want to research existing solutions — libraries, ready products, analogues? Useful at the start so you don't build what already exists. Run /pm-research?"
 
@@ -201,7 +210,7 @@ Write minimal docs — enough to start adding features:
 
 **Stack literacy onboarding (mandatory, no PM questions).** Once stack components are identified from the code, spawn `pm-stack-researcher` (`subagent_type: "pm-stack-researcher"`) with that list. It fills `docs/stack-notes.md`. Take its "New validators" list and add commands to the Pipeline block in `CLAUDE.md`. Take its "Open questions" — surface to PM as caveats.
 
-**Authored front door.** Before presenting findings, ask the PM the two product front-door questions (why this exists / what is deliberately out of scope for now), then spawn `pm-architect` (`subagent_type: "pm-architect"`) to author `docs/product.md` from those answers, deriving `## Что умеет сегодня` from existing contracts and the architecture. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`. If the PM is not ready, leave the scaffolded skeleton for a later `pm-architect` run.
+**Authored front door.** Before presenting findings, ask the PM the two product front-door questions (why this exists / what is deliberately out of scope for now), then spawn `pm-architect` (`subagent_type: "pm-architect"`) to author `docs/product.md` from those answers, deriving `## What it does today` from existing contracts and the architecture. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`. If the PM is not ready, leave the scaffolded skeleton for a later `pm-architect` run.
 
 Present findings to PM. Follow the PM communication rules from WORKFLOW.md: plain language, user perspective, no code, no unexplained technical terms.
 
@@ -227,7 +236,7 @@ After the extractor finishes:
 - Write `CLAUDE.md` from `.ai-pm/tooling/doc/_templates/CLAUDE.md.tmpl` — fill in all placeholders using the stack and architecture the extractor documented. Pipeline section left as placeholders until `pm-stack-researcher` runs.
 - Create `docs/stack-notes.md` from `.ai-pm/tooling/doc/_templates/stack-notes.md.tmpl` (empty shell).
 - Spawn `pm-stack-researcher` (`subagent_type: "pm-stack-researcher"`) with the stack components the extractor put in `architecture.md` (mandatory, no PM questions). After it returns: extend the Pipeline block in `CLAUDE.md` with its "New validators"; reflect "Integration contracts" in `architecture.md` deploy section; record "Open questions" for the PM brief below.
-- **Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A)** to finalize `docs/architecture.md` to canonical format, and — passing the PM's product front-door answers (ask the two product questions: why this exists / deliberately out of scope for now) — to author `docs/product.md`. `pm-legacy-reader` produces a raw architecture draft — `pm-architect` is the owner and must walk every template section, fill gaps from `stack-notes.md`, mark N/A sections explicitly, and cite each decision. For `docs/product.md`, it authors the funnel from the PM answers, deriving `## Что умеет сегодня` from the drafted contracts and architecture. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`. Wait for it to complete before presenting to PM.
+- **Spawn `pm-architect`** (`subagent_type: "pm-architect"`) **(Section A)** to finalize `docs/architecture.md` to canonical format, and — passing the PM's product front-door answers (ask the two product questions: why this exists / deliberately out of scope for now) — to author `docs/product.md`. `pm-legacy-reader` produces a raw architecture draft — `pm-architect` is the owner and must walk every template section, fill gaps from `stack-notes.md`, mark N/A sections explicitly, and cite each decision. For `docs/product.md`, it authors the funnel from the PM answers, deriving `## What it does today` from the drafted contracts and architecture. pm-architect is the sole writer of the authored `docs/product.md`; it never writes the generated `docs/product-map.md`. Wait for it to complete before presenting to PM.
 - Create `docs/features/` directory if it doesn't exist
 - Create `docs/product.md` — the **authored** front door. Scaffold from `product.md.tmpl` (no generator signature line) so `pm-architect` (above) can author it.
 - Create `docs/product-map.md` — the **generated** map; generate using the **Product map generation procedure** below.
@@ -320,12 +329,12 @@ Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product-map.
 2. **Contracts** — for each `.ai-pm/contracts/<name>.md`, place a block under the component it serves (match by the contract's subject / architecture component):
    - Heading is a **clickable markdown link** to the contract file followed by the status label: `### [<Contract name>](../.ai-pm/contracts/<name>.md) — <status>` — status `live` (default) or `deprecated` if the contract says so. Do not print a raw backtick path; the name itself is the link.
    - **Lead with the product-language value lines as a markdown bullet list, before any table** (bullets render on separate lines in every renderer; two adjacent plain lines would collapse into one paragraph on GitHub):
-     - `- **Что даёт:**` one line taken from the contract's `## User value` section (the human, product-language promise — **not** the technical first `Must work` item).
-     - `- **Границы:**` a compact projection of the contract's `## Out of scope` bullets — join them into a short single line (keep up to the first couple of bullets if the list is long). **Omit this bullet entirely** when the contract has no `## Out of scope` content (empty or absent section) — do not emit an empty `Границы:` bullet.
-   - Then the build-history table under a plain `Чем построено:` label line (**pure markdown, no HTML** — no `<details>`): the features that built or changed the contract, read from its **Built/changed by** list. `Done` = `git log --follow --diff-filter=A --format="%Y-%m-%d" -- .ai-pm/reviews/<topic>_review.md` (else `—`); `Review` = `[R](../.ai-pm/reviews/<topic>_review.md)` if it exists, else `—`.
-3. **Infrastructure bucket** — a final `## Infrastructure (no user-facing contract)` section listing every `*_plan.md` in `docs/features/` not referenced by any contract's Built/changed by list (backend / infra features). It has no contract, so it carries **no** `Что даёт` / `Границы` lines and **no** `Чем построено:` label — just its existing plain table.
+     - `- **User value:**` one line taken from the contract's `## User value` section (the human, product-language promise — **not** the technical first `Must work` item).
+     - `- **Out of scope:**` a compact projection of the contract's `## Out of scope` bullets — join them into a short single line (keep up to the first couple of bullets if the list is long). **Omit this bullet entirely** when the contract has no `## Out of scope` content (empty or absent section) — do not emit an empty `Out of scope:` bullet.
+   - Then the build-history table under a plain `Built by:` label line (**pure markdown, no HTML** — no `<details>`): the features that built or changed the contract, read from its **Built/changed by** list. `Done` = `git log --follow --diff-filter=A --format="%Y-%m-%d" -- .ai-pm/reviews/<topic>_review.md` (else `—`); `Review` = `[R](../.ai-pm/reviews/<topic>_review.md)` if it exists, else `—`.
+3. **Infrastructure bucket** — a final `## Infrastructure (no user-facing contract)` section listing every `*_plan.md` in `docs/features/` not referenced by any contract's Built/changed by list (backend / infra features). It has no contract, so it carries **no** `User value` / `Out of scope` lines and **no** `Built by:` label — just its existing plain table.
 4. Sort contracts alphabetically within a component; sort feature rows by `Done` (newest last).
-5. **One feature, many contracts — render once.** A single feature can appear in several contracts' `Built/changed by` lists (it built or changed all of them). Render that feature's row **fully once** under the first contract (alphabetical order) where it appears; under every subsequent contract, render the feature as a single marked line `↑ та же работа` instead of a repeated full row, so the PM sees the shared work without duplicate Done/Review columns.
+5. **One feature, many contracts — render once.** A single feature can appear in several contracts' `Built/changed by` lists (it built or changed all of them). Render that feature's row **fully once** under the first contract (alphabetical order) where it appears; under every subsequent contract, render the feature as a single marked line `↑ same work` instead of a repeated full row, so the PM sees the shared work without duplicate Done/Review columns.
 
 ### Status legend
 
@@ -347,10 +356,10 @@ Do **not** print a generator-mechanics header ("Source of truth = contracts. Gen
 ## <Component>
 
 ### [<Contract name>](../.ai-pm/contracts/<name>.md) — live
-- **Что даёт:** <one line from the contract's `## User value` section>
-- **Границы:** <compact projection of the contract's `## Out of scope` bullets — omit this bullet when there is no Out of scope>
+- **User value:** <one line from the contract's `## User value` section>
+- **Out of scope:** <compact projection of the contract's `## Out of scope` bullets — omit this bullet when there is no Out of scope>
 
-Чем построено:
+Built by:
 
 | Feature | Done | Review |
 |---|---|---|
@@ -365,7 +374,7 @@ Do **not** print a generator-mechanics header ("Source of truth = contracts. Gen
 
 ### Worked example
 
-Two contracts (`dimmer-control`, `scene-recall`) live under a "Lighting" component; one feature (`bus-failover`) is backend-only. The feature `scene-engine` built **both** `dimmer-control` and `scene-recall`, so it is rendered fully under `dimmer-control` (alphabetically first) and marked `↑ та же работа` under `scene-recall`:
+Two contracts (`dimmer-control`, `scene-recall`) live under a "Lighting" component; one feature (`bus-failover`) is backend-only. The feature `scene-engine` built **both** `dimmer-control` and `scene-recall`, so it is rendered fully under `dimmer-control` (alphabetically first) and marked `↑ same work` under `scene-recall`:
 
 ```markdown
 # Product map — what the system does, by contract
@@ -375,10 +384,10 @@ Two contracts (`dimmer-control`, `scene-recall`) live under a "Lighting" compone
 ## Lighting
 
 ### [dimmer-control](../.ai-pm/contracts/dimmer-control.md) — live
-- **Что даёт:** A user can smoothly dim any connected dimmable light from the app, and the brightness it shows always matches the lamp.
-- **Границы:** no RGB or colour-temperature control; non-dimmable fixtures are out of scope.
+- **User value:** A user can smoothly dim any connected dimmable light from the app, and the brightness it shows always matches the lamp.
+- **Out of scope:** no RGB or colour-temperature control; non-dimmable fixtures are out of scope.
 
-Чем построено:
+Built by:
 
 | Feature | Done | Review |
 |---|---|---|
@@ -386,14 +395,14 @@ Two contracts (`dimmer-control`, `scene-recall`) live under a "Lighting" compone
 | [scene-engine](features/scene-engine_plan.md) | 2025-10-15 | [R](../.ai-pm/reviews/scene-engine_review.md) |
 
 ### [scene-recall](../.ai-pm/contracts/scene-recall.md) — live
-- **Что даёт:** A user can save the current lighting as a named scene and bring it back with one tap.
-- **Границы:** no scheduled or location-triggered scenes; scenes are not shared between users.
+- **User value:** A user can save the current lighting as a named scene and bring it back with one tap.
+- **Out of scope:** no scheduled or location-triggered scenes; scenes are not shared between users.
 
-Чем построено:
+Built by:
 
 | Feature | Done | Review |
 |---|---|---|
-| [scene-engine](features/scene-engine_plan.md) — ↑ та же работа |  |  |
+| [scene-engine](features/scene-engine_plan.md) — ↑ same work |  |  |
 
 ## Infrastructure (no user-facing contract)
 
