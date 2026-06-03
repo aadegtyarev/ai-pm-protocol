@@ -13,6 +13,20 @@
 
 ---
 
+## [2.12.0] — 2026-06-03
+
+Adds a new domain-agnostic protocol behaviour: the **Blast-radius preflight** gate. Before any on-hardware "run it for real" or a diagnostic probe that restarts or structurally mutates a live target, the orchestrator now stops and asks one question — *does the effect reach an external stateful peer whose state a local revert will not undo?* — and if the live target is coupled to such a peer, it surfaces the blast radius to the PM before acting. This guards the trap *reversible locally ≠ reversible for a coupled external peer*: a probe's "throwaway / I revert it afterwards" framing is false when the side effect lives outside, in a paired external system's own record of the target. The gate is defined once in `WORKFLOW.md` and single-sourced from Step 5.5 and Step A.5; the originating wb-mqtt-matter live-paired-bridge incident is named only as the worked example, never as protocol vocabulary. Purely additive — it adds a precondition before acting and relaxes none of the Step A read-only default or the Step A.5 probe rules. `tests/hooks.sh` 71/71.
+
+### Added
+- **Blast-radius preflight gate** (`WORKFLOW.md`, new section under "When you say it doesn't work in production"): one named, domain-agnostic concept — before an on-hardware/live action whose effect reaches an external stateful peer that a local revert won't undo, the orchestrator stops and surfaces the blast radius to the PM. It offers safe alternatives first (separate/throwaway target, separate identity), keeps structural mutations off the user's live coupled target by default, and proceeds against a live coupled target or down a re-commission/re-pair recovery path only on explicit PM consent with the recovery planned as a mandatory step. The wb-mqtt-matter case (a structural device test on a live paired bridge corrupted the ecosystem's own device record, which reverting the bridge did not heal) is the worked example only.
+
+### Changed
+- **Step 5.5 and Step A.5 reference the gate** (`WORKFLOW.md`): Step 5.5 ("run it for real") and Step A.5 ("diagnostic probe") now invoke the single-sourced Blast-radius preflight before exercising or probing a live target, instead of restating the rule.
+- **Diagnostic-probe row qualifier** (`WORKFLOW.md`, the "What is mandatory when" table): the "Diagnostic probe / spike" row now notes the Blast-radius preflight still applies — a coupled live target is stop-and-surface even for a skip-all probe.
+- **Architecture decision record** (`doc/architecture.md`): records that the preflight is enforced by soft prose plus orchestrator discipline, not a `PreToolUse` hook — coupling to an external peer is runtime state a regex guard cannot read, consistent with the 2026-06-02 rejection of a hard edit-ownership guard — and that the rule is phrased domain-agnostically with the wb-mqtt-matter incident as worked example only.
+
+---
+
 ## [2.11.2] — 2026-06-03
 
 Mechanical whitespace fix for blank-line correctness on PM-facing rendered markdown — no wording change. PRIMARY: a durable one-paragraph markdown-authoring rule is added to `WORKFLOW.md` ("surround lists/tables/headings with blank lines; never two adjacent soft-break lines"), read by every doc-writing agent so authored and generated markdown stays blank-line-correct going forward. SECONDARY: a one-time fix of 7 already-shipped static/generator instances the rule cannot retroactively reach. `tests/hooks.sh` 71/71.
