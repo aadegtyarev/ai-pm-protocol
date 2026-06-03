@@ -27,13 +27,13 @@ base=$(git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD main)
 - A review file that **contains** a `## Code review` section must have it **stamped**: `## Code review: <date> — passed`.
 - A review file with **no** `## Code review` section (e.g. a trivial-fixup `fixup-*_review.md`) is **exempt** — nothing to stamp.
 
-For each in-scope review file, inspect its `## Code review` heading (grep the file content, including the working-tree version):
+For each in-scope review file, inspect its stamp heading — the `## Code review` line, **not** the separate `## Code review findings` heading (grep the file content, including the working-tree version):
 
 ```bash
-grep -nE '^## Code review( |$|:)' "$f"
+grep -nE '^## Code review(:.*)?$' "$f"   # the stamp line; excludes "## Code review findings"
 ```
 
-A section is **unstamped** when its `## Code review` line is `## Code review: NOT YET RUN`, an empty `## Code review` heading, or any `## Code review:` line without a trailing `— passed` date.
+A section is **unstamped** when its `## Code review` line is `## Code review: NOT YET RUN`, a bare `## Code review` heading, or any `## Code review:` line without a trailing `— passed` date.
 
 If **any** in-scope review file's `## Code review` section is unstamped → **STOP**: do not bump the version, do not commit, do not push. Return a clear **BLOCKED** report naming the feature(s) and the remedy:
 
