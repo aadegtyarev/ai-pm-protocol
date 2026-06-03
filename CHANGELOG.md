@@ -13,6 +13,26 @@
 
 ---
 
+## [2.9.0] — 2026-06-03
+
+Makes on-disk artifact strings English-canonical: all scaffolded and regenerated files (`product.md`, product-map, templates, agent/command prose) use English headers and labels. Conversation language unchanged — agents relay artifacts to the PM in the PM's language. Existing downstream projects with Russian headers are offered a headers-only migration (preserving authored prose), with automatic detection preventing false-positive "missing header" flags during transition.
+
+### Added
+- **English-canonical artifact strings**: `product.md` funnel headers (`## Why this exists` / `## What it does today` / `## Documents` / `## Features`), product-map labels (`- **User value:**` / `- **Out of scope:**` / `Built by:`, replacing Russian `Что даёт:` / `Границы:` / `Чем построено:`), and `↑ same work` repeat marker — all new scaffolds carry English.
+- **Russian-header product.md migration**: when an existing downstream `product.md` carries Russian funnel headers, a headers-only migration is offered at `/pm-plan` and `/pm-audit` — `pm-architect` (owner of `product.md`) rewrites the four headers to English, preserving the authored prose verbatim (no machine-translation).
+- **Broadened old-format-map detection** (`pm-bootstrap.md` `### Pending-migration detection`): a product-map triggers the format-refresh note if it carries the pre-v2.6 `Guarantees:` label **or** the v2.6 Russian `- **Что даёт:**` label; regeneration yields English labels automatically.
+- **Language-canon record** (`WORKFLOW.md`, `CLAUDE.md.tmpl`): "Conversation language: the user's. On-disk artifacts (files, code, commits, agent-authored docs): English." Recorded once so all agents and downstream projects inherit the rule.
+
+### Changed
+- **Product-map generation** (`.claude/commands/pm-bootstrap.md`): output format, procedure, and worked example now emit English labels for newly scaffolded projects.
+- **Agent references** (`pm-auditor`, `pm-architect`, `pm-bootstrap`, `pm-plan`, `pm-audit`, `CLAUDE.md.tmpl`, `architecture.md.tmpl`, `doc/architecture.md`): all funnel-header and map-label prose align to English strings and correctly route Russian headers/labels to migration procedures.
+- **Architecture record** (`doc/architecture.md`): documented English-canonical decision and the two-axis rule (conversation ↔ PM's language; on-disk artifacts ↔ English). Owner: `pm-architect`.
+
+### Fixed
+- **No false-positive missing-header flag on Russian-header projects**: `pm-auditor` now detects Russian headers as a migration *trigger* (format note), never as a missing-header *finding*, so the grep flip and downstream migration ship together without breaking live projects during transition.
+
+---
+
 ## [2.8.0] — 2026-06-03
 
 Adds a new home for technical taxonomies and invariants (`## Behavioral contract` in `architecture.md`) and rewrites journey-step guidance into human language, eliminating protocol identifiers and format tables from step bodies and journeys' Invariants fields. Journeys now reference the Behavioral contract section move-not-copy, establishing single-source-of-truth for all format/taxonomy invariants.
