@@ -1,33 +1,17 @@
 # Execution State
 
-- **Task:** `pm-product-advocate` — new independent product-axis referee (the `code-review` twin): a read-only agent that generates fixed-checklist foundational-product-question gaps and blocks the coder handoff (user-facing features) + a `/pm-bootstrap` foundational-question pass; soft-enforced with `pm-plan-checker` DoD + `pm-auditor` backstop, no hook.
-- **Status:** review
-- **Branch:** `feature/pm-product-advocate` (from `main`)
+- **Task:** `legacy-reader-role-split` — split pm-legacy-reader's two roles: rename it `pm-legacy-reader` → `pm-codebase-reader` (pure existing-codebase raw-drafter at bootstrap) and move `docs/user-journeys.md` ownership to `pm-architect` (it already owns the sibling docs + the Behavioral contract journeys reference). Completes the existing "reader drafts → architect finalizes/owns" pattern (already true for architecture.md / threat-model) for user-journeys.
+- **Status:** coding
+- **Branch:** `feature/legacy-reader-role-split` (from `main`)
 - **Done:**
-  - `/pm-research` → `.ai-pm/research/pm-product-advocate_research.md` (verdict: new agent justified; checklist from Cagan/Working-Backwards/Shape-Up; block-but-overridable; proportional).
-  - Plan approved → `doc/features/pm-product-advocate_plan.md` (7 scenarios, 8 key design decisions, categorical = user-facing only).
-  - Arch review → `.ai-pm/arch/pm-product-advocate_arch.md` (Variant A on all 4 placements; Step 3.5, checklist in WORKFLOW.md, `.ai-pm/reviews/<topic>_advocate.md` with `gaps: N`/`clean` greppable token + `## Resolutions` trail, second edit-ownership carve-out, no hook). Plan updated with greppable format + carve-out specifics.
-  - PM decisions (2026-06-04): v1 = full anchor (agent + per-feature gate + bootstrap pass); reach = user-facing only.
-- **Done (pm-coder, 2026-06-04):**
-  1. Created `.claude/agents/pm-product-advocate.md` (read-only referee: `tools: Read, Grep, Glob, Bash, Write`, no `model:`; presence-not-prose; never addresses PM; emits `gaps: N`/`clean` + numbered gaps through `## Verdict`; does NOT write `## Resolutions`).
-  2. `WORKFLOW.md`: roster row; Step 3.5 product-readiness gate; bootstrap-pass note; `### Foundational product questions` (two tiers, fixed order, presence-only, cross-domain); product-readiness rider in "What is mandatory when"; **second edit-ownership carve-out** + agent-owned-artefact list entry + owner-list entry.
-  3. `.claude/commands/pm-plan.md`: Product-readiness gate section (user-facing only via pm-auditor's human-role-subject extraction; spawn advocate after contract draft; one AskUserQuestion relay; record `## Resolutions`; block handoff until resolved; silent on `clean`); wired into Handoff; dispatch-table row; checklist referenced by name.
-  4. `.claude/commands/pm-bootstrap.md`: Foundational-question pass (tier bootstrap) after the product Q&A, wired into greenfield + legacy shallow + legacy full; dispatch-table row; bootstrap tier referenced by name; explicit "questions only, no auto-drafted user-journeys.md".
-  5. `.claude/agents/pm-plan-checker.md`: one user-facing-only DoD item (prose list + Verdict-format block) keyed on the greppable token (treats `clean` and `gaps: N`-with-N-resolutions as the two resolved states; non-user-facing exempt).
-  6. `.claude/agents/pm-auditor.md`: dimension-1 user-facing-only artifact-completeness check, reusing the human-role-subject extraction (absent/unresolved = blocking; non-user-facing with no artifact = clean).
-  7. `README.md`: one capability bullet in "Какие риски шаблон снижает" + agent name in the factual roster listing.
-- **Done (pm-coder, 2026-06-04 — code-review fix):**
-  - Code-review finding 1 (count-match wording ambiguity): aligned the `## Resolutions` recording instruction in `.claude/commands/pm-plan.md` step 3 and `.claude/commands/pm-bootstrap.md` step 3 with the advocate spec — "Record **each gap** as a numbered entry — one entry per gap, in gap order, matching the gap's number" — so the `gaps: N` ↔ N-resolutions count-match the backstops perform is mechanical.
-- **Remaining:**
-  - `doc/architecture.md` decision — POST-coding (pm-architect handoff, orchestrator drives), not coder's.
-- **Touched files:**
-  - `.claude/agents/pm-product-advocate.md` (new)
-  - `WORKFLOW.md`
-  - `.claude/commands/pm-plan.md`
-  - `.claude/commands/pm-bootstrap.md`
-  - `.claude/agents/pm-plan-checker.md`
-  - `.claude/agents/pm-auditor.md`
-  - `README.md`
-  - `.ai-pm/state/current.md`
-- **Next step:** spawn `pm-architect` for the `doc/architecture.md` decision (Docs-to-update handoff), then review loop (`pm-plan-checker` + `code-review`).
-- **Validation:** no executable tests (repo "no automated tests by design"); `tests/hooks.sh` green (71/71, unchanged — no hook added); scenario coverage verified editorially by `pm-plan-checker` + `code-review`.
+  - Plan approved → `doc/features/legacy-reader-role-split_plan.md`.
+  - PM decisions (2026-06-04): (1) do this split BEFORE the parked bootstrap-populated-journeys feature; (2) rename to `pm-codebase-reader` (not keep, not new pm-journeys agent — consolidate journeys into pm-architect); arch-review skipped (structural fork resolved by the rename+consolidate choice).
+- **Remaining (for pm-coder) — TWO-PHASE per the repo git convention:**
+  - **Commit 1 (rename only):** `git mv .claude/agents/pm-legacy-reader.md .claude/agents/pm-codebase-reader.md` + set frontmatter `name: pm-codebase-reader`. Pure rename diff.
+  - **Commit 2 (references + scope):** every `subagent_type`/prose ref → `pm-codebase-reader` (pm-plan.md:12, pm-bootstrap.md:13/185/191/211, pm-audit.md:34/83, WORKFLOW.md:17/36/128, pm-coder.md:50, pm-stack-researcher.md:14, protocol-vs-builtins-analysis.md:88, README.md:222, backlog.md:179); MOVE user-journeys.md ownership to pm-architect (pm-plan.md:45/58 + WORKFLOW.md:36/128 + pm-audit.md:83 + pm-coder.md:50 → pm-architect); extend pm-architect.md (owns user-journeys.md + journeys format rule + finalize the reader journeys draft at bootstrap); narrow pm-codebase-reader.md scope (raw-drafter only, standalone = code re-read).
+  - **Verify:** `grep -rn pm-legacy-reader` over the LIVE surface returns 0; historical artifacts (CHANGELOG, past plans/reviews/arch/audits/state-archive) keep the old name; `.claude/settings.json` untouched (no MIGRATIONS entry); `bash tests/hooks.sh` green.
+  - `doc/architecture.md` decision (rename + journeys-ownership) is POST-coding via pm-architect handoff, not coder's.
+- **Touched files:** (to be filled by coder)
+- **Next step:** spawn `pm-coder`. After coder: spawn `pm-architect` for the `doc/architecture.md` decision, then review loop (`pm-plan-checker` + `code-review`).
+- **Validation:** no executable tests (repo "no automated tests by design"); `tests/hooks.sh` green; reference-completeness grep = the load-bearing check; scenario coverage verified editorially.
+- **Parked:** `doc/features/bootstrap-populated-journeys_plan.md` (untracked draft) — resumes after this lands, revised to point journeys authoring at pm-architect.
