@@ -27,6 +27,30 @@ On an already-initialized project, before confirming-and-exiting, check whether 
 
 The migration procedures themselves are below; they are unchanged.
 
+### Expected-discipline manifest
+
+**Registry mapping each version-introduced content discipline to (a) the existing `pm-auditor` dimension-5 finding that already detects it, and (b) the foundational-question source used to remediate it.** This section carries **no detection of its own** — dimension 5 already detects these gaps; this registry only connects a detected gap to the question source that drives its PM-collaborative fill. It is consumed by `pm-audit.md`'s remediation step (referenced there **by name**), **not** by a detector. `pm-auditor` does **not** reference it.
+
+Distinct from `### Pending-migration detection` above: that section lists *structural* stale-artifact conditions remediated mechanically; this is the remediation registry for *content disciplines* a new version introduced, remediated by PM-authored content. The two are **disjoint** — no entry here duplicates a `### Pending-migration detection` condition (those are greppable stale artifacts; these are absent/under-filled content surfaced by dimension 5).
+
+#### Populated threat-model lifecycle
+
+- **Introduced in:** v2.13.
+- **Detected by:** dimension 5's `docs/threat-model.md` **skeleton / stale** sub-check (the `<placeholder>`-present / empty-Threats-table case is already **blocking**).
+- **Question source:** the bootstrap **threat-model Q-set** (the Q7 security answers named in `### Threat-model lifecycle` in `WORKFLOW.md`).
+
+#### Foundational user-journeys
+
+- **Introduced in:** v2.16 (the version that consolidated `docs/user-journeys.md` under `pm-architect` as an owned content discipline; the product-readiness gate that forces the journey story shipped one version earlier in v2.15).
+- **Detected by:** dimension 5's `docs/user-journeys.md` **"missing journey for an implemented user-facing feature"** note. This generalizes the epic's "product story fell behind" note — "N substrate features shipped while `user-journeys.md` is still skeletal" is exactly that finding.
+- **Question source:** `### Foundational product questions` in `WORKFLOW.md`, **per-feature tier** (the value/usability/scope-boundary set).
+
+#### Value-first product story
+
+- **Introduced in:** v2.3 (the version that split `docs/product.md` into the authored PM front door funnel; the value-first map format followed in v2.6 and the English-canonical funnel headers below in v2.9).
+- **Detected by:** dimension 5's `docs/product.md` **funnel-missing** note (`product.md` missing / empty / no funnel headers).
+- **Question source:** `### Foundational product questions` in `WORKFLOW.md`, **bootstrap tier** (discovery / onboarding / value / viability).
+
 - **v2.2 — feature index → product map.** Detection: see `### Pending-migration detection` above (`docs/features/_index.md` present). When it applies:
   1. **Backfill `Built/changed by` from the index first.** Pre-v2.2 contracts have no `Built/changed by` list, so a naive generation would drop every feature into the Infrastructure bucket. The mapping already exists in the index's `Contract` column: read `docs/features/_index.md`, and for each feature row that links a contract, append `- [<topic>](../../docs/features/<topic>_plan.md)` to that contract's `Built/changed by` section. Features with no contract link correctly fall into the Infrastructure bucket.
   2. Generate `docs/product-map.md` from the contracts / plans / reviews using the **Product map generation procedure** in `pm-bootstrap.md`. (Pre-v2.3 the target was `docs/product.md`; the v2.3 migration below splits that into the authored front door plus this generated map. If you run both migrations on a project that still has a generated `docs/product.md`, run the v2.3 rename first.)
