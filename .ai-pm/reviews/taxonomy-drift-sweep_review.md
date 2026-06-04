@@ -66,4 +66,4 @@ Observations (not defects, no fix on this branch):
 
 `tests/hooks.sh` 71/71 after the fixes.
 
-## Code review: DONE — 2 findings, both fixed in-pass; verdict approve
+## Code review: 2026-06-04 — passed
