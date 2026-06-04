@@ -1,5 +1,7 @@
 # invariants-index — plan
 
+Decision authority: autonomous
+
 *First slice of the EPIC cross-document-consistency-auditor (`.ai-pm/backlog.md` → "From downstream artifact review — 2026-06-04 (wb-mqtt-matter docs)" first bullet + the EPIC "Cross-document consistency auditor" bullet). PM picked this slice 2026-06-04.*
 
 Make `docs/architecture.md` `## Behavioral contract (taxonomies & invariants)` the **single index / entry point** for the project's system invariants — so a top-down reader finds one list, not three partial ones keyed differently. Today invariants are fragmented across three homes: format/taxonomy invariants already live **in** the Behavioral contract; rule-shaped invariants live as `SCn` in `## Security constraints` (referenced by the threat-model by ID); and product-level / journey-level invariants live in `docs/product.md` and the per-journey `**Invariants:**` blocks. The fix applies the protocol's own *one-fact-one-owner / reference-don't-duplicate* and *threat→constraint-by-ID* patterns to invariants: the Behavioral contract **indexes** invariants by reference (an `SCn` by ID; a journey by name; inline only when the Behavioral contract is itself the home), **never relocating** the `SCn` ones (moving them would break the threat→constraint-by-ID wiring) and never restating identifiers (a copy-beside-a-link drifts).
