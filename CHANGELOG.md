@@ -13,6 +13,25 @@
 
 ---
 
+## [2.24.1] — 2026-06-04
+
+Ships **readme-rewrite** — a PM-directed rewrite of the protocol's own `README.md` front door, documentation-only (no agent / template / command / code change). The README is reordered to the canonical что→зачем→установка→подробности→лицензия shape: install moves up top, a two-path quickstart (greenfield + legacy onboarding) replaces the single flow, the risk list is strongly cut and lifted up as the "why", and the update / migration sections are consolidated. The inline v1.x→v2.0 migration walkthrough is removed from the README and now lives in `MIGRATIONS.md`. Newcomer-first, no behavior change.
+
+### Changed
+
+- **`README.md` rewritten and reordered (newcomer-first)** — canonical что→зачем→установка→подробности→лицензия order: install raised to the top, a two-path quickstart added (greenfield + legacy onboarding), the risk list strongly cut and moved up as the "why", and the update / migration sections consolidated. One editorial finding fixed in-pass.
+
+### Removed
+
+- **Inline v1.x→v2.0 migration walkthrough removed from `README.md`** — the front door now points to `MIGRATIONS.md` instead of carrying the migration steps inline.
+
+### Notes
+
+- Documentation-only change to the template repo's own front door; no protocol capability added or changed, so a PATCH bump. No Product Contract touched, no migration.
+- Versioned above the latest landed CHANGELOG heading (`[2.24.0]`); v2.25.0 (state-model-section, PR #214) ships separately and is not in this branch's history.
+
+---
+
 ## [2.24.0] — 2026-06-04
 
 Ships **automode-procedural-gates** — generalizes the shipped automode (`### Decision authority` engine) from a single-gate capability into a **graded procedural-gate progression**. In autonomous mode the routine procedural gates — feature-selection, plan-approval, arch-offer, retrospective / migration nudges, contract-existence — become **announce-and-proceed**: the orchestrator states the call and continues without a stop. A **genuine product fork** still derives-or-escalates (no silent product decision), and **merge / ship stays manual** regardless of mode. The autonomous branches cite their basis (a `Source:` line) so an announced call remains auditable. Additive over the existing engine, fully back-compatible, **no migration**.
