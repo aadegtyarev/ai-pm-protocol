@@ -1,6 +1,6 @@
 # Execution State
 
-- **Status:** idle
+- **Status:** planning → coding (automode-feature-selection)
 - **Decision authority:** `autonomous` (project-wide, `.ai-pm/decision-authority.md`) — every feature runs autonomously; merge/ship stays manual.
 - **Last shipped:** `nfr-operational-limits-prompt` — third slice of the EPIC cross-document-consistency auditor. A conditional NFR / operational-limits prompt in `/pm-plan` (fires when the feature is scale-bearing OR the platform resource-constrained; silent + proportional otherwise; no hook), with audience-split homes: user-facing limits → Product Contract `## Must not break`; resource budgets → a new conditional `docs/architecture.md` `## Operational limits & budgets` section (born `N/A`, A2-walked / A4-excluded, owned by pm-architect). `[?]`-not-invented; no hard gate (deferred to a slice-4 did-it-right check). Ran autonomous (project-wide). Released v2.23.0, PR #208 merged 2026-06-04. Archived: `.ai-pm/state/archive/nfr-operational-limits-prompt-2026-06-04.md`.
 - **This session shipped (2026-06-04):** v2.15.0 pm-product-advocate · v2.16.0 legacy-reader-role-split · v2.17.0 doc-migration-on-template-bump · v2.18.0 protocol-process-flavor · v2.19.0 documentation-flavor · v2.20.0 automode · v2.21.0 invariants-index · v2.22.0 taxonomy-drift-sweep · v2.23.0 nfr-operational-limits-prompt; + full audit 2026-06-04; + install/docs PRs #204–#206; + project-wide autonomous mode.

@@ -1,0 +1,77 @@
+# automode-feature-selection — plan
+
+*Extends the shipped `automode` (v2.20.0, PR #199) — the `### Decision authority` engine in `WORKFLOW.md`. PM-directed 2026-06-04 after hitting the gap 3× ("third time I write 'autonomous' myself and it keeps asking me to choose features"). Source: `.ai-pm/backlog.md:80` — the automode vision: "the PM front-loads everything at bootstrap, then the orchestrator + agents carry the feature/product to the end with NO further questions." The shipped slice redirects only the product-readiness advocate gaps **within** a feature; it never covered **which feature to build next**, so an idle autonomous project still relays a "which feature?" question and bootstrap still relays "describe the first feature" — contradicting the vision.*
+
+Close the gap: in `autonomous` mode, **selecting the next feature** becomes a fork the engine **resolves from the PM's own canon** (the backlog + bootstrap mandate + recorded priorities), **announces** (announce-before-act), and **proceeds** into `/pm-plan` — instead of relaying a blocking "which feature?" to the PM. The orchestrator **sequences PM-authored candidates**; it never invents a roadmap direction. The PM keeps: authorship of the backlog (what is even a candidate), interrupt-at-announce, full plan review, and **merge authority** (merge/ship stays manual — the load-bearing safety).
+
+Meta-feature on the template repo: **software-kind**, the no-user-facing-contract exception; dev-docs in `doc/` (singular). Every scenario subject is the orchestrator / the `### Decision authority` engine / `WORKFLOW.md` / `/pm-bootstrap` (non-human) → not user-facing → no Product Contract, no product-readiness advocate gate, no `## Validation` gate (Pass-2 is `code-review`). Verification = editorial + clean-grep.
+
+## Scenarios
+
+1. **Idle autonomous project with an open backlog → the orchestrator selects + announces + proceeds (the missing behaviour).** When `.ai-pm/state/current.md` is `idle`/`done`, the effective authority is `autonomous`, and `.ai-pm/backlog.md` carries open items, the orchestrator **selects** the next feature — the open candidate most aligned with the bootstrap mandate + recorded priorities — **announces** it (the existing announce-before-act console line: fork · chosen feature · cited rationale (the backlog item / mandate passage) · invariants kept · `(proceeding — interrupt to override)`), and **proceeds into `/pm-plan`**. No "which feature next?" `AskUserQuestion`.
+
+2. **Bootstrap in autonomous mode → the first feature is derived, not relayed.** At the `/pm-bootstrap` "before the project is ready for its first feature" transition, when the effective authority is `autonomous`, the same rule applies: the first feature is derived from the bootstrap mandate (and any seeded backlog), announced, and proceeded into `/pm-plan` — instead of the blocking "describe the first feature." Same fork, second entry point (mirrors automode's "two scopes, one engine").
+
+3. **Selection is canon-DERIVED, never confabulated.** The chosen feature must be an **existing backlog item or a mandate-implied need**, carried into the new plan's provenance with a **cited reference** (the backlog line / the mandate passage). The orchestrator never invents a roadmap direction the PM's canon never implied — the same anti-confabulation discipline as the `### Decision authority` derivability test ("no canon passage ⇒ no auto-decision"). No derivable candidate ⇒ **escalate** (Scenario 4), never invent.
+
+4. **Escalate-regardless — selection asks the PM only when genuinely undecidable.** Reusing the existing escalate-regardless cap, the orchestrator **escalates** the selection (one `AskUserQuestion`, the same single relay) when any holds: the backlog is **empty / has no open items**; the top priority is **genuinely ambiguous** (≥2 candidates with no derivable tiebreak from the mandate or recorded priorities); or the best candidate is one the PM **marked high-stakes / irreversible**. An empty escalation set ⇒ fully silent (announce + proceed). The PM can always interrupt the announce to override the pick or switch modes.
+
+5. **Announce-before-act + recorded — no new artifact.** Feature-selection happens **before** a feature exists, so it has no advocate `## Resolutions` trail to ride. The selection is recorded in two existing places: the **announce console line** (shown, interrupt-to-override) and the **selected plan's provenance / Source line** (`selected autonomously per ### Decision authority; source: <backlog item / mandate passage>`) plus a one-line note in `.ai-pm/state/current.md`. Auditable through the plan; no new file, no new artifact type.
+
+6. **Merge/ship stays manual — the load-bearing safety (unchanged).** Auto-**selecting** what to plan is safe **because** the existing "merge/ship stays manual in BOTH scopes" invariant is untouched: the PM reviews every plan and every PR before anything ships. Autonomous selection chooses the **order** among PM-authored candidates; it never plans against invented direction and never merges. This is why no new gate is introduced — the existing plan-review + manual-merge are the gate.
+
+7. **Interactive mode byte-unchanged; graded extension, additive.** An `interactive` project still relays every "which feature?" / "describe the first feature" to the PM, exactly as today (the default, every existing project). This is a **graded extension of the one engine** — it reuses the derivability test, announce-before-act, the escalate-regardless cap, and the merge-manual invariant; it adds **no new engine**, no new enum value, no migration. Existing projects are unaffected unless their effective authority is already `autonomous`.
+
+## Existing behaviors this feature touches
+
+(from the protocol spec — what must not break)
+
+- **The `### Decision authority` engine** (`WORKFLOW.md`) — extended in **scope** (feature-selection added as an in-scope autonomous fork), reusing the derivability test, announce-before-act, the escalate-regardless cap, and the merge-manual invariant. No new engine, no new enum value.
+- **The escalate-regardless cap** — reused verbatim, with the three selection-specific escalation conditions (empty backlog / ambiguous priority / high-stakes candidate) added as instances of it, not a new escalation mechanism.
+- **"Merge/ship stays manual in BOTH scopes"** — preserved exactly; it is the load-bearing safety that makes auto-selection safe (the PM reviews plan + PR). Autonomy still relaxes only *which-fork-resolves-how*, never merge/release.
+- **The Step 6 ship gate + "after you merge … ready for the next feature" transition** — the A/B/C ship gate is unchanged; the new selection behaviour slots at the **idle-after-merge** point (and at bootstrap), not inside the ship gate.
+- **`/pm-bootstrap`'s first-feature transition + the Decision-authority question (Q8)** — the bootstrap question that *sets* the mode is unchanged; what changes is the downstream first-feature transition, which gains an autonomous branch referencing `### Decision authority`.
+- **The consumer-reference single-source rule** (`WORKFLOW.md` — every consumer references `### Decision authority` by name, never re-encodes the enum/default) — preserved: the feature-selection rule lives **once** in `### Decision authority`; the Step-6 idle transition, the autonomous rider, and `/pm-bootstrap` reference it.
+- **Interactive mode** — byte-unchanged.
+- **Anti-confabulation** — preserved and extended to selection: a feature picked autonomously must cite a backlog/mandate source; no signal ⇒ escalate, never invent.
+
+## Contracts
+
+None. Meta-feature on the no-user-facing-contract template repo (the documented exception). No new API or data shape consumed by a downstream runtime.
+
+## Interaction scenarios
+
+Provably isolated: prose-spec change only — no runtime, no shared mutable state, no concurrent operations, no I/O. The coupling (the `### Decision authority` rule ↔ its consumers: the Step-6 idle transition, the autonomous rider, `/pm-bootstrap`) is read sequentially by the orchestrator within one turn and is covered by Scenarios 1–7 and the clean-grep verification.
+
+## Test plan
+
+*Repo discipline: "no automated tests by design — validation by use." Verification is editorial + clean-grep, the same shape as every prior meta-feature; `tests/hooks.sh` stays green — this feature touches no hook.*
+
+- Existing tests that must pass: `tests/hooks.sh` (71/71 — unchanged).
+- New tests: none (prose-spec feature). Verification instead:
+  - **Editorial walkthrough** — the `### Decision authority` extension matches Scenarios 1–7: autonomous idle-selection + bootstrap-first-feature derived-announced-proceeded; canon-derived-or-escalate; escalate on empty/ambiguous/high-stakes; recorded in the plan provenance + announce + state (no new artifact); merge-manual preserved; interactive byte-unchanged.
+  - **Clean-grep — single-source:** the feature-selection rule is added **only** inside `### Decision authority`; the Step-6 idle transition, the autonomous rider, and `/pm-bootstrap` **reference it by name** and do **not** re-encode the enum/default/selection rule (the consumer-reference rule holds).
+  - **Clean-grep — reuse, not re-encode:** the extension names the existing derivability test / announce-before-act / escalate-regardless cap / merge-manual invariant by reference; it introduces no second copy of them and no new enum value.
+  - **Clean-grep — safety invariant intact:** "merge/ship stays manual in BOTH scopes" is byte-unchanged; the new selection step sits at idle/bootstrap, never inside the ship gate.
+  - **Clean-grep — interactive unchanged:** no interactive-path wording is altered; the new behaviour is gated to `autonomous` effective authority.
+  - **Proportionality check:** this template repo's own state (currently `autonomous`, open backlog) is exactly the Scenario-1 case — the rule would have the orchestrator select-announce-proceed rather than ask, which is the corrected behaviour the PM asked for.
+- Interaction scenario tests: none (provably isolated).
+- Stack-spec tests: none (no stack component touched).
+
+## Docs to update
+
+- `WORKFLOW.md` `### Decision authority` (single source): add the **feature-selection scope** — in `autonomous` mode, "which feature next" (idle) and "the first feature" (bootstrap) are forks the engine **resolves** by the derivability test from `.ai-pm/backlog.md` + the bootstrap mandate + recorded priorities, **announced** (announce-before-act) and **proceeded** into `/pm-plan`; **canon-derived or escalate** (the three escalation conditions: empty backlog / ambiguous priority / high-stakes candidate, as instances of the existing escalate-regardless cap); **recorded** in the selected plan's provenance + the announce line + `current.md` (no new artifact); **merge/ship stays manual** (reuse the existing invariant — auto-selection is safe *because* the PM reviews plan + PR). State explicitly that selection **sequences PM-authored candidates**, never invents direction. Reuse — do not re-encode — the derivability test, announce-before-act, the cap, and the merge-manual invariant already in this subsection.
+- `WORKFLOW.md` Step 6 / the "after you merge … ready for the next feature" idle transition: add a one-line autonomous branch — when idle + `autonomous` + open backlog, the orchestrator selects-announces-proceeds per `### Decision authority` (referenced by name; no re-encoding) instead of waiting for the PM to name the next feature.
+- `WORKFLOW.md` "How to talk to the PM" **Autonomous-mode rider**: note that feature-selection is now **derived-and-announced**, not relayed (one sentence; reference `### Decision authority`).
+- `.claude/commands/pm-bootstrap.md`: at the "before the project is ready for its first feature" transition, add the autonomous branch — derive the first feature from the mandate/seeded backlog, announce, and proceed into `/pm-plan`; escalate only if the mandate yields no derivable first feature. Reference `### Decision authority` by name (do not re-encode the enum/default).
+- `doc/architecture.md`: a short decision record — autonomous feature-selection as a graded extension of the `### Decision authority` engine; selection sequences PM-authored backlog candidates (never invents direction); canon-derived-or-escalate; recorded in plan provenance (no new artifact, because selection precedes the feature); merge-manual is the load-bearing safety; bootstrap-first-feature and idle-next-feature are one fork with two entry points. (Owned by `pm-architect`, post-coding handoff.)
+- *(No `MIGRATIONS.md` / template structural / hook change — additive, no migration, no new enum value.)*
+
+## Out of scope
+
+- **Interactive mode** — the sibling element of the `autonomous | interactive` mode set: byte-unchanged. An interactive project keeps relaying every feature-selection to the PM; this feature touches only the `autonomous` branch.
+- **Relaxing the merge/ship gate** — explicitly **not** touched. Autonomy extends to *selecting and planning* a feature, never to opening or merging a PR. Step 6 A/B/C stays manual in both scopes; that invariant is the safety this feature depends on.
+- **A priority/ranking model for the backlog** (formal scoring, dependency graphs, effort estimates) — out. Selection uses the existing judgement (most-aligned-with-mandate + recorded priorities) and **escalates on genuine ambiguity** rather than inventing a ranking algorithm; a structured backlog-priority model is a separate later plan if ever wanted.
+- **Auto-merging the selected feature's PR, or chaining feature-after-feature without the PM seeing a PR** — out; each selected feature still stops at the manual ship gate. Autonomy is "pick + plan + build to a reviewed result," not "ship a backlog unattended."
+- **Promoting auto-selected directions into `docs/product.md` / `docs/architecture.md`** (the "accumulated-experience loop" the automode plan also deferred) — out; the selection is recorded in the plan provenance + state, not promoted into product canon.
+- **A new artifact for the selection decision** — deliberately avoided; the plan's provenance/Source line + the announce line + `current.md` are the record (selection precedes the feature, so the advocate `## Resolutions` trail cannot host it).
