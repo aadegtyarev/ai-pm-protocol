@@ -78,6 +78,41 @@ use"), so the no-code mode is partly dogfooded.
    are agents/process), but it **applies to downstream process-kind features** (the operator is a
    human role) — these are different things.
 
+## Architecture outcomes (arch review — Variant A on all 6 forks)
+
+See `.ai-pm/arch/protocol-process-flavor_arch.md` for full rationale + the drop-in
+`process.md.tmpl` skeleton. Resolved structural shapes the coder follows:
+
+1. **`kind` home + single-source.** The per-project value lives as `## Project kind: software |
+   process` in the downstream **`CLAUDE.md`** (every agent already reads it; root file → no
+   `doc/`-vs-`docs/` trap). The **rule** (the enum + the load-bearing **`absent ⇒ software`**
+   default) is single-sourced in a **new `### Project kind` subsection of `WORKFLOW.md`**; every
+   new conditional **references it by name**, never re-encodes the enum/default. The "What is
+   mandatory when" table gets a **rider** (the proven Product-readiness / Threat-model rider
+   pattern) — **not a new column, not row-duplication** — so the existing software rows are
+   byte-unchanged.
+2. **SOP author = `pm-coder`**, via a one-word remit generalization: "implement code" → **"author
+   the plan's deliverable artefact"** (code in software mode, `process.md` in process mode). The
+   `process.md` is the *implementation artefact* (analogue of source); the canonical `docs/`
+   context docs stay `pm-architect`'s — the **`docs/` ban is preserved verbatim**.
+3. **Dry-run gate = the review-stamp triad cloned.** `pm-plan-checker` writes a born-loud
+   **`## Dry-run: NOT YET RUN`**; the orchestrator stamps **`## Dry-run: <date> — passed`** after
+   the tabletop/pilot; enforced by **extending** `pm-pr-prep` step 0 + `pm-auditor` dimension 1
+   (both already presence-keyed — no new gate, no filename special-casing). markdownlint =
+   pre-gate; a **kind-conditioned DoD line** (checklist, not signature). Pass-2 **routes on kind**
+   — the software `code-review` branch is untouched.
+4. **Advocate process tier.** A new **`process` tier** in the single-source `### Foundational
+   product questions` (advocate + relay + DoD/auditor backstops reused **verbatim**) — presence-
+   checked questions mapped to the SOP sections. The advocate **fires** on downstream
+   process-kind features (operator = human role); *this* meta-feature stays gate-exempt.
+5. **`process.md.tmpl` sections** — drop-in skeleton in arch note §5 (purpose · scope ·
+   roles/RACI · inputs+outputs/SIPOC · procedure · decision points · exceptions+recovery ·
+   references · revision history); additive to `user-journeys.md` (experience flow) and contracts
+   (good-outcome bar); flagged "confirm against SOP methodology" (research angle-4 unverified).
+6. **Back-compat airtight.** `absent ⇒ software` is the one named rule every consumer defaults to;
+   proportionality scales through the **existing** change-type matrix + per-section `N/A`
+   discipline — no new mechanism.
+
 ## Scenarios
 
 1. **Bootstrap asks the project kind.** `/pm-bootstrap` asks early (alongside the product/stack
