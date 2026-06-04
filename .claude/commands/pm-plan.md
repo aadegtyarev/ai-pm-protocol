@@ -181,7 +181,7 @@ Everything else follows the normal plan format. The Incident facts section is th
 
 Decision authority: autonomous | interactive   # OPTIONAL — omit unless overriding the project value
 
-Source: <where this plan came from>   # provenance line. When the feature was SELECTED autonomously (the orchestrator picked it per the feature-selection scope of `### Decision authority` in `WORKFLOW.md`, not the PM naming it), this same line reads: `selected autonomously per ### Decision authority; source: <backlog item / mandate passage>` — one provenance line carrying the citation, NOT a parallel "Selected-by:" field. The `source:` token is the single grep target the `pm-plan-checker` backstop keys on.
+Source: <where this plan came from>   # the plan's provenance line (the plan-level provenance line defined by this feature in the plan format). When the feature was SELECTED autonomously (the orchestrator picked it per the feature-selection scope of `### Decision authority` in `WORKFLOW.md`, not the PM naming it), this same line reads: `selected autonomously per ### Decision authority; source: <backlog item / mandate passage>` — one provenance line carrying the citation, NOT a parallel "Selected-by:" field. The `source:` token is the single grep target the `pm-plan-checker` backstop keys on.
 
 ## Scenarios
 1. <user-visible behavior after this change>
@@ -252,7 +252,7 @@ If PM says no or later → continue with this feature.
 If **no audit has ever been run** (.ai-pm/audits/ empty or missing):
 > "This project hasn't had a protocol check yet. Want to run one before we plan this feature? It verifies that all previous work is properly documented."
 
-**Autonomous branch.** When the effective authority is `autonomous`, the retrospective/audit nudge is a procedural checkpoint per `### Decision authority` in `WORKFLOW.md` (procedural-gate progression): auto-decide — run `/pm-audit` when the 5-since-last threshold trips — and **announce**, instead of asking. The PM interrupts to override.
+**Autonomous branch.** When the effective authority is `autonomous`, the retrospective/audit nudge is a procedural checkpoint per `### Decision authority` in `WORKFLOW.md` (procedural-gate progression): auto-decide — run `/pm-audit` when **either** retrospective trigger fires (the 5-since-last threshold trips, **or** no audit has ever been run on a project that has accumulated features) — and **announce**, instead of asking. The PM interrupts to override.
 
 **Pending-migration nudge.** If the project shows an un-migrated template structure (per `### Pending-migration detection` in `MIGRATIONS.md` — a lingering `docs/features/_index.md`, or a generated `docs/product.md` with the frozen signature line and no `docs/product-map.md`), surface it before new work:
 > "This project is on an older template structure — `docs/product-map.md` hasn't been generated yet. Worth running the pending `/pm-bootstrap` migration first so we plan against the current format. Run the migration now?"
@@ -281,7 +281,7 @@ If PM says yes → run the **contract two-layer migration procedure** in `MIGRAT
 
 **Autonomous branch (all pending-migration nudges above).** When the effective authority is `autonomous`, a pending-migration nudge is a procedural checkpoint per `### Decision authority` in `WORKFLOW.md` (procedural-gate progression): run the detected pending migration + **announce**, instead of asking. The PM interrupts to override.
 
-Don't implement fixes, don't block planning. PM decides.
+In interactive mode: don't implement fixes, don't block planning — PM decides. (In autonomous mode the nudges above are auto-decided per the **Autonomous branch** — the orchestrator runs the detected pending migration and announces, instead of relaying to the PM.)
 
 ## Product-readiness gate (user-facing features only)
 
