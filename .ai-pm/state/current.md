@@ -1,6 +1,6 @@
 # Execution State
 
-- **Status:** idle
+- **Status:** review-complete → pr-prep (readme-template-canonical-shape). pm-coder template+authoring-rule; plan-check approve; editorial code-review 2 LOW (1 latent/observation, 1 blank-line nit fixed abb2b03); stamp `## Code review: 2026-06-05 — passed`. **Next step:** pr-prep → STOP. Target ~v2.26.0.
 - **Decision authority:** `autonomous` (project-wide, `.ai-pm/decision-authority.md`) — routine procedural gates announce-and-proceed (v2.24.0); merge/ship stays manual.
 - **Last shipped:** `deny-review-orchestrator` (v2.25.1, PR #217) — deny `wb-development:code-review-orchestrator` auto-intercept in the shipped routing hook, with a surgical per-skill env-escape `WB_ALLOW_REVIEW_ORCHESTRATOR=1`; ships downstream. Archived: `.ai-pm/state/archive/deny-review-orchestrator-2026-06-05.md`.
 - **This session shipped:** v2.15.0–v2.25.1 (EPIC slices invariants-index / taxonomy-drift-sweep / nfr-operational-limits-prompt / state-model-section; automode + automode-procedural-gates; readme-rewrite; deny-review-orchestrator) + full audit + install/docs PRs #204–#206 + backlog notes #210/#211/#218.
