@@ -156,7 +156,7 @@ Read:
 From this, determine: language, framework, database, key abstractions.
 
 Write minimal docs — enough to start adding features:
-- `CLAUDE.md` — fill what's clear from reading; mark gaps as `[?]`. Legacy adoption reads an existing codebase, so the `## Project kind:` line is `software` (the default).
+- `CLAUDE.md` — fill what's clear from reading; mark gaps as `[?]`. **Write `## Project kind: software`** (legacy adoption reads an existing codebase — `software`; see `### Project kind` in `WORKFLOW.md`).
 - `docs/architecture.md` — stack and key decisions extracted from code; mark gaps as `[?]`
 - `docs/user-journeys.md` — write only what's visible from entry points and module names; leave the rest as `[?]`
 - `docs/stack-notes.md` from `stack-notes.md.tmpl` — empty shell
