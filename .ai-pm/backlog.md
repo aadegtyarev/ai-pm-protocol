@@ -176,7 +176,7 @@ _Superseded rationale (kept for the record — the rejected language-parameter d
 **Mechanism (set once → automatic):**
 - One bootstrap question: "Documentation language (PM-facing prose)?" — default: detect from the PM's answers and confirm.
 - One home: `CLAUDE.md` (every pm-* agent already reads it) gets a `## Documentation language` line — `PM-facing prose: <lang>. Technical layer: English.`
-- One instruction added to each writing agent (`pm-architect`, `pm-legacy-reader`, the map generator): "PM-facing prose in CLAUDE.md's declared language; technical layer English." No new files.
+- One instruction added to each writing agent (`pm-architect`, `pm-codebase-reader`, the map generator): "PM-facing prose in CLAUDE.md's declared language; technical layer English." No new files.
 
 **Header-canon rule (protects the strict checks — and the migration the PM asked for):**
 - **Section headers stay a fixed canonical language (English); only prose bodies follow the PM language.** Headers are structural anchors that grep-based checks key on (auditor header-existence + move-not-copy, e.g. `pm-auditor.md:119` greps the exact funnel headers). Translating headers would force every such check to become language-aware — fragile. Fixing headers keeps the strict system entirely untouched while the readable bodies localize.
