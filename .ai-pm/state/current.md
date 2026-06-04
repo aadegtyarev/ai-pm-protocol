@@ -1,7 +1,7 @@
 # Execution State
 
-- **Task:** `doc-migration-on-template-bump` — v1 extends `/pm-audit` with the SEMANTIC half of doc-migration: a version-keyed `### Expected-discipline manifest` in MIGRATIONS.md + a new docs-currency sub-check in pm-auditor + a remediation type in pm-audit (relay discipline questions → pm-architect authors) + "run /pm-audit after a template bump" in WORKFLOW Maintenance. Mechanical half already exists (### Pending-migration detection); no new command/agent/hook.
-- **Status:** coded — awaiting post-coding pm-architect handoff (`doc/architecture.md`) + review loop
+- **Task:** `doc-migration-on-template-bump` — v1 extends `/pm-audit` with the SEMANTIC half of doc-migration. **Reworked to REMEDIATION-ONLY (post-code-review):** no parallel detector — the EXISTING `pm-auditor` dimension-5 doc findings (missing journey, missing/empty `product.md` funnel, skeleton `threat-model`) already detect these gaps; `### Expected-discipline manifest` in MIGRATIONS.md is reframed as a question-source + introduced-in REGISTRY (no detection); the net-new value is the PM-collaborative remediation enhancement on the EXISTING dimension-5 fix-now path in pm-audit.md (relay discipline foundational questions → pm-architect authors). Mechanical half already exists (### Pending-migration detection); no new command/agent/hook.
+- **Status:** reworked (remediation-only) — awaiting `doc/architecture.md` refresh (pm-architect, orchestrator-spawned; still describes the OLD detector shape) + re-review
 - **Branch:** `feature/doc-migration-on-template-bump` (from `main`)
 - **Done:**
   - `/pm-research` → `.ai-pm/research/doc-migration-on-template-bump_research.md` (Copier template-update model + load-bearing markers + dpkg three-way + Django registry).
@@ -14,11 +14,16 @@
     3. `.claude/commands/pm-audit.md`: remediation entry #7 added after the token-laden-contract entry — orchestrator relays the discipline's foundational questions (one AskUserQuestion, by-name source) → spawn pm-architect; accept-with-context escape hatch; NO advocate spawn.
     4. `WORKFLOW.md` § Maintenance: "after the bump, run `/pm-audit`" line added (semantic-upgrade-aware).
     5. `README.md`: one-line capability mention added in the risk-reduction roster (Russian).
-  - **Verified:** single-source (3 `####` names live only in MIGRATIONS.md; section referenced by name in WORKFLOW/pm-auditor/pm-audit); disjoint from `### Pending-migration detection`; `.claude/settings.json` not in diff; `### Pending-migration detection` heading/conditions not in diff; `bash tests/hooks.sh` 71/71.
+  - **pm-coder REWORK (2026-06-04, commit `e8bf2ab`, code-review finding 1):** dropped the duplicate detector, manifest → question registry.
+    1. `.claude/agents/pm-auditor.md`: REMOVED the entire added "Expected-discipline gap" sub-check from dimension 5. Dimension 5 is now byte-identical to `main` (`git diff main -- .claude/agents/pm-auditor.md` empty; no `Expected-discipline` reference remains).
+    2. `MIGRATIONS.md` `### Expected-discipline manifest`: reframed as a remediation REGISTRY — preamble states no detection of its own (dimension 5 detects), consumed by pm-audit.md by name, `pm-auditor` does NOT reference it. Each `####` entry now: `Introduced in:` (v2.13/v2.16/v2.3) + `Detected by:` (the existing dimension-5 finding) + `Question source:`. REMOVED Applicability + Satisfied-check lines (those duplicated dimension 5). Disjoint-from-`### Pending-migration detection` note kept.
+    3. `.claude/commands/pm-audit.md`: removed the standalone remediation entry #7; ENHANCED the existing "Stale docs → pm-architect" remediation — when a dimension-5 doc finding maps to a manifest discipline and PM picks fix-now, relay the discipline's foundational questions (one AskUserQuestion) → spawn pm-architect to author; accept-with-context escape hatch; no advocate spawn; adds NO new finding type.
+    4. `WORKFLOW.md` / `README.md`: wording corrected to remediation-only (no detector implied); manifest still referenced by name in WORKFLOW.
+  - **Verified (rework):** `git diff main -- .claude/agents/pm-auditor.md` EMPTY (dimension 5 fully restored); `grep -rn "Expected-discipline manifest"` → MIGRATIONS.md (def) + pm-audit.md (remediation) + WORKFLOW.md (Maintenance pointer) + doc/architecture.md (old decision record, untouched), NOT pm-auditor.md; manifest carries no satisfied-check/applicability lines; the 3 `Detected by:` lines map to real dimension-5 findings (threat-model skeleton L132, journeys L111, product.md missing/empty L124+L127); `.claude/settings.json` not in diff; `### Pending-migration detection` heading not modified; `bash tests/hooks.sh` 71/71.
 - **Remaining:**
-  - `doc/architecture.md` decision record — POST-coding `pm-architect` handoff (orchestrator-spawned), NOT coder's.
-  - Review loop: `pm-plan-checker` (Pass 1) + `code-review` (Pass 2).
-- **Touched files:** `MIGRATIONS.md`, `.claude/agents/pm-auditor.md`, `.claude/commands/pm-audit.md`, `WORKFLOW.md`, `README.md`, `.ai-pm/state/current.md`.
-- **Next step:** spawn `pm-architect` for the `doc/architecture.md` decision record, then review loop (`pm-plan-checker` + `code-review`).
+  - `doc/architecture.md` decision record — needs REFRESH to the remediation-only shape (it still describes the OLD parallel-detector / sub-check / remediation-entry-#7 design). POST-rework `pm-architect` handoff (orchestrator-spawned), NOT coder's.
+  - Re-review loop: `code-review` (re-run on the reworked diff) + `pm-plan-checker` consistency check against the DESIGN CORRECTION banner.
+- **Touched files (rework):** `MIGRATIONS.md`, `.claude/agents/pm-auditor.md` (now back to main), `.claude/commands/pm-audit.md`, `WORKFLOW.md`, `README.md`, `.ai-pm/state/current.md`.
+- **Next step:** spawn `pm-architect` to refresh the `doc/architecture.md` decision record to the remediation-only shape, then re-review (`code-review` + `pm-plan-checker`).
 - **Validation:** no executable tests (repo "no automated tests by design"); `tests/hooks.sh` green; scenario coverage verified editorially.
 - **Parked:** `doc/features/bootstrap-populated-journeys_plan.md` (committed, banner-marked) — resumes later.
