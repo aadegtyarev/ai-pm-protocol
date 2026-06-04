@@ -29,29 +29,26 @@ The migration procedures themselves are below; they are unchanged.
 
 ### Expected-discipline manifest
 
-**Single source for "this template version introduced a content discipline that may need PM-authored content."** The semantic sibling of `### Pending-migration detection` above: that section lists *structural* stale-artifact conditions remediated mechanically; this section lists *content disciplines* remediated by PM-authored content. `pm-auditor` references this subsection **by name** ("`### Expected-discipline manifest` in `MIGRATIONS.md`") and must never re-encode the entries. The two lists are **disjoint** — no entry here duplicates a `### Pending-migration detection` condition (those are greppable stale artifacts; these are absent/under-filled content).
+**Registry mapping each version-introduced content discipline to (a) the existing `pm-auditor` dimension-5 finding that already detects it, and (b) the foundational-question source used to remediate it.** This section carries **no detection of its own** — dimension 5 already detects these gaps; this registry only connects a detected gap to the question source that drives its PM-collaborative fill. It is consumed by `pm-audit.md`'s remediation step (referenced there **by name**), **not** by a detector. `pm-auditor` does **not** reference it.
 
-Each entry's **satisfied-check is a presence/structure test, never a quality judgment** — it asks whether the required structure is absent / `<placeholder>` / skeletal, never whether the prose is good (the PM owns meaning; same shape-not-meaning rule as the wire-token notes in `pm-auditor.md` dimension 5). A discipline is flagged only when it **applies** to the project AND its satisfied-check shows the gap; applicable-and-satisfied, or not-applicable → silent.
+Distinct from `### Pending-migration detection` above: that section lists *structural* stale-artifact conditions remediated mechanically; this is the remediation registry for *content disciplines* a new version introduced, remediated by PM-authored content. The two are **disjoint** — no entry here duplicates a `### Pending-migration detection` condition (those are greppable stale artifacts; these are absent/under-filled content surfaced by dimension 5).
 
 #### Populated threat-model lifecycle
 
 - **Introduced in:** v2.13.
-- **Applicability:** the project is security-bearing — `docs/threat-model.md` is **present** (the durable signal, per `### Threat-model lifecycle` in `WORKFLOW.md`). Absent → not applicable → silent.
-- **Satisfied-check (presence):** the threat-model's Assets and Threats carry **no** `<placeholder>` tokens AND the Threats table has ≥1 data row. A `<placeholder>` remaining, or an empty Threats table → gap. (This is the same skeleton test dimension 5 already runs; the manifest entry names it as a discipline so the bump-driven sweep covers it under one rule.)
+- **Detected by:** dimension 5's `docs/threat-model.md` **skeleton / stale** sub-check (the `<placeholder>`-present / empty-Threats-table case is already **blocking**).
 - **Question source:** the bootstrap **threat-model Q-set** (the Q7 security answers named in `### Threat-model lifecycle` in `WORKFLOW.md`).
 
 #### Foundational user-journeys
 
 - **Introduced in:** v2.16 (the version that consolidated `docs/user-journeys.md` under `pm-architect` as an owned content discipline; the product-readiness gate that forces the journey story shipped one version earlier in v2.15).
-- **Applicability:** the project has ≥1 **user-facing** feature — by the **human-role-subject extraction** (`pm-auditor.md` dimension 1: any merged feature whose scenario-1 subject is a human role). Zero user-facing features → not applicable → silent. (Reuses the dimension-1 extraction; never re-derived.) This generalizes the epic's "product story fell behind" note — "N substrate features shipped while `user-journeys.md` is still skeletal" is exactly this entry unsatisfied.
-- **Satisfied-check (presence):** `docs/user-journeys.md` exists AND contains ≥1 journey block with a populated step table (a journey heading plus a non-empty `| Step | What user does | … |` table) — i.e. a foundational zero-to-working journey is present, not the bare template skeleton.
+- **Detected by:** dimension 5's `docs/user-journeys.md` **"missing journey for an implemented user-facing feature"** note. This generalizes the epic's "product story fell behind" note — "N substrate features shipped while `user-journeys.md` is still skeletal" is exactly that finding.
 - **Question source:** `### Foundational product questions` in `WORKFLOW.md`, **per-feature tier** (the value/usability/scope-boundary set).
 
 #### Value-first product story
 
 - **Introduced in:** v2.3 (the version that split `docs/product.md` into the authored PM front door funnel; the value-first map format followed in v2.6 and the English-canonical funnel headers below in v2.9).
-- **Applicability:** the project has ≥1 user-facing feature (same human-role-subject extraction as journeys). A backend/infra-only project → not applicable → silent.
-- **Satisfied-check (presence):** `docs/product.md` exists with its funnel headers (`## Why this exists` / `## What it does today`) present AND each carries non-skeleton body (not the empty `product.md.tmpl` placeholder text). Structure/placeholder test only — never whether the value story is persuasive.
+- **Detected by:** dimension 5's `docs/product.md` **funnel-missing** note (`product.md` missing / empty / no funnel headers).
 - **Question source:** `### Foundational product questions` in `WORKFLOW.md`, **bootstrap tier** (discovery / onboarding / value / viability).
 
 - **v2.2 — feature index → product map.** Detection: see `### Pending-migration detection` above (`docs/features/_index.md` present). When it applies:
