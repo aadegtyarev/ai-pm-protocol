@@ -91,7 +91,7 @@ Reference-don't-duplicate, one-way-by-ID — the same discipline as threat → c
 Example — a System-invariants index:
 
 - **Reachability:** a record is observable only after its `active` transition is published — stated inline above (Behavioral contract is the home).
-- **One commissioning window at a time:** enforced by `SC5` (see `## Security constraints`).
+- **One commissioning window at a time:** enforced by whichever `SCn` you assigned this rule in your own `## Security constraints` (reference that ID here — e.g. `SC3` — never restate the rule text).
 - **Pre-paired controller:** the *Commission a device* journey requires a paired controller before any device write (see `docs/user-journeys.md`).
 
 ## Release flow
