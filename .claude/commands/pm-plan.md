@@ -181,6 +181,8 @@ Everything else follows the normal plan format. The Incident facts section is th
 
 Decision authority: autonomous | interactive   # OPTIONAL — omit unless overriding the project value
 
+Source: <where this plan came from>   # provenance line. When the feature was SELECTED autonomously (the orchestrator picked it per the feature-selection scope of `### Decision authority` in `WORKFLOW.md`, not the PM naming it), this same line reads: `selected autonomously per ### Decision authority; source: <backlog item / mandate passage>` — one provenance line carrying the citation, NOT a parallel "Selected-by:" field. The `source:` token is the single grep target the `pm-plan-checker` backstop keys on.
+
 ## Scenarios
 1. <user-visible behavior after this change>
 2. ...
