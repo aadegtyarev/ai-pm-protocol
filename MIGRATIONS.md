@@ -138,3 +138,11 @@ Distinct from `### Pending-migration detection` above: that section lists *struc
   1. For each detected review file, replace the empty/placeholder `## Code review` heading line with `## Code review: NOT YET RUN` (text-only; nothing else in the file changes).
   2. **Idempotent.** Never rewrite a section already stamped `## Code review: <date> — passed`, and never rewrite a section already reading `## Code review: NOT YET RUN`. Running the normalization twice is a no-op.
   3. The now-loud marker makes the gap blocking under `pm-auditor` dimension 1, which surfaces it to the PM **per feature** for remediation — a retroactive review-loop Pass 2 (orchestrator runs `code-review`, then stamps `passed`), or accept-with-context recorded in `.ai-pm/backlog.md`. The normalization surfaces the gap; it never claims review happened.
+
+- **`## Project kind: process` → `documentation` rename — stale early-v2.18 kind line corrected.** A downstream `CLAUDE.md` carrying the early-v2.18 `## Project kind: process` line (declared before the `process` flavor was generalized to `documentation`) is brought onto the current kind vocabulary. Detection: see `### Pending-migration detection` above (a `## Project kind:` line carrying the literal `process` value). When it applies:
+
+  **This is a trivial, mechanical single-line rename performed by the orchestrator** — the runtime owner of the downstream `CLAUDE.md` (the project's own file, not an agent-owned canonical doc). No other artefact moves; the `process` flavor and the `documentation` flavor are the same kind under two names, so the rename only updates the declared label, never the project's behavior.
+
+  1. In the downstream `CLAUDE.md`, rewrite the single `## Project kind: process` line to `## Project kind: documentation`. Nothing else in the file changes.
+  2. **Idempotent.** Never rewrite a line already reading `## Project kind: documentation` or `## Project kind: software`, and never touch a project with no `## Project kind:` line. Running the rename twice is a no-op.
+  3. Back-compat is safe even before the rename runs: by the `absent OR unrecognized ⇒ software` default in `### Project kind` (`WORKFLOW.md`), the stale `process` line already falls safely to the software flavor (no break) — the rename restores the project's correct declared kind (`documentation`) and silences the detection.
