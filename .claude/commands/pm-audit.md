@@ -109,16 +109,34 @@ All agents below are project agents — use the Agent tool with the exact `subag
 
    Doc-only remediations (missing plan for already-correct code, stale docs) do not require `pm-coder`.
 
-## Technical quality (full scope only)
+## Technical quality — the smell / hygiene sweep (full scope only)
 
-After the protocol findings are walked through, if scope was `full`:
+After the protocol findings are walked through, if scope was `full`, run the **smell / hygiene sweep** — the first concrete review **type** of `### Review typology` in `WORKFLOW.md` (the registry; do not re-encode the type list or cadence rule here — reference it by name). It runs the `code-review` skill over the **proportional scope** to surface functionality-preserving hygiene issues (dead code, duplication, high cognitive complexity, over-complexity, simplification) — distinct from a per-diff bug. Its deterministic **detection** half (an enumerable smell catalog a hook/linter should own) is a **named downstream/future path, not run here** (this protocol repo has no linter to host it — see `### Review typology`); the AI **prioritization / root-cause** half is this sweep.
 
-> "Protocol check done. Want a deep technical quality review too? It scans the whole project for bugs, security issues, and dead code using multi-agent review. Takes 10–15 minutes. Run it?"
+**1. Derive the proportional scope from the last-sweep marker (no new file).** When the sweep actually runs, it writes its outcome as a **real sweep-marker line** in the `audit-*.md` report the auditor already produces:
 
-If PM says yes → invoke the built-in `code-review` skill with `ultra` level.
-If PM says no → done.
+> `## Quality sweep: <date> — swept <sha>..HEAD at depth <d>`
 
-This step is always offered, never assumed. The protocol check is fast and always runs; the deep technical sweep is expensive and PM-gated.
+where **`<sha>` is HEAD at sweep time** (the commit the sweep reviewed up to). This extends the auditor's existing "derive the diff cutoff from the latest `audit-*.md`" pattern (`pm-auditor.md` step 2) from date-only to date+SHA — **no dedicated `.ai-pm/` file**. A **skip** (step 2) writes **no such line** — only a plain note — so the steady-state reader is never undefined. To scope the next sweep:
+
+- **First-run precedence (overrides the skip gate).** If **no** `audit-*.md` anywhere carries a **real** `## Quality sweep: <date> — swept <sha>..HEAD at depth <d>` line, this is a **first-run = full** sweep — reuse the auditor's existing fallback verbatim (`pm-audit.md` Auto-scope, "empty or does not exist → first audit → always `full`"; `pm-auditor.md` step 2). Do not invent a parallel "first sweep" rule. The skip/silent gate (step 2) applies **only** when a prior real sweep-marker exists AND nothing changed since its `<sha>`.
+- **Incremental scope.** Otherwise, find the **latest `audit-*.md` that contains a real `## Quality sweep: … swept <sha>..HEAD …` line** (a skip note is **not** such a line; a `diff`-scope audit may write a report but run no sweep), read its `<sha>`, and scope the `code-review` pass to **`git diff <that sha>..HEAD`** — the code changed since the last sweep (Clean-as-You-Code new-code gating, per `### Review typology`). Legacy / never-diff-reviewed code is **not** chased per-incremental (there is no signal to compute "never-swept" incrementally) — it is covered by the **first-run full** sweep above and the **periodic full re-sweep** (cadence-drift), the two mechanisms `### Review typology` names for legacy coverage. *(Coupling: the marker exists only where an `audit-*.md` does — safe while the `## Technical quality` full-scope hook is the sole sweep trigger.)*
+
+**2. Proportionality gate — silent/skip when nothing changed since the last sweep.** If a prior real sweep-marker exists AND nothing changed since its `<sha>`, announce **"codebase swept-clean since `<date>`"**, write **only a plain skip note** in the report (e.g. `Quality sweep skipped — swept-clean since <date>`), **NOT** a `## Quality sweep: … swept <sha>..HEAD …` sweep-marker line, and **skip** the `code-review` pass. A skip leaves the previous real marker as the latest one, so the next sweep's reader still finds a well-defined `<sha>`. The sweep never re-reviews swept-clean code.
+
+**3. Selectable depth (no hard-wired `ultra`).** Run the `code-review` skill at a **chosen** level (low / medium / high / max / ultra) — never silently the costliest:
+
+- **Interactive:** offer the cost/depth trade-off and let the PM pick:
+  > "Protocol check done. Want a smell/hygiene sweep too? It reviews the code changed since the last sweep (or the full tree on a first / periodic re-sweep) for dead code, duplication, and over-complexity. Depth is selectable — light (`low`/`medium`, a few minutes) for a small routine sweep, deep (`high`/`max`/`ultra`, 10–15 min) for a first/legacy/comprehensive sweep. Run it — and at what depth?"
+
+  If PM says no → write no marker, done.
+- **Autonomous:** pick a **proportionate** depth and **announce** it (lighter for a small routine sweep; deeper for a first / legacy / PM-requested sweep), then proceed — never silently the costliest. PM can override.
+
+**4. Findings → the existing triage (not lost).** Run the sweep's `code-review` findings through `/pm-audit`'s existing **fix-now / next-sprint(backlog) / accept-with-context** loop (the same flow as protocol findings, above) — one PM decision per finding, no auto-batch. Accepts are recorded in `.ai-pm/backlog.md` marked **`accepted (quality-sweep-<date>): <reason>`** (mirroring `accepted (auditor-<date>)`). Fix-now spawns the normal `/pm-plan` → coder path; the sweep never auto-edits.
+
+**5. Autonomous branch — a procedural gate, bounded by proportionality.** The "run the sweep?" offer is a **procedural checkpoint** per `### Decision authority` in `WORKFLOW.md` (announce-and-proceed — it decides *whether to run an optional review step*, not *what the user gets*), **bounded by the proportionality gate in step 2**: it runs only when there is changed surface since the last sweep (or it is a first / periodic full re-sweep), and never auto-launches a full-tree `ultra` sweep on every audit. The interactive yes/no offer wording (step 3) is unchanged for interactive mode. **Merge / ship stays manual** in both modes; findings still go to PM triage (step 4).
+
+This sweep is always offered (interactive) or proportionally auto-run (autonomous), never blanket-assumed. The protocol check is fast and always runs; the smell sweep is scoped, depth-proportionate, and gated.
 
 ## Pre-protocol-migration artifacts
 
