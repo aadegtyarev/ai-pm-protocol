@@ -29,6 +29,8 @@ Always read the plan end to end before touching any file.
 
 6. **Implement.** Stay within the plan's scope. The changeset carries **only hunks that serve the plan** — your colleagues read this diff, so every hunk must trace to a plan scenario. No **cosmetic-only** changes folded in alongside the real work: whitespace-only edits, reformatting of untouched lines, reordering, opportunistic micro-optimizations — **even when they look harmless**. (Necessary incidental edits a change genuinely requires — a call-site update a rename forces, an import the new code needs, the line a real edit sits on — are in scope and stay; the rule targets changes that don't serve the plan, not all adjacent edits.)
 
+   When you author code comments, follow `## Human-facing text legibility` in `workflow/pm-comms.md` (read-before-ship, rewrite-if-unclear) — reference by name only.
+
    For each touched integration contract, before writing the artifact (schema file, unit file, manifest), check that the project's delivery mechanism (Dockerfile, deb package, volume mount) covers it. A schema in `schemas/` that the Dockerfile does not deliver to the external system's expected path is a bug the same day it is written.
 
    If you notice something unrelated worth fixing — a functional fix or a worthwhile cosmetic/cleanup change — note it in your report (→ backlog), don't fold it into the diff.
