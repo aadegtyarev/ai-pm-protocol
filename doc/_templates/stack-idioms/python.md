@@ -203,16 +203,19 @@ rules:
     paths:
       include:
         - "*.py"
-    pattern-regex: '#\s*[A-Z]{2,3}\d+'
+    pattern-regex: '#\s*[A-Z]{2,3}\d+\b\s*$'
 ```
 
-**Note:** the pattern `#\s*[A-Z]{2,3}\d+` matches 2–3 uppercase letters followed by digits
-immediately after a `#` comment marker. This targets protocol/requirement-style IDs (`SC1`,
-`AC6`, `NFR3`). It avoids matching `# TODO`, `# FIXME`, `# NOTE` (no digit suffix), and
-`# type: ignore` (lowercase). Suppress with
-`# nosemgrep: python.style.inline-rule-id-ban` on a line where the ID is intentional
-documentation (e.g., a test file whose comment names the scenario by ID for traceability —
-a legitimate exception).
+**Note:** the pattern `#\s*[A-Z]{2,3}\d+\b\s*$` matches 2–3 uppercase letters followed by
+digits immediately after a `#` comment marker. This targets protocol/requirement-style IDs
+(`SC1`, `AC6`, `NFR3`). It avoids matching `# TODO`, `# FIXME`, `# NOTE` (no digit suffix),
+and `# type: ignore` (lowercase). The `\s*$` end-of-line anchor limits matches to comments
+that are *only* a rule ID; a comment like `# SC1 — validates token age` (text after the ID)
+will NOT match. The `[A-Z]{2,3}` prefix still matches common technical acronyms that appear
+as *sole* comment (e.g. `# MQ3`, `# TX2`) — use
+`# nosemgrep: python.style.inline-rule-id-ban` on those lines. Suppress with the same
+nosemgrep directive on any line where the ID is intentional documentation (e.g., a test file
+whose comment names the scenario by ID for traceability — a legitimate exception).
 
 **Linter encoding (if applicable):** not expressible as a pylint/ruff rule — Semgrep Tier 1 only.
 
@@ -259,7 +262,11 @@ the docstring). This narrows the rule to only functions whose ENTIRE body is the
 no implementation code. The rule catches `pass`-less stubs and documentation-only wrappers.
 For legitimate stub functions (abstract methods, `...`-body), annotate with
 `# nosemgrep: python.style.docstring-only-function` or use the `abc.abstractmethod` decorator
-(which changes the AST shape and avoids the match).
+(which changes the AST shape and avoids the match). Verify the pattern with `semgrep --test`
+before wiring into CI — specifically check that: (a) a docstring-only function fires, (b) a
+docstring + 1 statement does NOT fire (the `pattern-not` suppresses it), (c) a docstring +
+`pass` does NOT fire. This repo has no Semgrep harness; the `pattern-not $BODY` exclusion is
+correct per Semgrep statement metavariable semantics but is unverified by automated test.
 
 **Scope note:** the rule targets the unambiguous case (entire body = docstring) rather than a
 line-count threshold. The comment-restraint convention in `### Code conventions` (no docstrings
