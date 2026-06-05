@@ -436,6 +436,10 @@ Durable hand-off between agents is what is on disk — `state/current.md`, the r
 
 `.ai-pm/tooling/` (the protocol submodule) is inside the project root but outside the readable content surface for downstream agents. The protection that existed was a `doc/`-vs-`docs/` path-naming coincidence; this decision replaces it with an explicit invariant. Named shipped surface (always reachable): `WORKFLOW.md` (via `@`-import), `MIGRATIONS.md`, `.claude/agents|commands|settings.json`, `doc/_templates/`. Everything else inside `.ai-pm/tooling/` — plans, backlog, reviews, arch notes — is never read by downstream agents. The rule lives in three layers: always-on kernel (`WORKFLOW.md` "Project boundary" one-liner), full rule (`workflow/enforcement.md` "Submodule exclusion" paragraph), and highest-risk-agent note (`pm-auditor.md` Step 1 inventory exclusion). Sources: `doc/features/template-dev-artifacts-inert_plan.md`. Authored by `pm-architect` post-coding.
 
+### Deployment-context triage: severity calibrated against operational limits and architectural constraints
+
+**Deployment-context triage: severity calibrated against operational limits and architectural constraints.** All review passes (per-diff Pass-2, seam-completeness, quality sweep) must read `docs/architecture.md ## Operational limits & budgets` + `## Architectural constraints` (and `docs/threat-model.md` when present) before spawning the review subagent and include them in the prompt. Root cause: static code analysis is blind to deployment target — the same OOM is Low on a 16 GB server and Medium on an embedded controller with a 128 MB RAM budget. Context-enrichment (same model, better prompt) is cheaper and more targeted than cross-model for this class of blind spot. Rule single-sourced in `workflow/review-typology.md` `### Deployment-context triage`; consumer references in `workflow/pipeline.md` Step 5 and `pm-audit.md` `## Technical quality`. **Source:** `doc/features/severity-triage-deployment-context_plan.md`.
+
 ---
 
 ## Architectural constraints
