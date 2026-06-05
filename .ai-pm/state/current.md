@@ -1,6 +1,6 @@
 # Execution State
 
-- **Status:** review — `agent-handoff-durability` implementation complete.
+- **Status:** idle — `agent-handoff-durability` done. **MODE: repo transfer → LOCALLY ONLY.**
 - **Decision authority:** autonomous. Conversation language: Russian.
 - **Branch:** `feature/agent-handoff-durability`
 
@@ -11,18 +11,10 @@
 - `workflow/pipeline.md` Step 4 — added fresh-agent-with-brief sentence naming the designed fault-tolerance path.
 - `tests/hooks.sh`: 73/73 green.
 
-## Remaining
+## Done
 
-- Pass-1 (`pm-plan-checker`) + Pass-2 (`code-review`) review loop.
-- `doc/architecture.md` decision record — deferred to `pm-architect` post-coding (plan specifies this).
+- `agent-handoff-durability`: durable-handoff principle in `workflow/state.md`, flush-before-stop preamble in `pm-coder.md`, fresh-agent-with-brief in `workflow/pipeline.md` Step 4. Pass-1 + Pass-2 (Opus, 0 findings). Stamp: `.ai-pm/reviews/agent-handoff-durability_review.md` `## Code review: 2026-06-05 — passed`.
 
-## Next step
+## Next feature
 
-Review: spawn `pm-plan-checker` for Pass-1 plan compliance.
-
-## Touched files
-
-- `workflow/state.md`
-- `.claude/agents/pm-coder.md`
-- `workflow/pipeline.md`
-- `.ai-pm/state/current.md`
+Check `.ai-pm/backlog.md` for next open item.
