@@ -1,18 +1,15 @@
 # Execution State
 
 > ## ▶ RESUME MEMO (read first — for a fresh session after a restart)
-> - **You are on branch `feature/comment-restraint`** — tip of local stack: `main @ v2.36.0` → `feature/agent-reporting-discipline` → `feature/stack-idioms-library` → `feature/cross-model-review` → `feature/integration-risk-spike-gate` → `feature/stack-idioms-library-plan` → `feature/seam-completeness` → `feature/comment-restraint` (current).
+> - **You are on branch `feature/comment-restraint`** — tip of local stack: `main @ v2.36.0` → `feature/agent-reporting-discipline` → `feature/stack-idioms-library` → `feature/cross-model-review` → `feature/integration-risk-spike-gate` → `feature/stack-idioms-library-plan` → `feature/seam-completeness` → `feature/comment-restraint` (**done**).
 > - **MODE = repo-transfer hold:** NO push / NO PR / NO merge until PM sends the new remote URL.
 > - **Cross-model review IS live** (auto): run code-review in a model-pinned subagent.
 > - **Authority:** autonomous, product forks → PM; conversation language = Russian.
-> - **This feature:** comment-restraint — comment-restraint convention in CLAUDE.md.tmpl + 2 Semgrep entries in python.md.
-> - **Next queue after this:** (check backlog).
+> - **comment-restraint: SHIPPED** — comment-restraint convention in CLAUDE.md.tmpl + inline-rule-id-ban + docstring-only-function in python.md + architecture.md record. Pass-1 + Pass-2 (Opus, 3 findings fixed) passed; stamp in `.ai-pm/reviews/comment-restraint_review.md`.
+> - **Next queue:** check backlog for next feature.
 
-- **Status:** ready for pr-prep — `comment-restraint`. **MODE: repo transfer → LOCALLY ONLY.**
+- **Status:** idle — `comment-restraint` done. **MODE: repo transfer → LOCALLY ONLY.**
 - **Decision authority:** autonomous. Conversation language: Russian.
-- **Plan:** `doc/features/comment-restraint_plan.md`.
-- **Touched files:** `doc/features/comment-restraint_plan.md` (plan), `doc/_templates/CLAUDE.md.tmpl` (comment-restraint subsection added), `doc/_templates/stack-idioms/python.md` (2 new Semgrep entries: inline-rule-id-ban, docstring-only-function; Pass-2 fixes applied), `doc/architecture.md` (decision record updated to final pattern), `.ai-pm/state/current.md`.
-- **Done:** pm-coder implemented — comment-restraint convention in CLAUDE.md.tmpl; inline-rule-id-ban and docstring-only-function entries in python.md; tests/hooks.sh 73/73 green. Pass-2 code-review findings (3) fixed: trailing \b added, \s*$ end-of-line anchor added, docstring-only-function test note added; architecture.md updated to final pattern.
-- **Remaining:** pm-pr-prep (when repo transfer hold is lifted).
-- **Next step:** pm-pr-prep (waiting on repo transfer hold to clear).
-- **Validation:** `tests/hooks.sh` 73/73; editorial: 3 scenarios implemented, convention in template, 2 Semgrep entries in python.md.
+- **Stack (local, transfer hold):** `main @ v2.36.0` → `feature/agent-reporting-discipline` (done) → `feature/stack-idioms-library` (done) → `feature/cross-model-review` (done) → `feature/integration-risk-spike-gate` (done) → `feature/stack-idioms-library-plan` (done) → `feature/seam-completeness` (done) → `feature/comment-restraint` (done).
+- **Last completed:** `comment-restraint` — comment-restraint convention + 2 Semgrep library entries. Pass-1 + Pass-2 (Opus, 3 findings fixed). Stamp: `.ai-pm/reviews/comment-restraint_review.md` `## Code review: 2026-06-05 — passed`.
+- **Next feature:** check `.ai-pm/backlog.md` for next open item after #474.
