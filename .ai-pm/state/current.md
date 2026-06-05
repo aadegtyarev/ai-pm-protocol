@@ -1,6 +1,6 @@
 # Execution State
 
-- **Status:** coding — `changeset-hygiene` (feature A of the PM-sequenced A→B→C reviewability track). Plan: `doc/features/changeset-hygiene_plan.md`.
+- **Status:** SHIPPED to PR — awaiting manual merge. `changeset-hygiene` (feature A) released as **v2.33.0**, **PR #239 open** (https://github.com/aadegtyarev/ai-pm-protocol/pull/239). Pass-1 approve + Pass-2 no defects (stamp `— passed`, gate-verified); hooks 73/73; dogfood-clean diff. Merge stays manual: PM squash-merges → auto-tag v2.33.0. After merge: `git checkout main && git pull`. **Next in the track: B (deterministic linters #218/#211), then C (idioms #227, needs /pm-research).**
 - **Decision authority:** `autonomous` (project-wide, `.ai-pm/decision-authority.md`) — routine procedural gates announce-and-proceed; merge/ship stays manual. **Product forks go to the PM** (PM directive 2026-06-05: "продуктовые решения со мной"). Conversation language: Russian (PM directive 2026-06-05).
 - **Branch:** `feature/changeset-hygiene` (cut fresh from main after #238/v2.32.0 merged).
 - **Last shipped:** v2.32.0 (PR #238 merged 2026-06-05): `review-engine-selection` (orchestrator unblocked as a legitimate engine; per-diff → built-in code-review by routing; whole-codebase sweep → orchestrator-preferred + `/code-review ultra` fallback + `WB_REVIEW_ORCHESTRATOR=off`) + `audit-scope-menu` (PM-initiated analysis → upfront Quick/Full+depth menu). Tag v2.32.0 created by auto-tag.
