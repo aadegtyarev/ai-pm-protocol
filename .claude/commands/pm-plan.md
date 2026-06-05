@@ -268,6 +268,8 @@ Source: <where this plan came from>   # the plan's provenance line (the plan-lev
 
 **Stack-spec test rule:** for every entry in "Stack expectations touched", at least one test must verify behavior against the cited rule, not against the coder's own mapping. Self-consistent property-based tests (e.g., round-trip over the coder's own range) do not count — they can freeze a spec violation as a contract. Stack-spec tests must reference the source URL in a comment.
 
+**Test-wiring-parity rule:** a test that sets up the unit's dependencies, registration, or environment differently from how the production entry point does can pass while production is broken — it measures a path the app never takes. For any feature whose correctness depends on initialization/registration order or wiring (a provider registered on a shared singleton, a side-effect import, a plugin/factory hook, env/DI setup), at least one test must drive the **same registration path the production entry point uses** and assert the observable post-condition that path is supposed to produce (e.g. `registerX()` → `container.has(X)` is true), not a hand-rolled equivalent setup. `pm-plan-checker` blocks a wiring-dependent feature whose tests bypass the production registration path.
+
 **"Stack expectations touched" rule:** if the feature touches any stack component listed in `docs/stack-notes.md` and the plan omits this section — plan is incomplete. `pm-plan-checker` will block on missing section.
 
 ## Retrospective check
