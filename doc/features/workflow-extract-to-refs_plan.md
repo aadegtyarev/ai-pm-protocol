@@ -1,5 +1,7 @@
 # workflow-extract-to-refs — plan
 
+> **SUPERSEDED 2026-06-05 by `workflow-progressive-disclosure_plan.md`.** This examples-only companion was a band-aid; the PM reframed the problem as the eager-`@`-load architecture, and this extraction became one slice of the broader decomposition (the `examples` topic file). Kept for the record; not implemented as a standalone feature.
+
 Source: PM-directed 2026-06-05 — "уменьшить WORKFLOW.md … с выносом в refs" (approach B, chosen via the planning scoping question). Follow-up housekeeping on the canonical orchestration spec, which has grown to 564 lines and is loaded by every agent + every downstream `CLAUDE.md` via `@.ai-pm/tooling/WORKFLOW.md`.
 
 *Slim `WORKFLOW.md` by **relocating its purely-illustrative content** — the `## How to talk to the PM` ✓/✗ example pairs and ASCII diagram, the Blast-radius-preflight Matter worked example, and the Step A.5 probe-proposal template — into a new illustrative companion `WORKFLOW-examples.md` (a root-level sibling, the same shape as `MIGRATIONS.md`), leaving in `WORKFLOW.md` every **rule, gate, named anchor, and single-source statement** plus a one-line pointer at each section the examples left. A secondary, bounded **lossless prose-tightening** pass on the most verbose rule paragraphs deepens the reduction without removing any rule, anchor, gate, or deliberate single-source redundancy. **No rule changes — content is relocated or compressed, never dropped in meaning.***
