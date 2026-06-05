@@ -67,6 +67,10 @@ approve
 4. **(plausible) Unverified fan-out claim leaked into an operational instruction.** `pm-audit.md` instructed running the sweep pinned **unconditionally**, while the rule marks orchestrator fan-out inheritance "to-verify" — risk of announcing "on Sonnet" while the fan-out runs on session. → **Fix:** `pm-audit.md` carries the verify-before-rely caveat by reference; the announce reflects only what is actually pinned, never a blanket claim.
 5. **(confirmed) Opt-out idempotency unsupported.** The offer promised "won't re-nag" but declining wrote nothing, so absent-detection re-fired every run. → **Resolved by the auto-default decision:** no offer ⇒ no re-nag ⇒ no opt-out-state to record. (Opt-out is the one-line `session` config.)
 
-**Net:** the auto-default decision dissolves #1/#3/#5 (all the interactive-offer machinery); the real code fixes are **#2** (scope boundary) and **#4** (fan-out caveat), folded into the same fix round as the auto-default flip and the no-orchestrator full-model offer refinement. Re-stamped after the fix pass.
+**Net:** the auto-default decision dissolves #1/#3/#5 (all the interactive-offer machinery); the real code fixes are **#2** (scope boundary) and **#4** (fan-out caveat), folded into the same fix round as the auto-default flip and the no-orchestrator full-model offer refinement, plus the mandatory-announce strengthening.
 
-## Code review: NOT YET RUN
+**Re-verification (second cross-model pass, Sonnet):** a targeted Sonnet re-check over the fixed feature diff confirmed all 7 consistency axes PASS — no leftover `session`-default, no leftover offer/re-nag/`/pm-plan`, `review-scope` per-diff-only, fan-out caveat present, mandatory every-path announce, no new contradiction from the auto-flip, single-source intact. Findings #1–#5 resolved; nothing residual.
+
+(Dogfood note: this feature — cross-model review — was itself reviewed cross-model on Sonnet, which caught 5 real issues an Opus authoring + Opus Pass-1 missed, then re-verified cross-model after the fix. The clearest possible validation of the feature, on the feature.)
+
+## Code review: 2026-06-05 — cross-model (Sonnet) built-in code-review (high effort) + targeted re-verify; 5 findings resolved (2 fixed, 3 dissolved by the auto-default design), re-verified clean — passed
