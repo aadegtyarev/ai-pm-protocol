@@ -369,17 +369,11 @@ Every agent's report holds to two reporting rules, single-sourced as `### Report
 
 ### Protocol-level stack-idioms library: two-tier executable standard
 
-The library addresses the "same idioms rediscovered per project" problem: common, recurring per-stack patterns should live at the protocol level so each new project starts from a curated seed.
+**Superseded.** The two-tier local library approach (hand-written Semgrep rules + linter-config references in `doc/_templates/stack-idioms/<stack>.md`) was superseded by community Semgrep rulesets. Community rulesets (`semgrep --config p/<lang>`) provide broader coverage — hundreds of rules maintained by security and quality experts — with zero maintenance on the protocol side. The library file `doc/_templates/stack-idioms/python.md` and its `doc/_templates/stack-idioms/` directory were deleted; no project-local idioms library exists. `pm-stack-researcher`'s "Seed from library" and "Contribute-up recommendation" steps were removed accordingly.
 
-- **Two-tier standard:** Tier 1 = Semgrep rules (YAML, pattern-detectable idioms, machine-executable per-diff); Tier 2 = shareable linter-config references (metric-threshold idioms such as max line count, complexity — the `ai-minimums-linter-wiring` mapping). Prose-only entries are not added to the library; they stay in `docs/stack-notes.md`.
-- **Library home:** `doc/_templates/stack-idioms/<stack>.md` — one Markdown file per language/framework with fenced YAML blocks for Semgrep rules and prose for linter-config references. Placed in `doc/_templates/` (the template machinery home); load-on-demand via the Read tool, never @-imported (the @-import-is-eager lesson from `doc/stack-notes.md` § "Claude Code context-loading model" — `@`-imports expand at session start regardless of size).
-- **Entry schema:** `idiom → edge case covered → deviation = bug → Semgrep rule YAML → linter encoding reference → source URL → contributed-by`. The `message` field is the load-bearing prose; the fenced YAML block is the machine-executable rule. One fact, one owner.
-- **Seed-then-augment → contribute-up:** `pm-stack-researcher` reads the library before researching new idioms (seed), annotates first-occurrence entries with `[first occurrence — not yet promoted to library]`, and emits "Contribute-up candidate" recommendations for patterns recurring across ≥2 projects. The orchestrator (on PM approval) writes to the library; the researcher never does.
-- **Recurrence gate ≥2 projects:** prevents accumulating one-off project specifics. First occurrence stays in the downstream project's `docs/stack-notes.md`.
-- **Initial seed:** `doc/_templates/stack-idioms/python.md` — three seam-completeness entries (exception-crosses-module-boundary, dict-subscript-vs-get, pin-lower-version-bound) — validates the schema end-to-end. These are the idioms the seam-completeness review pass (#226) will reference.
-- **Why Semgrep, not prose:** the "idiom deviation = bug" thesis (backlog § "Idiom-as-pre-solved-edge-case") — an idiom pre-solves an edge case; deviation leaves it uncovered; Semgrep rules make this deterministic and diff-runnable, offloading the idiom-consistency class from AI reviewer to tooling (the deterministic-vs-AI boundary, backlog #211).
+The original two-tier design (Tier 1 = project-local Semgrep YAML, Tier 2 = linter-config references) is recorded here for history; its role is now served by the community rulesets run as a Step 5 Pass-2 pre-check (see `### Semgrep pre-review: community rulesets before AI code-review` below).
 
-**Source:** `doc/features/stack-idioms-library_plan.md`, `.ai-pm/research/stack-idioms-library_research.md`, commit `e87f851`.
+**Source:** original design — `doc/features/stack-idioms-library_plan.md`, commit `e87f851`; superseded by — `doc/features/semgrep-pre-review-linter_plan.md`.
 
 ### Seam-completeness + failure-inventory: conditional planning discipline, negative-space test pairing, per-diff seam check, and universal dedup rule
 
@@ -409,11 +403,6 @@ Comments and docstrings in downstream projects had no restraint convention — t
 4. No docstrings on trivial or private functions — a name + signature that is self-explanatory needs no docstring.
 5. Do NOT wire docstring-presence linters (pydocstyle / ruff `D` rules / pylint missing-docstring / interrogate / darglint) — they enforce the opposite direction of comment restraint and would amplify over-documentation.
 
-Two new Semgrep library entries added to `doc/_templates/stack-idioms/python.md` (following the existing entry schema):
-
-- **`inline-rule-id-ban`** — pattern `#\s*[A-Z]{2,3}\d+\b\s*$`, targeting inline rule-ID citations (`# SC1`, `# AC6`, `# NFR3`) that appear as the *sole* content of a comment (end-of-line anchor excludes prose like `# SC1 — validates token age`); the `[A-Z]{2,3}` constraint avoids `# TODO` / `# FIXME` (single-word, no digit suffix); Tier 1 Semgrep.
-- **`docstring-only-function`** — detects a function whose entire body is a docstring with no implementation; the `docstring-only-function` (body = only `"""..."""`) pattern was chosen over a `trivial-function-docstring` (body ≤ N lines) threshold because ≤N is arbitrary and noisy — a real short utility function exists; a body that is *only* a docstring is always a real finding (dead or placeholder); Tier 1 Semgrep.
-
 **Where each lives.** The comment-restraint convention lives in `doc/_templates/CLAUDE.md.tmpl` `### Code conventions` — downstream inheritance is the right audience (the coder reads `CLAUDE.md`); WORKFLOW.md governs the orchestrator and has no `### Code conventions` section, so it was not the home. The Semgrep entries live in `doc/_templates/stack-idioms/python.md` — consistent with the stack-idioms-library mechanic (Python-specific rules accumulate in `python.md`; the library grows via the contribute-up path established in the `stack-idioms-library` decision above).
 
 **Why `docstring-only-function`, not `trivial-function-docstring` (≤N lines).** The backlog mentioned "docstring on a function ≤N lines" but the ≤N threshold is arbitrary (legitimate short utility functions exist and would over-fire). The `docstring-only-function` pattern — body = only the docstring — is unambiguous: if no implementation follows the docstring, the docstring is either dead or a placeholder; a real finding either way. The comment-restraint convention (rule 4 above) handles the semantic "trivial function" case without Semgrep.
@@ -439,6 +428,18 @@ Durable hand-off between agents is what is on disk — `state/current.md`, the r
 ### Deployment-context triage: severity calibrated against operational limits and architectural constraints
 
 **Deployment-context triage: severity calibrated against operational limits and architectural constraints.** All review passes (per-diff Pass-2, seam-completeness, quality sweep) must read `docs/architecture.md ## Operational limits & budgets` + `## Architectural constraints` (and `docs/threat-model.md` when present) before spawning the review subagent and include them in the prompt. Root cause: static code analysis is blind to deployment target — the same OOM is Low on a 16 GB server and Medium on an embedded controller with a 128 MB RAM budget. Context-enrichment (same model, better prompt) is cheaper and more targeted than cross-model for this class of blind spot. Rule single-sourced in `workflow/review-typology.md` `### Deployment-context triage`; consumer references in `workflow/pipeline.md` Step 5 and `pm-audit.md` `## Technical quality`. **Source:** `doc/features/severity-triage-deployment-context_plan.md`.
+
+### Semgrep pre-review: community rulesets before AI code-review
+
+Step 5 Pass-2 now runs `semgrep --config p/<lang>` on the changed files before spawning the AI `code-review` subagent. The orchestrator detects the project's primary language from `docs/architecture.md ## Stack`, runs `semgrep --config p/<lang> --json <changed-files>` over the files touched by the diff, and appends any findings to `## Code review findings` in `.ai-pm/reviews/<topic>_review.md`. The AI `code-review` then runs over the same diff — Semgrep findings are already present in the file, so `pm-coder` receives one combined artifact.
+
+**Rationale.** Community Semgrep rulesets are maintained by security and quality experts and provide deterministic, cheap mechanical-issue detection. Running before AI review lets the AI focus on semantic and architectural concerns rather than flagging identifiable mechanical patterns. Community rules are qualitatively better than the hand-written project-local rules the `stack-idioms-library` design produced.
+
+**Fallback.** If Semgrep is not installed, the community config download fails, or no community config is known for the detected language, the step is skipped silently. AI review always runs regardless.
+
+**Library superseded.** The local `doc/_templates/stack-idioms/` library (hand-written Semgrep YAML rules) was deleted; community rulesets replace its coverage and require zero maintenance. See `### Protocol-level stack-idioms library` above for the superseded design.
+
+**Source:** `doc/features/semgrep-pre-review-linter_plan.md`.
 
 ---
 
