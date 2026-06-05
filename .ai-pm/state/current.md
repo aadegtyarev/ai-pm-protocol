@@ -1,20 +1,30 @@
 # Execution State
 
-- **Status:** idle — `agent-handoff-durability` done. **MODE: repo transfer → LOCALLY ONLY.**
+- **Status:** implementation complete — `template-dev-artifacts-inert` done. Awaiting Pass-1 + Pass-2 review.
 - **Decision authority:** autonomous. Conversation language: Russian.
-- **Branch:** `feature/agent-handoff-durability`
+- **Branch:** `feature/template-dev-artifacts-inert`
 
 ## Done
 
-- `workflow/state.md` — added durable-handoff principle paragraph after the archive sentence (§ "How state is kept").
-- `.claude/agents/pm-coder.md` — added flush-before-stop preamble before the bullet list in `## When to stop and ask`.
-- `workflow/pipeline.md` Step 4 — added fresh-agent-with-brief sentence naming the designed fault-tolerance path.
+- `WORKFLOW.md` — Added submodule exclusion clause to the "Project boundary" one-liner in Cross-cutting invariants.
+- `workflow/enforcement.md` — Added "Submodule exclusion" paragraph after the "Project boundary rule" paragraph, replacing the doc/-vs-docs/ coincidence with an explicit invariant.
+- `.claude/agents/pm-auditor.md` — Added parenthetical exclusion note to Step 1 `docs/features/` inventory line.
 - `tests/hooks.sh`: 73/73 green.
 
-## Done
+## Remaining
 
-- `agent-handoff-durability`: durable-handoff principle in `workflow/state.md`, flush-before-stop preamble in `pm-coder.md`, fresh-agent-with-brief in `workflow/pipeline.md` Step 4. Pass-1 + Pass-2 (Opus, 0 findings). Stamp: `.ai-pm/reviews/agent-handoff-durability_review.md` `## Code review: 2026-06-05 — passed`.
+- Pass-1 plan-compliance review (`pm-plan-checker`).
+- Pass-2 technical quality (`code-review`).
+- `doc/architecture.md` decision record — authored by `pm-architect` post-coding (out of scope for this coder run).
+- `pm-pr-prep` / ship gate.
 
-## Next feature
+## Next step
 
-Check `.ai-pm/backlog.md` for next open item.
+Orchestrator runs Pass-1 (`pm-plan-checker`) on this branch.
+
+## Touched files
+
+- `WORKFLOW.md`
+- `workflow/enforcement.md`
+- `.claude/agents/pm-auditor.md`
+- `.ai-pm/state/current.md`
