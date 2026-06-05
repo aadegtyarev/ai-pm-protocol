@@ -42,7 +42,7 @@ approve
 ## Code review findings
 (populated by orchestrator from code-review output; pm-coder reads and fixes these)
 
-## Code review: NOT YET RUN
+## Code review: 2026-06-05 — passed
 <!-- The orchestrator replaces THIS WHOLE LINE with `## Code review: <date> — passed`
      only when code-review clears. Until then the section is UNSTAMPED: `pm-pr-prep`
      refuses to release it (step 0) and `pm-auditor` blocks on it (dimension 1).
