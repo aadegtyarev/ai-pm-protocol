@@ -1,6 +1,6 @@
 # Execution State
 
-- **Status:** implementation complete — `template-dev-artifacts-inert` done. Awaiting Pass-1 + Pass-2 review.
+- **Status:** idle — `template-dev-artifacts-inert` done. **MODE: repo transfer → LOCALLY ONLY.**
 - **Decision authority:** autonomous. Conversation language: Russian.
 - **Branch:** `feature/template-dev-artifacts-inert`
 
@@ -11,20 +11,10 @@
 - `.claude/agents/pm-auditor.md` — Added parenthetical exclusion note to Step 1 `docs/features/` inventory line.
 - `tests/hooks.sh`: 73/73 green.
 
-## Remaining
+## Done
 
-- Pass-1 plan-compliance review (`pm-plan-checker`).
-- Pass-2 technical quality (`code-review`).
-- `doc/architecture.md` decision record — authored by `pm-architect` post-coding (out of scope for this coder run).
-- `pm-pr-prep` / ship gate.
+- `template-dev-artifacts-inert`: submodule exclusion in `WORKFLOW.md` kernel + `workflow/enforcement.md` + `pm-auditor.md` inventory note. Pass-1 + Pass-2 (Opus, 0 blocking). Stamp: `.ai-pm/reviews/template-dev-artifacts-inert_review.md` `## Code review: 2026-06-05 — passed`.
 
-## Next step
+## Next feature
 
-Orchestrator runs Pass-1 (`pm-plan-checker`) on this branch.
-
-## Touched files
-
-- `WORKFLOW.md`
-- `workflow/enforcement.md`
-- `.claude/agents/pm-auditor.md`
-- `.ai-pm/state/current.md`
+Check `.ai-pm/backlog.md` for next open item (severity-triage-deployment-context).
