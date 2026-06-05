@@ -393,7 +393,7 @@ Four disciplines added together, closing the "flawless-where-stated, gap-on-the-
 
 ### Comment-restraint + documentation-minimalism: convention in CLAUDE.md.tmpl, two Semgrep entries in the library
 
-Comments and docstrings in downstream projects had no restraint convention — the risk being over-documentation noise (trivial docstrings, inline rule-ID citations, "what" comments restating the code) that makes diffs harder to read and the codebase harder to maintain. This decision adds a comment-restraint convention to the template and two machine-enforceable Semgrep rules to the stack-idioms library.
+Comments and docstrings in downstream projects had no restraint convention — the risk being over-documentation noise (trivial docstrings, inline rule-ID citations, "what" comments restating the code) that makes diffs harder to read and the codebase harder to maintain. This decision adds a comment-restraint convention to the template.
 
 **What was added.** Five rules added to `doc/_templates/CLAUDE.md.tmpl` `### Code conventions` (inherited by every downstream project at bootstrap):
 
@@ -403,9 +403,7 @@ Comments and docstrings in downstream projects had no restraint convention — t
 4. No docstrings on trivial or private functions — a name + signature that is self-explanatory needs no docstring.
 5. Do NOT wire docstring-presence linters (pydocstyle / ruff `D` rules / pylint missing-docstring / interrogate / darglint) — they enforce the opposite direction of comment restraint and would amplify over-documentation.
 
-**Where each lives.** The comment-restraint convention lives in `doc/_templates/CLAUDE.md.tmpl` `### Code conventions` — downstream inheritance is the right audience (the coder reads `CLAUDE.md`); WORKFLOW.md governs the orchestrator and has no `### Code conventions` section, so it was not the home. The Semgrep entries live in `doc/_templates/stack-idioms/python.md` — consistent with the stack-idioms-library mechanic (Python-specific rules accumulate in `python.md`; the library grows via the contribute-up path established in the `stack-idioms-library` decision above).
-
-**Why `docstring-only-function`, not `trivial-function-docstring` (≤N lines).** The backlog mentioned "docstring on a function ≤N lines" but the ≤N threshold is arbitrary (legitimate short utility functions exist and would over-fire). The `docstring-only-function` pattern — body = only the docstring — is unambiguous: if no implementation follows the docstring, the docstring is either dead or a placeholder; a real finding either way. The comment-restraint convention (rule 4 above) handles the semantic "trivial function" case without Semgrep.
+**Where each lives.** The comment-restraint convention lives in `doc/_templates/CLAUDE.md.tmpl` `### Code conventions` — downstream inheritance is the right audience (the coder reads `CLAUDE.md`); WORKFLOW.md governs the orchestrator and has no `### Code conventions` section, so it was not the home.
 
 **No-docstring-presence-linters stated explicitly (rule 5).** Most documentation linters enforce docstring *presence* — the opposite of comment restraint. The convention names this explicitly so a bootstrap session or future `pm-stack-researcher` does not wire them (the trap the backlog called out).
 

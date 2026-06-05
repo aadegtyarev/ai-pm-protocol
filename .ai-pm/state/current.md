@@ -1,6 +1,6 @@
 # Execution State
 
-- **Status:** implementation complete — `semgrep-pre-review-linter` ready for review
+- **Status:** implementing `semgrep-pre-review-linter` — Pass-1 fix round
 - **Decision authority:** autonomous. Conversation language: Russian.
 - **Branch:** feature/severity-triage-deployment-context
 
@@ -16,14 +16,12 @@ Plan at `doc/features/semgrep-pre-review-linter_plan.md`.
 4. Added `### Semgrep` section to `doc/stack-notes.md`
 5. Ran `tests/hooks.sh` — 73/73 passed
 6. Committed all four changes in one atomic commit
+7. pm-architect updated `doc/architecture.md` (three decision-record changes)
+8. Fixed two blocking items from Pass-1: dangling arch ref + state update
 
 ## Remaining
 
-- `doc/architecture.md` update (pm-architect, post-coding): three decision-record updates per plan's "Docs to update" section — orchestrator spawns pm-architect
-
-## Next step
-
-Orchestrator spawns `pm-architect` to update `doc/architecture.md` (three decision-record changes listed in plan § Docs to update). Then review loop.
+- Re-run Pass-1 (after fix commit), then Pass-2
 
 ## Touched files
 
@@ -32,4 +30,4 @@ Orchestrator spawns `pm-architect` to update `doc/architecture.md` (three decisi
 - `.claude/agents/pm-stack-researcher.md` (two sub-bullets removed)
 - `workflow/pipeline.md` (Semgrep pre-check bullet added to Step 5 Pass-2)
 - `doc/stack-notes.md` (### Semgrep section added)
-- `.ai-pm/state/current.md` (this file)
+- `doc/architecture.md` (three decision records updated; stale Semgrep-entries refs removed)
