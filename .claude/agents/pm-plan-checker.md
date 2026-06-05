@@ -127,6 +127,7 @@ Write to `.ai-pm/reviews/<topic>_review.md`:
 - [x/[ ]] Expected artifacts exist (plan, this review, contract if user-facing)
 - [x/[ ]/n/a] Product-readiness gate resolved (user-facing only — advocate artifact `clean` or `gaps: N` with N resolutions)
 - [x/[ ]/n/a] Validation gate resolved (documentation-kind only — `## Validation` stamped `<date> — <method> — passed`; markdownlint green)
+- [x/[ ]/n/a] Failure-inventory negative-space tests present (n/a when plan has no failure-inventory scenarios — applies only when the plan lists failure paths as explicit scenarios)
 
 **DoD: pass | fail**
 

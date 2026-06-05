@@ -64,6 +64,8 @@ Then write `.ai-pm/review-config.md` and confirm; the change applies from the ne
 
 ### Seam-completeness per-diff angle
 
+**Scope gate.** This angle applies only to `software`-kind projects (and kind-absent projects treated as `software` per the `absent OR unrecognized ⇒ software` default in `### Project kind`) — the same branch where per-diff code-review runs. On `documentation`-kind projects, code-review runs the no-code validation discipline instead (see `### Project kind` in `workflow/project-kind.md`), and the seam angle is silent.
+
 **Single source for the seam-completeness check that runs after per-diff code-review.** After the bundled `code-review` completes at Pass-2 (Step 5), the orchestrator additionally invokes a dedicated seam-completeness check as a **separate Agent** — not a modification to the bundled `code-review` skill. The bundled skill's 7 angles are fixed upstream; the seam check is a parallel dedicated Agent invocation with a 3-item seam checklist. This keeps the bundled skill unchanged and the seam check composable. Findings are merged into `## Code review findings` alongside code-review findings.
 
 **The 3-item seam checklist** the Agent applies to the diff and the touched files:
@@ -85,7 +87,7 @@ The seam check is subject to the **backlog-aware dedup rule** — see `### Revie
 - `.ai-pm/reviews/<topic>_review.md` — already-raised and accepted/rejected findings from this feature's own review
 - `.ai-pm/backlog.md` — entries marked `accepted (…)` or carrying an accept-with-context rationale
 
-**Dedup rule:** do NOT re-raise a finding already recorded in either artifact (whether open or accepted). A finding that was examined and accepted with a rationale is not a fresh finding — suppressing it avoids re-raising settled decisions and keeps the review signal clean.
+**Dedup rule:** do NOT re-raise a finding already recorded as accepted or settled — i.e., items present in `.ai-pm/backlog.md` with an `accepted (…)` tag, or items closed with an accept-with-context rationale in a prior review. **Open (unfixed) findings are explicitly excluded from suppression**: a finding still present in `## Code review findings` but not yet fixed must be re-raised on re-run — suppressing open findings would make every re-run falsely appear clean, breaking the Pass-2 re-run loop (pipeline.md runs code-review repeatedly until no findings). Only settled decisions (accepted, descoped with rationale) are suppressed.
 
 **Severity respect:** an accepted item's severity is the recorded triage, never a fresh (often inflated) re-assessment. When a finding was downgraded on acceptance (e.g. blocking → note), that triage is honored in subsequent passes — the current pass does not re-inflate it.
 
