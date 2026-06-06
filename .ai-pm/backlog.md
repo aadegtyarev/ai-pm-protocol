@@ -2,6 +2,16 @@
 
 Observations and follow-ups recorded during reviews/audits.
 
+## OpenCode harness support — PARKED unapproved plan (design + groundwork slice) — 2026-06-07 (this repo)
+
+**Plan written but NOT approved — PM will finish later.** Add OpenCode as a second supported harness alongside Claude Code: one repo, no build step, identical install. Scope = **design + groundwork slice** (OpenCode adapter as a labeled preview), not full certification.
+
+- **Artifacts (committed on branch `feature/opencode-harness-support`):** plan `doc/features/opencode-harness-support_plan.md`; stack-notes `doc/stack-notes.md` § "OpenCode (sst/opencode → anomalyco/opencode)" (8 areas, every datum sourced, `doc/cited (unverified)`).
+- **Four PM forks resolved (AskUserQuestion 2026-06-07):** (1) scope = design + groundwork; (2) dogfood = **Claude Code stays self-host**, OpenCode = downstream-supported; (3) sync = **dual-native + equivalence test** (preserves the "no build step" decision; generator rejected); (4) install = **auto-detect harness**.
+- **Two upstream blockers gate full certification (we do NOT close them):** runtime per-`task` model override (PR `anomalyco/opencode#17577` — **closed-not-merged** → cross-model via static frontmatter model pins on OpenCode) and subagent hook containment (`#5894` — **closed-disputed** → OpenCode enforcement labeled "best-effort, not subagent-proof"; spike candidate). Good news from research: `question` (AskUserQuestion-equiv) + `skill` tools exist and OpenCode reads `.claude/skills/`; the `instructions` array can point at a submodule path (no in-file `@`-import).
+- **Resume next (no production code until PM greenlights):** `pm-architect` arch note (dual-harness layout, neutral-core carve, equivalence-test shape, harness-vocabulary home) → two gated integration-risk spikes (A: submodule-path sourcing for install; B: does plugin `tool.execute.before` constrain a `task`-spawned subagent — the #5894 dispute) → `pm-coder` builds the groundwork.
+- *Path:* checkout `feature/opencode-harness-support`, approve/amend the parked plan, then arch note → spikes → coder. PM-parked 2026-06-07.
+
 ## Ideation-phase elicitation gap: product-shaping before `/pm-plan` is unscaffolded; bootstrap tier is shallow + one-shot; accessibility absent — 2026-06-06 (downstream: nula → this repo)
 
 PM-relayed protocol-gap report from the `nula` greenfield bootstrap + extended-ideation session (written for upstream, forwarded by the PM). **This is a new facet of the EPIC "technical-over-product bias" below** — same root (the product axis is demand-driven, lazily-filled, weakly-gated) but at an earlier point on the timeline: the *ideation / product-shaping* phase **before** any feature enters `/pm-plan`. Sequence it with the EPIC's `pm-product-advocate` (✓shipped, the per-feature/bootstrap product referee) and its "Bootstrap product/journey asymmetry" item — they compose, they don't collide; this one extends the same machinery backward into the brainstorm phase.
