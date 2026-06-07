@@ -72,14 +72,47 @@
 #     neither engine agent file references a .claude/ path (the symmetry /
 #     no-cross-read invariant, asserted directly on the two engine files).
 #
-#   oc-crossmodel-pins  (slice 9)
-#     the cross-model rule degrades to STATIC frontmatter pins on OpenCode (no
-#     runtime per-task model override — PR #17577). Driven off the manifest
-#     `models` block: each control agent carries `model: <models.control>`, every
-#     producer agent has NO pin (inherits the session), and opencode.json `model`
-#     == models.session. Runtime guarded-skip: `opencode agent list` resolves each
-#     control agent to the control model. Source:
-#     https://github.com/anomalyco/opencode/pull/17577
+#   oc-compact-reviewer  (compact-reviewer slice A)
+#     the generated .opencode/agent/code-review.md is the COMPACT one-pass
+#     reviewer (compressed from the wb code-review-orchestrator skill): a SINGLE
+#     agent that covers the aspect set in one pass with NO fan-out/spawn language,
+#     carrying the load-bearing contract — the three severities, the structured
+#     <finding> block, the consolidated-report sections, the verdict rubric with
+#     the absolute plan-compliance-never-Approve row. Asserts it is substantially
+#     smaller than the wb SKILL.md + references combined. Runtime guarded-skip:
+#     `opencode agent list` shows code-review loaded. Source:
+#     https://opencode.ai/docs/agents/
+#
+#   oc-single-model-default  (compact-reviewer slice B — replaced oc-crossmodel-pins)
+#     SINGLE session-model default: the manifest `models` block carries ONLY
+#     `session` (no `control` / `control_variant` / `control_agents` keys), NO
+#     generated agent carries a baked `model:` or `variant:` pin (every agent
+#     inherits the session), and opencode.json `model` == models.session. Runtime
+#     guarded-skip: `opencode debug config --pure` exit 0 with no baked pins.
+#     Source: https://github.com/anomalyco/opencode/pull/17577,
+#     https://opencode.ai/docs/config/
+#
+#   oc-control-layer-model  (compact-reviewer slice B — replaced oc-effort-tier)
+#     the control-layer model (the four checking agents — code-review, pm-auditor,
+#     pm-plan-checker, pm-product-advocate — run on the reviewer model when set,
+#     else the session) is a FOUR-line `agent.<id>.model` block in the PM's OWN
+#     opencode.json, NOT a template pin (OpenCode has no native cross-agent model
+#     inheritance / runtime per-task override). FORM: the shipped opencode.json
+#     bakes no per-agent pin; the documented block names exactly the four checking
+#     agents. Runtime guarded-skip: with a test 4-line agent.<id>.model block laid
+#     over a scratch build, `opencode debug config --pure` resolves the four
+#     checking agents to the override (else session). NOTE: the task-spawn
+#     resolution is the to-verify residual (the in-tree runtime spike was
+#     inconclusive due to parent-.opencode bleed); this guarded test is the
+#     controlled check. Source: https://opencode.ai/docs/agents/,
+#     https://opencode.ai/docs/permissions/
+#
+#   oc-builtins-hidden  (compact-reviewer slice B)
+#     the shipped opencode.json disables the built-in build + plan primaries
+#     (agent.build.disable = true, agent.plan.disable = true) so the personality
+#     picker shows only the protocol's own ai-pm. Runtime guarded-skip: `opencode
+#     debug config --pure` exit 0 with both disabled. Source:
+#     https://opencode.ai/docs/agents/, https://opencode.ai/docs/config/
 #
 #   oc-orchestrator-primary-present  (slice 12)
 #     the protocol ships a first-class orchestrator as a PRIMARY agent:
@@ -445,8 +478,11 @@ fi
 #       value is "allow".
 #   (b) RUNTIME (guarded-skip when `opencode` absent): the real loader accepts the
 #       config (debug config --pure exit 0) AND `opencode agent list` resolves the
-#       primary `build` agent's `question` permission to `allow` while every `pm-*`
-#       subagent resolves it to `deny` (the grant is scoped to the orchestrator).
+#       orchestrator PRIMARY `ai-pm`'s `question` permission to `allow` while every
+#       `pm-*` subagent resolves it to `deny` (the grant is scoped to the
+#       orchestrator). NOTE: keyed on `ai-pm` (the protocol's shipped primary), not
+#       `build` — the compact-reviewer slice disables the built-in `build`/`plan`
+#       primaries (oc-builtins-hidden), so `build` no longer appears in the roster.
 # Source: https://opencode.ai/docs/permissions/
 # ----------------------------------------------------------------------
 OCJSON="$OC/opencode.json"
@@ -486,19 +522,21 @@ def question_effective(raw):
     except Exception: return None
     q = [r["action"] for r in arr if r.get("permission") == "question"]
     return q[-1] if q else None  # last-match-wins
-build_eff = None; bad = []
+# Keyed on the protocol's shipped primary `ai-pm` (the built-in `build` is
+# disabled by the compact-reviewer slice, so it is absent from the roster).
+primary_eff = None; bad = []
 for nm, raw in blocks:
     eff = question_effective(raw)
-    if nm == "build": build_eff = eff
+    if nm == "ai-pm": primary_eff = eff
     if nm.startswith("pm-") and eff != "deny":
         bad.append((nm, eff))
-ok = (build_eff == "allow") and not bad
+ok = (primary_eff == "allow") and not bad
 if not ok:
-    print("build question=%r (want allow); pm-* not denying: %r" % (build_eff, bad))
+    print("ai-pm question=%r (want allow); pm-* not denying: %r" % (primary_eff, bad))
 sys.exit(0 if ok else 1)
 PY
         then
-            pass "oc-orchestrator-can-question (runtime): the real loader resolves question=allow for the PRIMARY (build) and question=deny for every pm-* subagent (grant scoped to the orchestrator)"
+            pass "oc-orchestrator-can-question (runtime): the real loader resolves question=allow for the orchestrator PRIMARY (ai-pm) and question=deny for every pm-* subagent (grant scoped to the orchestrator)"
         else
             fail "oc-orchestrator-can-question (runtime): the loader did not scope question correctly (primary must be allow; every pm-* subagent must be deny)"
         fi
@@ -678,34 +716,35 @@ else
 fi
 
 # ----------------------------------------------------------------------
-# oc-crossmodel-pins  (slice 9)
-# The protocol's cross-model rule degrades to STATIC frontmatter pins on OpenCode
-# (no runtime per-task model override — PR #17577 closed-not-merged). The model
-# choice is single-sourced in the manifest's `models` block. Assert, DRIVEN OFF
-# that block so the test stays correct if the values change:
-#   (a) each CONTROL agent (.opencode/agent/<name>.md for name in
-#       models.control_agents) carries `model: <models.control>` in frontmatter;
-#   (b) the PRODUCER agents (every generated agent NOT in control_agents) carry
-#       NO `model:` pin — they inherit the session;
+# oc-single-model-default  (compact-reviewer slice B — replaced oc-crossmodel-pins)
+# SINGLE session-model default: the baked cross-model pins are retired. The
+# manifest `models` block carries ONLY `session` (no `control` /
+# `control_variant` / `control_agents` keys), so NO generated agent gets a baked
+# `model:`/`variant:` pin — every agent inherits the session model. Assert:
+#   (a) the manifest `models` block has NO control* keys (only `session`);
+#   (b) NO generated agent frontmatter carries a top-level `model:` OR `variant:`
+#       line (every agent inherits the session);
 #   (c) .opencode/opencode.json top-level `model` == models.session.
-# Source: https://github.com/anomalyco/opencode/pull/17577,
-#         https://opencode.ai/docs/agents/, https://opencode.ai/docs/config/
+# The control-layer override is a personal-config block in the PM's own
+# opencode.json (oc-control-layer-model), not a template pin. Source:
+# https://github.com/anomalyco/opencode/pull/17577, https://opencode.ai/docs/config/
 # ----------------------------------------------------------------------
 MANIFEST="$ROOT/src/manifests/opencode/adapter.json"
 if [ ! -f "$MANIFEST" ]; then
-    fail "oc-crossmodel-pins: opencode adapter manifest missing at $MANIFEST"
+    fail "oc-single-model-default: opencode adapter manifest missing at $MANIFEST"
 elif python3 - "$MANIFEST" "$OC" <<'PY'
 import json, re, sys, pathlib
 manifest_path, oc = sys.argv[1], pathlib.Path(sys.argv[2])
 man = json.load(open(manifest_path))
 models = man.get("models") or {}
 session = models.get("session")
-control = models.get("control")
-control_agents = set(models.get("control_agents", []))
 errs = []
-if not session:        errs.append("manifest models.session is missing/empty")
-if not control:        errs.append("manifest models.control is missing/empty")
-if not control_agents: errs.append("manifest models.control_agents is empty")
+if not session:
+    errs.append("manifest models.session is missing/empty")
+# (a) no control* keys in the models block.
+control_keys = [k for k in models if k.startswith("control")]
+if control_keys:
+    errs.append(f"manifest models block still carries control* key(s): {control_keys}")
 
 def frontmatter(path):
     lines = path.read_text(encoding="utf-8").split("\n")
@@ -718,39 +757,31 @@ def frontmatter(path):
         out.append(l)
     return None
 
-def model_pin(fm):
-    # a top-level `model: <value>` line in frontmatter (not an indented/comment line)
+def top_pin(fm, key):
+    # a top-level `<key>: <value>` line in frontmatter (not indented/comment)
     for l in fm:
-        m = re.match(r'^model:\s*(\S+)\s*$', l)
+        m = re.match(rf'^{key}:\s*(\S+)\s*$', l)
         if m:
             return m.group(1)
     return None
 
-# Enumerate the full generated agent set, classify producer vs control off the
-# manifest (every agent file that is NOT a control agent is a producer here).
+# (b) NO generated agent carries a baked model: or variant: pin.
 agent_files = sorted((oc / "agent").glob("*.md"))
 if not agent_files:
     errs.append("no .opencode/agent/*.md files found")
-seen_controls = set()
 for f in agent_files:
     name = f.stem
     fm = frontmatter(f)
     if fm is None:
         errs.append(f"{name}: could not parse frontmatter"); continue
-    pin = model_pin(fm)
-    if name in control_agents:
-        seen_controls.add(name)
-        if pin != control:
-            errs.append(f"CONTROL agent {name}: model pin is {pin!r}, want {control!r}")
-    else:
-        if pin is not None:
-            errs.append(f"PRODUCER agent {name}: has a model pin {pin!r} (producers must inherit the session — no pin)")
+    mp = top_pin(fm, "model")
+    if mp is not None:
+        errs.append(f"agent {name}: has a baked model pin {mp!r} (every agent must inherit the session — no pin)")
+    vp = top_pin(fm, "variant")
+    if vp is not None:
+        errs.append(f"agent {name}: has a baked variant {vp!r} (no per-agent variant — every agent inherits the session)")
 
-missing_controls = control_agents - seen_controls
-for nm in sorted(missing_controls):
-    errs.append(f"control agent {nm} named in manifest has no generated .opencode/agent/{nm}.md")
-
-# opencode.json top-level model == session
+# (c) opencode.json top-level model == session
 cfg = json.load(open(oc / "opencode.json"))
 if cfg.get("model") != session:
     errs.append(f"opencode.json model is {cfg.get('model')!r}, want session {session!r}")
@@ -761,129 +792,156 @@ if errs:
 sys.exit(0)
 PY
 then
-    pass "oc-crossmodel-pins: each control agent (driven off manifest models.control_agents) carries model: <models.control>, every producer agent has NO pin, and opencode.json model == models.session (https://github.com/anomalyco/opencode/pull/17577)"
+    pass "oc-single-model-default: the manifest models block carries only `session` (no control* keys), NO generated agent has a baked model:/variant: pin (every agent inherits the session), and opencode.json model == models.session (https://opencode.ai/docs/config/)"
 else
-    fail "oc-crossmodel-pins: the cross-model static pins do not match the manifest models block (see above)"
+    fail "oc-single-model-default: a baked per-agent model/variant pin or a leftover control* key remains (see above)"
 fi
 
-# Runtime: `opencode agent list` reports each agent's resolved PERMISSIONS but
-# NOT its resolved model (the model is not in that output), so the pin "taking"
-# at runtime cannot be confirmed from `agent list`. The runtime confirmation that
-# a control agent's LLM call actually uses the control model is a real
-# `opencode run --print-logs` check (the `service=llm ... modelID=` log lines for
-# the session vs the pinned subagent) — done as the slice-9 LIVE confirmation, not
-# wired here (it needs a real model round-trip + the configured provider). The
-# form check above (driven off the manifest) is the deterministic, CI-safe guard.
+# ----------------------------------------------------------------------
+# oc-builtins-hidden  (compact-reviewer slice B)
+# The shipped opencode.json must disable the built-in `build` + `plan` primaries
+# so the personality picker shows only the protocol's own ai-pm. FORM: the config
+# carries agent.build.disable == true AND agent.plan.disable == true. Spike-verified
+# accepted on 1.16.2. Runtime guarded-skip below (rides the oc-single-model-default
+# debug-config check). Source: https://opencode.ai/docs/agents/,
+# https://opencode.ai/docs/config/
+# ----------------------------------------------------------------------
+if [ -f "$OCJSON" ] && python3 - "$OCJSON" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+agent = cfg.get("agent") or {}
+ok = (agent.get("build", {}).get("disable") is True
+      and agent.get("plan", {}).get("disable") is True)
+sys.exit(0 if ok else 1)
+PY
+then
+    pass "oc-builtins-hidden: the shipped opencode.json disables the built-in build + plan primaries (agent.build.disable = agent.plan.disable = true) — the picker shows only ai-pm (https://opencode.ai/docs/agents/)"
+else
+    fail "oc-builtins-hidden: opencode.json does not disable both build and plan (agent.build.disable / agent.plan.disable must be true)"
+fi
+
+# Runtime (GUARDED-SKIP): the real loader must ACCEPT the shipped config with the
+# build/plan disables AND no baked per-agent pins (opencode debug config --pure
+# exit 0). SKIPS cleanly when `opencode` is absent. Covers oc-single-model-default
+# (no pins) + oc-builtins-hidden (disables) at the loader level in one check.
+# `no_proxy` includes registry.npmjs.org so the runtime's npm-install does not hang.
+if command -v opencode >/dev/null 2>&1; then
+    BDIR=$(mktemp -d) || { echo "FAIL: mktemp failed" >&2; exit 1; }
+    python3 "$GEN" --harness opencode --out "$BDIR/.opencode" >/dev/null 2>&1
+    if (cd "$BDIR" && no_proxy="${no_proxy:-},registry.npmjs.org" NO_PROXY="${NO_PROXY:-},registry.npmjs.org" timeout 120 opencode debug config --pure </dev/null >/dev/null 2>&1); then
+        pass "oc-single-model-default + oc-builtins-hidden (runtime): the real OpenCode loader accepts the shipped config with build/plan disabled and no baked per-agent pins (opencode debug config --pure, exit 0)"
+    else
+        fail "oc-single-model-default + oc-builtins-hidden (runtime): the real OpenCode loader REJECTED the config (opencode debug config --pure exited non-zero — a disable key or the no-pin config is invalid)"
+    fi
+    rm -rf "$BDIR"
+else
+    echo "SKIP: oc-single-model-default + oc-builtins-hidden (runtime) — opencode not on PATH (CI without opencode does not fail; the form checks above still run)"
+fi
 
 # ----------------------------------------------------------------------
-# oc-effort-tier  (per-operation effort tiering)
-# Per-operation reasoning-effort tiering: the cross-model CONTROL/review agents
-# run at LOW reasoning effort to cut reasoning-token COUNT, while producers + the
-# orchestrator keep their DEFAULT reasoning. The tier is single-sourced in the
-# manifest's `models.control_variant` and injected into each control agent's
-# frontmatter as a `variant:` line (mirroring the slice-9 `model:` pin). Assert,
-# DRIVEN OFF the manifest so the test stays correct if the value changes:
-#   (a) each CONTROL agent (.opencode/agent/<name>.md for name in
-#       models.control_agents) carries `variant: <models.control_variant>`;
-#   (b) every PRODUCER agent (generated agent NOT in control_agents — incl. the
-#       orchestrator ai-pm + the non-control engine deep-research) carries NO
-#       `variant:` line (default reasoning).
-# When the manifest omits control_variant, the case is a no-op pass (no variant
-# expected anywhere). Source: per-operation-effort-tiering plan scenario 1;
-# verified 1.16.2 — a per-agent `variant:` is accepted, a top-level one is not.
+# oc-control-layer-model  (compact-reviewer slice B — replaced oc-effort-tier)
+# The control-layer model rule: the FOUR checking agents — code-review,
+# pm-auditor, pm-plan-checker, pm-product-advocate — run on the reviewer model
+# when the PM sets one, else the session. OpenCode has NO native cross-agent
+# model inheritance / runtime per-task override (PR #17577), so the override is a
+# FOUR-line `agent.<id>.model` block in the PM's OWN opencode.json — NOT a
+# template pin. FORM:
+#   (a) the shipped opencode.json bakes NO per-agent `agent.<id>.model` override
+#       (the default IS session, with nothing baked in the template);
+#   (b) the documented canonical block (doc/stack-notes.md + the AGENTS.md
+#       control-layer section) names exactly the four checking agents.
+# RUNTIME guarded-skip: lay a test 4-line agent.<id>.model block over a scratch
+# build and assert `opencode debug config --pure` resolves each of the four
+# checking agents to the override model (proving the config-layer override is
+# applied at the agent id). NOTE: the task-spawn resolution (does a checking agent
+# spawned as a Task by the orchestrator resolve to the override?) is the to-verify
+# residual — the in-tree spike was inconclusive due to parent-.opencode bleed;
+# this controlled scratch-dir check is the deterministic surrogate.
+# Source: https://opencode.ai/docs/agents/, https://opencode.ai/docs/config/
 # ----------------------------------------------------------------------
-if [ ! -f "$MANIFEST" ]; then
-    fail "oc-effort-tier: opencode adapter manifest missing at $MANIFEST"
-elif python3 - "$MANIFEST" "$OC" <<'PY'
-import json, re, sys, pathlib
-manifest_path, oc = sys.argv[1], pathlib.Path(sys.argv[2])
-man = json.load(open(manifest_path))
-models = man.get("models") or {}
-control_variant = models.get("control_variant")
-control_agents = set(models.get("control_agents", []))
-errs = []
+CHECKING_AGENTS="code-review pm-auditor pm-plan-checker pm-product-advocate"
 
-def frontmatter(path):
-    lines = path.read_text(encoding="utf-8").split("\n")
-    if not lines or lines[0] != "---":
-        return None
-    out = []
-    for l in lines[1:]:
-        if l == "---":
-            return out
-        out.append(l)
-    return None
-
-def variant_line(fm):
-    # a top-level `variant: <value>` line in frontmatter (not indented/comment)
-    for l in fm:
-        m = re.match(r'^variant:\s*(\S+)\s*$', l)
-        if m:
-            return m.group(1)
-    return None
-
-agent_files = sorted((oc / "agent").glob("*.md"))
-if not agent_files:
-    errs.append("no .opencode/agent/*.md files found")
-seen_controls = set()
-for f in agent_files:
-    name = f.stem
-    fm = frontmatter(f)
-    if fm is None:
-        errs.append(f"{name}: could not parse frontmatter"); continue
-    v = variant_line(fm)
-    if name in control_agents:
-        seen_controls.add(name)
-        if control_variant:
-            if v != control_variant:
-                errs.append(f"CONTROL agent {name}: variant is {v!r}, want {control_variant!r}")
-        else:
-            if v is not None:
-                errs.append(f"CONTROL agent {name}: has variant {v!r} but manifest sets no control_variant")
-    else:
-        # producers + orchestrator + non-control engines: NO variant (default reasoning)
-        if v is not None:
-            errs.append(f"PRODUCER agent {name}: has a variant {v!r} (producers/orchestrator keep default reasoning — no variant)")
-
-if control_variant:
-    missing_controls = control_agents - seen_controls
-    for nm in sorted(missing_controls):
-        errs.append(f"control agent {nm} named in manifest has no generated .opencode/agent/{nm}.md")
-
-if errs:
-    for e in errs: print(e)
+# (a) the shipped opencode.json bakes NO agent.<id>.model override (default=session).
+if [ -f "$OCJSON" ] && python3 - "$OCJSON" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1]))
+agent = cfg.get("agent") or {}
+# The shipped config may carry agent.<built-in>.disable (build/plan), but NO
+# agent.<id>.model override — the control-layer model is the PM's own config.
+baked = [aid for aid, spec in agent.items()
+         if isinstance(spec, dict) and "model" in spec]
+if baked:
+    print("shipped opencode.json bakes agent model override(s): %r" % baked)
     sys.exit(1)
 sys.exit(0)
 PY
 then
-    pass "oc-effort-tier: each control agent (driven off manifest models.control_variant) carries variant: <models.control_variant>, and every producer/orchestrator agent has NO variant line (default reasoning) — per-operation effort tiering"
+    pass "oc-control-layer-model (form): the shipped opencode.json bakes NO agent.<id>.model override — the control-layer default is the session model, the override lives in the PM's own config (https://opencode.ai/docs/config/)"
 else
-    fail "oc-effort-tier: the per-operation effort variants do not match the manifest models.control_variant (see above)"
+    fail "oc-control-layer-model (form): the shipped opencode.json bakes an agent.<id>.model override — the control-layer model must be the PM's own config, not a template pin"
 fi
 
-# Runtime (GUARDED-SKIP): the real OpenCode loader must ACCEPT the generated
-# config WITH the per-agent variants present (opencode debug config --pure exit 0
-# — would catch a rejected variant value or a top-level-variant mistake). SKIPS
-# cleanly when `opencode` is absent. `no_proxy` includes registry.npmjs.org so the
-# runtime's npm-install does not hang on the proxy; --pure validates the parse
-# without external plugin load; generous timeout + an empty-output guard on a
-# precondition probe that the variants actually reached the scratch build.
+# (b) the documented canonical block names exactly the four checking agents, in
+#     both doc homes (doc/stack-notes.md + the AGENTS.md control-layer section).
+clm_doc_ok=1
+for doc in "$ROOT/doc/stack-notes.md" "$ROOT/src/manifests/opencode/AGENTS.md"; do
+    for aid in $CHECKING_AGENTS; do
+        grep -q "\"$aid\"" "$doc" 2>/dev/null \
+            || { fail "oc-control-layer-model (docs): $doc does not name checking agent $aid in the control-layer block"; clm_doc_ok=0; }
+    done
+done
+[ "$clm_doc_ok" -eq 1 ] && pass "oc-control-layer-model (docs): the canonical four-line control-layer block names exactly the four checking agents (code-review, pm-auditor, pm-plan-checker, pm-product-advocate) in doc/stack-notes.md and the AGENTS.md control-layer section"
+
+# RUNTIME (GUARDED-SKIP): lay a test 4-line agent.<id>.model block over a scratch
+# build and confirm the loader resolves the four checking agents to the override.
+# The override model is a synthetic id; --pure validates the resolved config parse
+# without a model round-trip. SKIPS cleanly when `opencode` is absent.
 if command -v opencode >/dev/null 2>&1; then
-    VDIR=$(mktemp -d) || { echo "FAIL: mktemp failed" >&2; exit 1; }
-    python3 "$GEN" --harness opencode --out "$VDIR/.opencode" >/dev/null 2>&1
-    # Precondition: the scratch build must actually carry the injected variants
-    # (empty-output guard — a silent no-inject would make the loader check vacuous).
-    variant_hits=$(grep -rl '^variant:' "$VDIR/.opencode/agent" 2>/dev/null)
-    if [ -z "$variant_hits" ]; then
-        fail "oc-effort-tier (runtime): no variant lines in the scratch build — nothing to validate (inject failed?)"
-    elif (cd "$VDIR" && no_proxy="${no_proxy:-},registry.npmjs.org" NO_PROXY="${NO_PROXY:-},registry.npmjs.org" timeout 120 opencode debug config --pure </dev/null >/dev/null 2>&1); then
-        pass "oc-effort-tier (runtime): the real OpenCode loader accepts the generated config WITH the per-agent variant: lines present (opencode debug config --pure, exit 0)"
+    CLMDIR=$(mktemp -d) || { echo "FAIL: mktemp failed" >&2; exit 1; }
+    python3 "$GEN" --harness opencode --out "$CLMDIR/.opencode" >/dev/null 2>&1
+    # Overlay the 4-line control-layer block onto the scratch opencode.json (the
+    # PM's-own-config simulation), keeping the session model as the override id so
+    # the loader needs no unconfigured provider.
+    OVERRIDE_MODEL=$(python3 - "$CLMDIR/.opencode/opencode.json" "$CHECKING_AGENTS" <<'PY'
+import json, sys
+path, checking = sys.argv[1], sys.argv[2].split()
+cfg = json.load(open(path))
+override = cfg["model"]  # reuse the session model id (no unconfigured provider)
+cfg.setdefault("agent", {})
+for aid in checking:
+    cfg["agent"].setdefault(aid, {})["model"] = override
+json.dump(cfg, open(path, "w"), indent=2)
+print(override)
+PY
+)
+    if (cd "$CLMDIR" && no_proxy="${no_proxy:-},registry.npmjs.org" NO_PROXY="${NO_PROXY:-},registry.npmjs.org" timeout 120 opencode debug config --pure </dev/null >"$CLMDIR/cfg.json" 2>/dev/null); then
+        # The resolved --pure config must carry the override on each checking agent.
+        if python3 - "$CLMDIR/cfg.json" "$OVERRIDE_MODEL" "$CHECKING_AGENTS" <<'PY'
+import json, sys
+resolved = json.load(open(sys.argv[1]))
+override, checking = sys.argv[2], sys.argv[3].split()
+agent = resolved.get("agent") or {}
+bad = []
+for aid in checking:
+    spec = agent.get(aid) or {}
+    if spec.get("model") != override:
+        bad.append((aid, spec.get("model")))
+if bad:
+    print("checking agents not resolved to the override: %r" % bad)
+    sys.exit(1)
+sys.exit(0)
+PY
+        then
+            pass "oc-control-layer-model (runtime): with a 4-line agent.<id>.model block laid over a scratch build, the loader resolves all four checking agents to the override model (the config-layer control-layer override is applied; opencode debug config --pure)"
+        else
+            fail "oc-control-layer-model (runtime): the loader did not resolve all four checking agents to the override model (see above)"
+        fi
     else
-        fail "oc-effort-tier (runtime): the real OpenCode loader REJECTED the config with the per-agent variant: lines (opencode debug config --pure exited non-zero — a variant value or placement is invalid)"
+        fail "oc-control-layer-model (runtime): \`opencode debug config --pure\` exited non-zero with the control-layer block applied"
     fi
-    rm -rf "$VDIR"
+    rm -rf "$CLMDIR"
 else
-    echo "SKIP: oc-effort-tier (runtime) — opencode not on PATH (CI without opencode does not fail; the form check above still runs)"
+    echo "SKIP: oc-control-layer-model (runtime) — opencode not on PATH (CI without opencode does not fail; the form/docs checks above still run). NOTE: the task-spawn resolution remains the to-verify residual."
 fi
 
 # ----------------------------------------------------------------------
