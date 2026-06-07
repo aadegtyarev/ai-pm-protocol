@@ -257,3 +257,11 @@ Ideas extracted from `docs/features/protocol-hardening_plan.md` (branch `feature
 - **P2.8 — reviewer↔coder loop ceiling.** WORKFLOW.md: 2 rounds on one finding → escalate to PM as a product/judgment call.
 - **P2.9 — cross-feature drift on judgment (not a script).** Planning step: list invariants from prior plans this feature might violate, show the PM. **Overlap:** cross-document-consistency EPIC + `seam-completeness`.
 - **P2.10 — submodule pinning.** README/docs: "updates automatically" → "pin to a tag, bump deliberately"; a template MAJOR must not silently change agents mid-project. Relevant now that the tooling submodule URL moved to wirenboard.
+
+## BUG — agents/orchestrator write temp/scratch files OUTSIDE the project root (boundary breach) — 2026-06-07
+
+**Found (PM, live nula OpenCode session):** the `ai-pm` orchestrator ran `npm run dev > /tmp/nula-dev.log` (+ other `/tmp/…` scratch), tripping OpenCode's `external_directory: ask` on `/tmp`. Writing temp/scratch outside the project root violates the **project-boundary invariant** (`workflow/enforcement.md` — "never read, search, or write outside the project root"). The harness *asked* (good), but the agent should never have tried.
+
+**Also hit the dogfood orchestrator (Claude side) this session** — diagnostic spikes/watchers used `/tmp` too. Same breach. Discipline cracked on both sides.
+
+**Fix (protocol-wide):** make "ALL scratch / temp / diagnostic / log files live INSIDE the project root — a project-local temp (e.g. a gitignored `.ai-pm/tmp/`), never `/tmp` or any path outside the project" an explicit rule for EVERY agent + the orchestrator, BOTH harnesses. Partial done: added the rule to the `ai-pm` persona body (s18). Generalize: the shared neutral bodies + the project-boundary rule in `workflow/enforcement.md` + the WORKFLOW always-on core; and consider an **enforcement guard** that denies an out-of-root write (bash redirect / write tool target outside the root), mirroring the existing Read/`find` boundary guards — on both the Claude `settings.json` and the OpenCode plugin. Severity: medium (boundary discipline; harness asks today but shouldn't need to).
