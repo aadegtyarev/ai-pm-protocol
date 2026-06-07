@@ -9,6 +9,16 @@ tools:
   bash: true
   read: true
   edit: true
+permission:
+  # The protocol routes PM-facing forks through the ORCHESTRATOR (the OpenCode
+  # PRIMARY agent), never through subagents. The adapter grants `question` to the
+  # primary via a top-level `permission: { question: allow }` in opencode.json;
+  # that grant would otherwise cascade onto every agent (last-match-wins applies
+  # the top-level rule to subagents too). This per-subagent re-deny keeps the
+  # `question` grant scoped to the orchestrator — a subagent surfaces findings to
+  # the orchestrator, it does not prompt the PM directly. Verified on OpenCode
+  # 1.16.2. Source: https://opencode.ai/docs/permissions/
+  question: deny
 ---
 
 You prepare and finalize a release. Your job: CHANGELOG + version bump + push (if a remote exists) + PR (if the remote is GitHub) + clear report. Execute immediately — no confirmation, no draft approval.
