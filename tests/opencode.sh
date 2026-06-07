@@ -716,6 +716,122 @@ else
 fi
 
 # ----------------------------------------------------------------------
+# oc-compact-reviewer  (compact-reviewer slice A)
+# The generated .opencode/agent/code-review.md is the COMPACT one-pass reviewer
+# (compressed from the wb code-review-orchestrator skill): ONE agent that covers
+# the aspect set in a single pass with NO fan-out/spawn language, carrying the
+# load-bearing contract. Asserts (form, on the generated file):
+#   (a) it is mode: subagent (still an engine, not a primary);
+#   (b) it is SINGLE-PASS — NO fan-out/parallel-subagent/spawn orchestration
+#       language (one agent reads the diff once and reports all aspects);
+#   (c) it covers the aspect set (plan-compliance, security, stability,
+#       regressions, test-coverage, conventions, simplification, documentation,
+#       architecture);
+#   (d) it carries the load-bearing contract — the three severities, the
+#       structured <finding> block, the consolidated-report sections, and the
+#       verdict rubric with the absolute "any plan-compliance deviation …
+#       never Approve" row;
+#   (e) it is SUBSTANTIALLY SMALLER than the wb SKILL.md + references combined
+#       (the compression target — well under half the source bulk).
+# Runtime guarded-skip: `opencode agent list` shows code-review loaded.
+# Source: https://opencode.ai/docs/agents/
+# ----------------------------------------------------------------------
+CR="$OC/agent/code-review.md"
+WBREFS="$ROOT/.ai-pm/tmp/wb-review-refs"
+if [ ! -f "$CR" ]; then
+    fail "oc-compact-reviewer: generated reviewer missing at $CR"
+else
+    cr_ok=1
+    crfm=$(awk 'NR==1 && $0=="---"{inb=1;next} inb && $0=="---"{exit} inb{print}' "$CR")
+    crbody=$(awk 'c==2{print} /^---$/{c++}' "$CR")
+
+    # (a) still a subagent engine
+    printf '%s\n' "$crfm" | grep -Eq '^mode:[[:space:]]+subagent[[:space:]]*$' \
+        || { fail "oc-compact-reviewer: code-review.md is not mode: subagent"; cr_ok=0; }
+
+    # (b) single-pass — NO fan-out / parallel-subagent / spawn orchestration. A
+    #     compact one-pass reviewer must not instruct spawning per-aspect agents,
+    #     a coordinator/judge pass over OTHER reviewers, or a "run in parallel".
+    if printf '%s\n' "$crbody" \
+        | grep -Eiq 'spawn|fan-?out|one (subagent|reviewer) per (aspect|dimension)|parallel (sub)?agents?|in parallel|coordinator pass|sub-?reviewers'; then
+        fail "oc-compact-reviewer: code-review body carries fan-out/spawn orchestration language (must be a single one-pass reviewer)"
+        printf '%s\n' "$crbody" | grep -Ein 'spawn|fan-?out|one (subagent|reviewer) per (aspect|dimension)|parallel (sub)?agents?|in parallel|coordinator pass|sub-?reviewers' | sed 's/^/    /'
+        cr_ok=0
+    fi
+    # It MUST positively state it is one pass / single agent.
+    printf '%s\n' "$crbody" | grep -Eiq 'one[ -]pass|single[ -](pass|agent)|reads the diff once|in (a |one )single pass' \
+        || { fail "oc-compact-reviewer: code-review body does not state it is a single one-pass reviewer"; cr_ok=0; }
+
+    # (c) covers the aspect set (the nine aspects the plan/arch preserve).
+    for asp in plan-compliance security stability regressions test-coverage conventions simplification documentation architecture; do
+        printf '%s\n' "$crbody" | grep -qi "$asp" \
+            || { fail "oc-compact-reviewer: aspect '$asp' not covered in the reviewer body"; cr_ok=0; }
+    done
+
+    # (d) load-bearing contract pieces.
+    #   three severities
+    for sev in critical warning suggestion; do
+        printf '%s\n' "$crbody" | grep -qi "$sev" \
+            || { fail "oc-compact-reviewer: severity '$sev' missing from the body"; cr_ok=0; }
+    done
+    #   the structured <finding> block
+    printf '%s\n' "$crbody" | grep -q '<finding>' \
+        || { fail "oc-compact-reviewer: the structured <finding> block is missing"; cr_ok=0; }
+    printf '%s\n' "$crbody" | grep -q '<severity>' \
+        || { fail "oc-compact-reviewer: <finding> block lacks <severity>"; cr_ok=0; }
+    #   the consolidated-report sections
+    for sec in '## Code review' '### Critical' '### Warnings' '### Suggestions' '### Test coverage' '### Plan compliance' '### Out-of-scope changes' '### Architecture'; do
+        printf '%s\n' "$crbody" | grep -qF "$sec" \
+            || { fail "oc-compact-reviewer: consolidated-report section '$sec' missing"; cr_ok=0; }
+    done
+    #   the verdict rubric with the absolute plan-compliance-never-Approve row
+    printf '%s\n' "$crbody" | grep -qi 'verdict rubric' \
+        || { fail "oc-compact-reviewer: the verdict rubric is missing"; cr_ok=0; }
+    if ! printf '%s\n' "$crbody" \
+        | grep -Eiq 'plan-compliance deviation.*never Approve|never Approve.*plan-compliance'; then
+        fail "oc-compact-reviewer: the absolute 'any plan-compliance deviation → never Approve' rubric row is missing"
+        cr_ok=0
+    fi
+
+    # (e) substantially smaller than the wb SKILL.md + references combined.
+    if [ -d "$WBREFS" ]; then
+        wb_bytes=$(cat "$WBREFS"/*.md 2>/dev/null | wc -c)
+        cr_bytes=$(wc -c < "$CR")
+        # "substantially smaller" => well under half the source bulk.
+        if [ "$wb_bytes" -gt 0 ] && [ "$((cr_bytes * 2))" -lt "$wb_bytes" ]; then
+            : # ok — less than half
+        else
+            fail "oc-compact-reviewer: reviewer ($cr_bytes B) is not substantially smaller than the wb source ($wb_bytes B) — expected well under half"
+            cr_ok=0
+        fi
+    else
+        echo "SKIP: oc-compact-reviewer size check — wb-review-refs not present (the form contract above still runs)"
+    fi
+
+    [ "$cr_ok" -eq 1 ] && pass "oc-compact-reviewer: .opencode/agent/code-review.md is the compact ONE-PASS reviewer — single agent, no fan-out, covers the nine-aspect set, carries the severities + <finding> block + consolidated-report sections + the absolute plan-compliance-never-Approve verdict row, and is substantially smaller than the wb SKILL.md+refs source (https://opencode.ai/docs/agents/)"
+fi
+
+# Runtime: the real loader must list the compact reviewer. GUARDED-SKIP when
+# opencode is absent (CI without opencode must not fail).
+if command -v opencode >/dev/null 2>&1; then
+    CRDIR=$(mktemp -d) || { echo "FAIL: mktemp failed" >&2; exit 1; }
+    CRAL="$CRDIR/agentlist.txt"
+    if timeout 300 opencode agent list </dev/null >"$CRAL" 2>/dev/null; then
+        if grep -Eq '^code-review \((subagent|all)\)' "$CRAL"; then
+            pass "oc-compact-reviewer (runtime): \`opencode agent list\` shows the compact code-review reviewer loaded as a subagent"
+        else
+            fail "oc-compact-reviewer (runtime): \`opencode agent list\` did not show code-review loaded"
+            grep -E '^code-review ' "$CRAL" | sed 's/^/    /'
+        fi
+    else
+        fail "oc-compact-reviewer (runtime): \`opencode agent list\` exited non-zero"
+    fi
+    rm -rf "$CRDIR"
+else
+    echo "SKIP: oc-compact-reviewer (runtime) — opencode not on PATH (the form contract above still runs)"
+fi
+
+# ----------------------------------------------------------------------
 # oc-single-model-default  (compact-reviewer slice B — replaced oc-crossmodel-pins)
 # SINGLE session-model default: the baked cross-model pins are retired. The
 # manifest `models` block carries ONLY `session` (no `control` /
