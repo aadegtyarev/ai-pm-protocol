@@ -64,6 +64,30 @@ difference to record: on Claude the reminder is **change-intent-triggered**
 > prioritization) via the structured-question tool, not plain prose; simple
 > yes/no proceed-gates may stay prose.
 
+## The orchestrator seat — the PRIMARY agent runs the protocol
+
+On OpenCode the protocol **orchestrator** is the **PRIMARY** agent (the default
+`build` primary). It is the seat that reads this `AGENTS.md` and the always-on
+core (`WORKFLOW.md`, loaded via the `instructions` array — see below), drives the
+Step 0–7 pipeline, and owns the three things subagents must not do:
+
+- **`question`** — surface PM decision-forks via the structured-question tool.
+  This grant is given to the **primary only**: `.opencode/opencode.json` carries a
+  top-level `permission: { question: "allow" }`, which the OpenCode loader resolves
+  to a `question: allow` rule on the primary (<https://opencode.ai/docs/permissions/>).
+  The **`pm-*` subagents keep `question: deny`** — each subagent's frontmatter
+  re-denies `question` so the top-level allow does **not** cascade onto it
+  (last-match-wins). A subagent **returns findings to the orchestrator**; it never
+  prompts the PM directly. Verified on OpenCode 1.16.2: the primary resolves
+  `question` to `allow`, every `pm-*` subagent resolves it to `deny`.
+- **`task`** — spawn the `pm-*` subagents (the protocol roles). Covered by the
+  primary's default `"*": allow` permission; no extra configuration.
+- **`skill`** — run protocol skills. Also covered by the primary's `"*": allow`.
+
+The `pm-*` agents are **subagents**: the orchestrator spawns them with `task`, they
+do their scoped work (read, write their artifact, run tests) and return findings.
+They do not surface forks to the PM themselves — that is the orchestrator's seat.
+
 ## Supported harnesses
 
 This protocol explicitly supports the following harnesses. The supported set is
