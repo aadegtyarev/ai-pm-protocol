@@ -1147,6 +1147,9 @@ fi
 # opencode-orchestrator-primary plan scenario 1.
 # ----------------------------------------------------------------------
 ORCH="$OC/agent/ai-pm.md"
+# Extract the orchestrator persona BODY (below the closing frontmatter fence)
+# ONCE; the four body-grep sections below reuse it instead of re-running awk.
+[ -f "$ORCH" ] && ORCH_BODY=$(awk 'f{print} /^---$/{c++} c==2{f=1}' "$ORCH")
 if [ ! -f "$ORCH" ]; then
     fail "oc-orchestrator-primary-present: orchestrator agent missing at $ORCH"
 else
@@ -1292,7 +1295,7 @@ if [ ! -f "$ORCH" ]; then
 else
     # Scan the BODY (below the closing frontmatter fence) so a rule cannot be
     # satisfied by a frontmatter comment.
-    obody=$(awk 'f{print} /^---$/{c++} c==2{f=1}' "$ORCH")
+    obody="$ORCH_BODY"
     oerrs=""
     # (1) A plan precedes code: /pm-plan runs BEFORE any pm-coder spawn.
     if ! printf '%s\n' "$obody" | grep -Eq '`/pm-plan`.*`pm-coder`|plan precedes code'; then
@@ -1344,7 +1347,7 @@ fi
 if [ ! -f "$ORCH" ]; then
     fail "oc-failure-path-persona: orchestrator agent missing at $ORCH"
 else
-    fbody=$(awk 'f{print} /^---$/{c++} c==2{f=1}' "$ORCH")
+    fbody="$ORCH_BODY"
     ferrs=""
     # (1) Retry the SAME subagent up to N (the count is load-bearing: N=2).
     if ! printf '%s\n' "$fbody" | grep -Eqi 'retry.*same.*subagent|retry the same'; then
@@ -1390,7 +1393,7 @@ fi
 if [ ! -f "$ORCH" ]; then
     fail "persona-conditional-default-on: orchestrator agent missing at $ORCH"
 else
-    cbody=$(awk 'f{print} /^---$/{c++} c==2{f=1}' "$ORCH")
+    cbody="$ORCH_BODY"
     cerrs=""
     # (1) In doubt -> treat as user-facing -> advocate.
     if ! printf '%s\n' "$cbody" | grep -Eqi 'doubt.*user-facing|in any doubt'; then
@@ -1425,7 +1428,7 @@ fi
 if [ ! -f "$ORCH" ]; then
     fail "oc-gate-deny-is-stop-not-loop: orchestrator agent missing at $ORCH"
 else
-    dbody=$(awk 'f{print} /^---$/{c++} c==2{f=1}' "$ORCH")
+    dbody="$ORCH_BODY"
     derrs=""
     # The persona names the pre-ship merge gate / a denied merge.
     if ! printf '%s\n' "$dbody" | grep -Eqi 'merge gate|denies a .?git merge|pre-ship merge'; then

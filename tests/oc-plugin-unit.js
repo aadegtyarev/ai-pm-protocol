@@ -631,8 +631,8 @@ const SCRATCH = fs.mkdtempSync(path.join(os.tmpdir(), "oc-plugin-unit-"));
   finish();
 })().catch((e) => {
   console.error("FAIL: unexpected error in oc-plugin-unit.js — " + (e && e.stack || e));
-  try { fs.rmSync(SCRATCH, { recursive: true, force: true }); } catch (_e) {}
-  process.exit(1);
+  fail++;            // mark the unexpected throw as a failure so finish() exits 1
+  finish();          // cleanup + Total summary + exit, instead of bypassing them
 });
 
 function finish() {
