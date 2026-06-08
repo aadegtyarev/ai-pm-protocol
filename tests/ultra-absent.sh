@@ -21,9 +21,12 @@
 #     `high/max/ultra`, `ultra AI`, `ultra depth`, and "ultra picks its own
 #     models" alike, because every one of them contains the whole word.
 #
-# NON-VACUOUS: the suite also injects an `ultra` token into a scratch copy of a
-# scoped file and asserts the scan trips (ultra-reintroduction-trips-guard) —
-# so a future re-introduction of the level cannot pass silently.
+# NON-VACUOUS: the suite also injects an `ultra` token into a REAL tracked,
+# in-scope file and asserts the production scan_ultra() path (git ls-files |
+# xargs grep) trips on it (ultra-reintroduction-trips-guard), then restores the
+# file via `git checkout` — so a future re-introduction of the level cannot pass
+# silently, and the self-check exercises the actual plumbing rather than a
+# scratch string.
 #
 # Out of scope (NOT scanned — by design): CHANGELOG.md (historical release
 # records), doc/ (the separate post-coding pm-architect decision-record handoff),
@@ -60,17 +63,38 @@ SCAN_PATHS="workflow src/commands .claude .opencode .golden README.md"
 # Whole-word, case-insensitive scan over the tracked files in the scoped paths.
 # `-w` anchors to a word boundary so the match is the level token, never a
 # substring of an unrelated word.
+#
+# Returns 0 and prints every offending "file:line:text" hit; empty output = clean.
+# Returns 2 (and prints nothing to stdout) when the scoped surface covers ZERO
+# tracked files — that means the scan inspected nothing and a clean result would
+# be vacuous, so the caller treats it as a hard error, not a pass.
+#
+# `--no-run-if-empty` on xargs stops grep from running on an empty file list
+# (GNU xargs otherwise runs the command once with no args, where grep would read
+# inherited STDIN instead of the surface and report a false clean). The empty
+# case is caught explicitly above that anyway, but the flag closes the stdin leak
+# defensively. The `-z`/`-0` NUL pairing is kept so paths with newlines are safe.
 scan_ultra() {
-    # Prints every offending "file:line:text" hit; empty output = clean.
+    # Emptiness is detected with a plain (non-`-z`) count: `git ls-files` without
+    # `-z` is one line per file, safe to count, and we never store the NUL stream
+    # in a shell variable (command substitution strips NULs and would silently
+    # break the `xargs -0` pairing). The actual scan re-runs `git ls-files -z`
+    # and streams it straight into `xargs -0` so NUL separation is preserved.
+    if [ "$(git ls-files -- $SCAN_PATHS 2>/dev/null | wc -l)" -eq 0 ]; then
+        return 2  # zero tracked files in scope — scan would be vacuous
+    fi
     git ls-files -z -- $SCAN_PATHS 2>/dev/null \
-        | xargs -0 grep -niw 'ultra' 2>/dev/null
+        | xargs -0 --no-run-if-empty grep -niw 'ultra' 2>/dev/null
 }
 
 # ----------------------------------------------------------------------
 # ultra-absent-review-level: no `ultra` in any scoped surface.
 # ----------------------------------------------------------------------
 HITS=$(scan_ultra)
-if [ -z "$HITS" ]; then
+SCAN_RC=$?
+if [ "$SCAN_RC" -eq 2 ]; then
+    fail "ultra-absent-review-level: the scoped surfaces ($SCAN_PATHS) matched ZERO tracked files — the scan covered nothing; these paths are expected to exist, so a vacuous clean is treated as a hard failure"
+elif [ -z "$HITS" ]; then
     pass "ultra-absent-review-level: no 'ultra' review level in workflow/, src/commands/, README.md, .claude/, .opencode/, .golden/"
 else
     fail "ultra-absent-review-level: 'ultra' still appears as a review level in a scoped surface:"
@@ -78,19 +102,30 @@ else
 fi
 
 # ----------------------------------------------------------------------
-# ultra-reintroduction-trips-guard (non-vacuous): inject `ultra` into a scratch
-# copy of a scoped file and confirm a whole-word scan trips. Proves the guard is
-# real — that a future re-introduction of the level would be caught.
+# ultra-reintroduction-trips-guard (non-vacuous): inject an `ultra` review-level
+# phrase into a REAL tracked, in-scope file, then run the production scan_ultra()
+# (git ls-files | xargs grep) — the same code path the absence check uses — and
+# assert it reports the injection. This proves the whole plumbing catches a
+# reintroduction, not merely that grep's regex matches a scratch string. The file
+# is restored with `git checkout` via a trap so the tree is never left dirty,
+# even if the assertion (or anything after) fails.
+#
+# INJECT_FILE must be tracked AND inside SCAN_PATHS so scan_ultra() actually
+# reaches it. README.md is both (a single tracked file in scope).
 # ----------------------------------------------------------------------
-SCRATCH=$(mktemp -d) || { echo "FAIL: mktemp failed" >&2; exit 1; }
-trap 'rm -rf "$SCRATCH"' EXIT
-INJECT="$SCRATCH/review-typology.md"
-printf 'fall back to the built-in /code-review ultra at the selected depth.\n' > "$INJECT"
-if grep -qniw 'ultra' "$INJECT"; then
-    pass "ultra-reintroduction-trips-guard: an injected 'code-review ultra' is detected by the whole-word scan"
+INJECT_FILE="README.md"
+restore_inject() { git checkout -- "$INJECT_FILE" 2>/dev/null; }
+trap restore_inject EXIT
+printf '\n<!-- self-check probe: fall back to /code-review ultra at depth -->\n' >> "$INJECT_FILE"
+PROBE_HITS=$(scan_ultra)
+PROBE_RC=$?
+if [ "$PROBE_RC" -eq 0 ] && printf '%s' "$PROBE_HITS" | grep -q "$INJECT_FILE"; then
+    pass "ultra-reintroduction-trips-guard: scan_ultra() (the real git-ls-files|xargs-grep path) catches an 'ultra' injected into the tracked, in-scope $INJECT_FILE"
 else
-    fail "ultra-reintroduction-trips-guard: the scan FAILED to detect an injected 'ultra' — guard is vacuous"
+    fail "ultra-reintroduction-trips-guard: scan_ultra() FAILED to catch an 'ultra' injected into $INJECT_FILE — the production scan path is vacuous"
 fi
+restore_inject
+trap - EXIT
 
 # ----------------------------------------------------------------------
 # Summary
