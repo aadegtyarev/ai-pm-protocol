@@ -859,9 +859,18 @@ fi
 # Intent: the generated reviewer's security aspect must carry the inspection
 # discipline — inspect env/secret wiring via the committed `.env.example`
 # template, never read the live `.env` into context (workflow/security-surfaces.md).
-# Non-vacuous: requires `.env.example` AND a negation (not/never) AND the live
-# `.env` token co-located in the security aspect bullet, so it fails if the
-# clause is removed or softened away.
+# Non-vacuous: the PROHIBITION must be co-located with its anchors, not merely
+# present-somewhere (the pre-existing bullet already contains "not" in the
+# unrelated "rotate-and-remove-from-history not just delete the line" clause and
+# mentions `.env`/`.env.example`, so three independent greps would FALSE-PASS
+# even with the live-.env prohibition removed). Two single-match assertions, each
+# requiring the negation adjacent to its anchor in ONE contiguous clause:
+#   (1) the prohibition sentinel — `never read the live \`.env\`` as a single
+#       contiguous match (fails if that clause is removed or reversed);
+#   (2) the committed-template list spanning `.env.example` AND `*.sample`, the
+#       canonical `*.example / *.sample` pair (workflow/security-surfaces.md).
+# Verified non-vacuous: stripping only the new secrets-inspection clause from the
+# body fails this case.
 # ----------------------------------------------------------------------
 if [ ! -f "$CR" ]; then
     fail "oc-reviewer-secrets-from-template: generated reviewer missing at $CR"
@@ -870,12 +879,19 @@ else
     sec_line=$(grep -i '^- \*\*security\*\*' "$CR")
     if [ -z "$sec_line" ]; then
         fail "oc-reviewer-secrets-from-template: could not locate the security aspect bullet in $CR"
-    elif printf '%s\n' "$sec_line" | grep -q '\.env\.example' \
-        && printf '%s\n' "$sec_line" | grep -Eiq 'never|not' \
-        && printf '%s\n' "$sec_line" | grep -Eq 'live `?\.env'; then
-        pass "oc-reviewer-secrets-from-template: the security aspect states the read-.env.example-not-the-live-.env inspection discipline (workflow/security-surfaces.md)"
+    # (1) Prohibition sentinel: the negation, the read action, `live`, and `.env`
+    #     in ONE contiguous match — non-vacuous against the pre-existing "not".
+    elif printf '%s\n' "$sec_line" | grep -Eq 'never read the live `?\.env'; then
+        # (2) The committed-template list carries BOTH the canonical patterns.
+        if printf '%s\n' "$sec_line" | grep -q '\.env\.example' \
+            && printf '%s\n' "$sec_line" | grep -Eq '`?\*\.sample'; then
+            pass "oc-reviewer-secrets-from-template: the security aspect states the inspect-via-template (.env.example / *.example / *.sample) never-read-the-live-.env discipline (workflow/security-surfaces.md)"
+        else
+            fail "oc-reviewer-secrets-from-template: the prohibition is present but the committed-template list is missing the canonical .env.example / *.sample pair"
+            printf '%s\n' "$sec_line" | sed 's/^/    /'
+        fi
     else
-        fail "oc-reviewer-secrets-from-template: the security aspect is missing the inspect-via-.env.example-never-live-.env discipline"
+        fail "oc-reviewer-secrets-from-template: the security aspect is missing the contiguous 'never read the live .env' inspection prohibition"
         printf '%s\n' "$sec_line" | sed 's/^/    /'
     fi
 fi
