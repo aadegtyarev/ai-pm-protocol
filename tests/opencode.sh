@@ -855,6 +855,32 @@ else
 fi
 
 # ----------------------------------------------------------------------
+# oc-reviewer-secrets-from-template  (secrets-review-hygiene)
+# Intent: the generated reviewer's security aspect must carry the inspection
+# discipline — inspect env/secret wiring via the committed `.env.example`
+# template, never read the live `.env` into context (workflow/security-surfaces.md).
+# Non-vacuous: requires `.env.example` AND a negation (not/never) AND the live
+# `.env` token co-located in the security aspect bullet, so it fails if the
+# clause is removed or softened away.
+# ----------------------------------------------------------------------
+if [ ! -f "$CR" ]; then
+    fail "oc-reviewer-secrets-from-template: generated reviewer missing at $CR"
+else
+    # The single security-aspect bullet line (one paragraph in the dense body).
+    sec_line=$(grep -i '^- \*\*security\*\*' "$CR")
+    if [ -z "$sec_line" ]; then
+        fail "oc-reviewer-secrets-from-template: could not locate the security aspect bullet in $CR"
+    elif printf '%s\n' "$sec_line" | grep -q '\.env\.example' \
+        && printf '%s\n' "$sec_line" | grep -Eiq 'never|not' \
+        && printf '%s\n' "$sec_line" | grep -Eq 'live `?\.env'; then
+        pass "oc-reviewer-secrets-from-template: the security aspect states the read-.env.example-not-the-live-.env inspection discipline (workflow/security-surfaces.md)"
+    else
+        fail "oc-reviewer-secrets-from-template: the security aspect is missing the inspect-via-.env.example-never-live-.env discipline"
+        printf '%s\n' "$sec_line" | sed 's/^/    /'
+    fi
+fi
+
+# ----------------------------------------------------------------------
 # oc-single-model-default  (compact-reviewer slice B — replaced oc-crossmodel-pins)
 # SINGLE session-model default: the baked cross-model pins are retired. The
 # manifest `models` block carries ONLY `session` (no `control` /
