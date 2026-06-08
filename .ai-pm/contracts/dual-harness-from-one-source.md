@@ -25,7 +25,7 @@ The AI agent (which loads the generated adapter for its harness), and the PM/mai
 - The downstream "plain files, no build" property is preserved — adding a development-side build never imposes a build on downstream.
 - The generated Claude adapter stays byte-identical to the golden reference — the byte-equivalence test and the regenerate-and-compare check guard it.
 - A behavioral skew between harnesses (e.g. a guard with no "ask" outcome on one harness, the per-prompt vs always-on route reminder) is labeled and documented, never silently divergent.
-- OpenCode stays labeled **preview** until certified — the not-yet-in-preview pieces (install auto-detect, the bash-`find` boundary guard and "ask"-class guards, cross-model model pins, a protocol-owned review/research engine, the repo split) are honestly disclosed, never implied as complete.
+- OpenCode stays labeled **preview** until certified — the not-yet-in-preview pieces (install auto-detect, the bash-`find` boundary guard and "ask"-class guards, a protocol-owned review/research engine, the repo split) are honestly disclosed, never implied as complete. *(The earlier "cross-model model pins" gap was dropped: the baked per-agent cross-model pins were retired and replaced by a single-session default plus a bump-surviving personal-`opencode.json` control-layer-model pattern — see `doc/architecture.md` § "OpenCode compact one-pass reviewer …" — so it is no longer a deferred preview gap.)*
 
 ## Acceptance checks
 
