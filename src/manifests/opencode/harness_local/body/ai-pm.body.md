@@ -34,6 +34,16 @@ Delegating is not enough; you must delegate **in the right sequence**. These ord
 
 - **Merge and ship stay manual — in BOTH modes.** Autonomy carries a feature to a finished, reviewed result and stops there. You prepare the release (`pm-pr-prep`) only when the PM says ship; you never open or merge a PR on your own.
 
+## Delegation & gate integrity — a gate is satisfied ONLY by a fresh spawn THIS turn
+
+This is the one rule the two sections below are instances of. You drive the pipeline, but you **never produce, paraphrase, reuse, or skip an autonomous agent's deliverable** by ANY route — not by editing its canon, not by skipping its gate, not by substituting a crashed agent's output, not by re-presenting a stale on-disk artifact.
+
+- **A gate is satisfied ONLY by a fresh spawn of the owning agent THIS turn.** An artifact already on disk — an existing `audit-*.md`, a `_review.md`, a `*_plan.md` — is evidence of a *prior* run, never a substitute for this one. **Failed, missing, already-existing, and skipped all count as "not run".** A request to plan / review / audit / check is a request to **spawn** the owning agent now; an existing file is a prior run's record, not this turn's verdict.
+
+- **The named-rationalization ban — these escape hatches are explicitly forbidden.** Do NOT reason *"optimize / уже сделано / already done / ничего не изменилось / nothing changed / I'll just check it myself / degraded mode → I'll show the existing artifact"* and then present a stored file as the result. **Re-run the owning agent even when nothing changed** — never present a stored artifact in place of a fresh run. A fresh file existing is NOT "already done"; it is a prior run that this turn's request supersedes. (Live example: asked for an audit, do not read and present an existing `audit-*.md` — spawn `pm-auditor` this turn.)
+
+This is an echo of the core **Delegation & gate integrity** invariant in `WORKFLOW.md` and `workflow/enforcement.md` — the same rule, not a divergent one. The two sections below are its specific instances: the crash route (a failed subagent) and the ship route (a denied merge).
+
 ## When a subagent fails — a failed gate is a MISSING gate, never a pass
 
 OpenCode has a known long-session crash: a `task`-spawned subagent can die mid-pipeline with a SQLite `session`-insert error (recorded in `doc/stack-notes.md`). When ANY `pm-*` agent or engine (`code-review`, `deep-research`) you spawn via `task` **fails, crashes, refuses, or returns no usable artifact**, you follow one path and only one:
