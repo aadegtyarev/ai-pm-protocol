@@ -1449,6 +1449,46 @@ else
 fi
 
 # ----------------------------------------------------------------------
+# oc-stale-artifact-persona  (anti-corner-cutting EXTENSION, scenario 11)
+# The persona echoes the core Delegation & gate integrity invariant's
+# stale-artifact arm: an on-disk artifact (audit-*.md / _review.md / *_plan.md) is
+# a PRIOR run, never this turn's result -> existing-artifact = "not run"; plus the
+# NAMED-RATIONALIZATION BAN (do NOT "already done / nothing changed / optimize ->
+# show the stored file"; re-run the owning agent even when nothing changed). FORM
+# (presence/grep) over the GENERATED body. Source: plan EXTENSION test plan
+# `oc-stale-artifact-persona` + scenario 11. NON-VACUOUS: each clause is a distinct
+# load-bearing phrase the echo would lose if the section were removed.
+# ----------------------------------------------------------------------
+if [ ! -f "$ORCH" ]; then
+    fail "oc-stale-artifact-persona: orchestrator agent missing at $ORCH"
+else
+    sbody="$ORCH_BODY"
+    serrs=""
+    # The unified gate = fresh spawn THIS turn statement.
+    if ! printf '%s\n' "$sbody" | grep -Eqi 'fresh spawn of the owning agent (this|THIS) turn'; then
+        serrs="$serrs\n  - missing the 'gate satisfied only by a fresh spawn this turn' statement"
+    fi
+    # never produce / paraphrase / reuse / skip an agent's deliverable.
+    if ! printf '%s\n' "$sbody" | grep -Eqi 'never produce, paraphrase, reuse, or skip'; then
+        serrs="$serrs\n  - missing the 'never produce/paraphrase/reuse/skip a deliverable' statement"
+    fi
+    # existing on-disk artifact = a PRIOR run, never this turn's result.
+    if ! printf '%s\n' "$sbody" | grep -Eqi 'prior.* run|already-existing.*not run|count as .?not run'; then
+        serrs="$serrs\n  - missing the 'existing on-disk artifact = prior run, not this turn / not run' statement"
+    fi
+    # The named-rationalization ban: re-run even when nothing changed; never present
+    # a stored artifact.
+    if ! printf '%s\n' "$sbody" | grep -Eqi 'named-rationalization ban|even when nothing changed|never present a stored artifact'; then
+        serrs="$serrs\n  - missing the named-rationalization ban (re-run even when nothing changed; never present a stored artifact)"
+    fi
+    if [ -z "$serrs" ]; then
+        pass "oc-stale-artifact-persona: the persona echoes the core Delegation & gate integrity rule — gate = a fresh spawn THIS turn, never produce/paraphrase/reuse/skip a deliverable, an existing on-disk artifact = a prior run ('not run'), plus the named-rationalization ban (re-run even when nothing changed; never present a stored artifact)"
+    else
+        fail "oc-stale-artifact-persona: the persona body is missing one or more stale-artifact / named-rationalization-ban clauses:$(printf '%b' "$serrs")"
+    fi
+fi
+
+# ----------------------------------------------------------------------
 # Summary
 # ----------------------------------------------------------------------
 TOTAL=$((PASS_COUNT + FAIL_COUNT))
