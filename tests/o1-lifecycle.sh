@@ -271,6 +271,73 @@ else
 fi
 
 # ----------------------------------------------------------------------
+# auditor-inventory-from-ledger
+# Under the O(1) lifecycle a merged feature's plan/review files EVAPORATE to git,
+# so the auditor must build its merged-feature inventory WITHOUT depending on them:
+#   (a) the inventory-building step sources merged features from git + the
+#       docs/product-map.md ledger (the durable feature list), reading
+#       docs/features/*_plan.md ONLY for in-flight / not-yet-merged features;
+#   (b) the product-map RE-DERIVE source list is .ai-pm/contracts/ + git ONLY —
+#       it no longer names docs/features/ or .ai-pm/reviews/ as re-derivation
+#       sources (matching the updated generation procedure in pm-bootstrap).
+# This pins the reconciliation so a future edit cannot silently re-source the
+# inventory / map from the now-evaporating per-feature evidence files.
+#
+# We extract the inventory-building step (the "merged-feature inventory comes from"
+# sentence) and the product-map re-derive bullet (the "re-derive it from source"
+# line) and assert the new sourcing. Non-vacuity: restoring the OLD re-derive
+# source list (which named docs/features/ + .ai-pm/reviews/) trips the check.
+# ----------------------------------------------------------------------
+ierrs=""
+
+# (a) Inventory-building step: merged features come from git + the product-map
+# ledger; plan files are read only for in-flight features.
+grep -qF 'inventory comes from `git log`' "$AUDITOR" \
+    || ierrs="$ierrs\n  - inventory step does not source the merged-feature inventory from git log"
+grep -qF '`docs/product-map.md` ledger' "$AUDITOR" \
+    || ierrs="$ierrs\n  - inventory step does not name the docs/product-map.md ledger as the durable merged-feature list"
+grep -qi 'only for in-flight / not-yet-merged features\|only for in-flight' "$AUDITOR" \
+    || ierrs="$ierrs\n  - inventory step does not scope docs/features/*_plan.md reads to in-flight / not-yet-merged features"
+grep -qi 'present in git / the ledger .*OR.* surviving plan file\|present in git .* ledger' "$AUDITOR" \
+    || ierrs="$ierrs\n  - inventory step does not keep mixed-project tolerance (git/ledger OR a surviving plan counts)"
+
+# (b) Product-map re-derive SOURCE LIST: the parenthetical immediately after
+# "re-derive it from source" is .ai-pm/contracts/ + git ONLY; the evaporated
+# docs/features/ + .ai-pm/reviews/ are NO LONGER named as re-derivation sources.
+# Extract just the source parenthetical (between "from source (" and the closing
+# ")") so the later "deliberately does NOT read docs/features/" negation prose
+# does not false-trip the source-list assertion.
+SRCLIST=$(grep -i 're-derive it from source' "$AUDITOR" | sed -n 's/.*from source (\([^)]*\)).*/\1/p')
+[ -n "$SRCLIST" ] \
+    || ierrs="$ierrs\n  - could not extract the product-map re-derive source parenthetical"
+printf '%s' "$SRCLIST" | grep -qF '.ai-pm/contracts/' \
+    || ierrs="$ierrs\n  - product-map re-derive source list does not name .ai-pm/contracts/"
+printf '%s' "$SRCLIST" | grep -qiw 'git' \
+    || ierrs="$ierrs\n  - product-map re-derive source list does not name git"
+printf '%s' "$SRCLIST" | grep -qF 'docs/features/' \
+    && ierrs="$ierrs\n  - product-map re-derive source list STILL names the evaporated docs/features/ as a re-derivation source"
+printf '%s' "$SRCLIST" | grep -qF '.ai-pm/reviews/' \
+    && ierrs="$ierrs\n  - product-map re-derive source list STILL names the evaporated .ai-pm/reviews/ as a re-derivation source"
+
+if [ -z "$ierrs" ]; then
+    pass "auditor-inventory-from-ledger: the merged-feature inventory is sourced from git + the docs/product-map.md ledger (plan files read only for in-flight work), and the product-map re-derive source list is .ai-pm/contracts/ + git only (docs/features/ + .ai-pm/reviews/ dropped)"
+else
+    fail "auditor-inventory-from-ledger: the inventory/map O(1) re-sourcing is not fully wired:$(printf '%b' "$ierrs")"
+fi
+
+# Non-vacuity: a copy of the auditor body whose re-derive line is restored to the
+# OLD source list (naming docs/features/ + .ai-pm/reviews/) must trip the (b)
+# check — proving the grep reads the real re-derive line, not a vacuous always-true.
+NV_LEDGER="$SCRATCH/pm-auditor-ledger-novacuum.body.md"
+sed 's#re-derive it from source (`\.ai-pm/contracts/` + git)#re-derive it from source (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git)#' "$AUDITOR" > "$NV_LEDGER"
+NV_SRCLIST=$(grep -i 're-derive it from source' "$NV_LEDGER" | sed -n 's/.*from source (\([^)]*\)).*/\1/p')
+if printf '%s' "$NV_SRCLIST" | grep -qF 'docs/features/'; then
+    pass "auditor-inventory-from-ledger-nonvacuous: restoring the OLD re-derive source list (naming docs/features/ + .ai-pm/reviews/) trips the (b) source check (the assertion reads the real re-derive line)"
+else
+    fail "auditor-inventory-from-ledger-nonvacuous: restoring the OLD re-derive source list did NOT trip the (b) check — the assertion is vacuous"
+fi
+
+# ----------------------------------------------------------------------
 # Summary
 # ----------------------------------------------------------------------
 TOTAL=$((PASS_COUNT + FAIL_COUNT))
