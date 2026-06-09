@@ -193,7 +193,7 @@ Built by:
 
 ## Infrastructure (no user-facing contract)
 
-Protocol-internal features (47) that strengthen the system but are not linked to a specific contract above.
+Protocol-internal features (48) that strengthen the system but are not linked to a specific contract above.
 
 | Feature | Added |
 |---|---|
@@ -212,6 +212,7 @@ Protocol-internal features (47) that strengthen the system but are not linked to
 | [context-leanness](features/context-leanness_plan.md) | 2026-06-07 |
 | [diagnostic-flow-discipline](features/diagnostic-flow-discipline_plan.md) | 2026-06-05 |
 | [diagnostic-probe-mode](features/diagnostic-probe-mode_plan.md) | 2026-06-02 |
+| [doc-frugality](features/doc-frugality_plan.md) | 2026-06-09 |
 | [documentation-flavor](features/documentation-flavor_plan.md) | 2026-06-04 |
 | [english-canonical-artifacts](features/english-canonical-artifacts_plan.md) | 2026-06-03 |
 | [extract-migrations-reference](features/extract-migrations-reference_plan.md) | 2026-06-03 |
