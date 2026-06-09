@@ -8,6 +8,14 @@ Durable text — anything that lands and is read later: a doc section, a code co
 
 Every section opens with the statement that breaks if violated — the load-bearing fact, not the build-up to it. Bottom Line Up Front: a reader who stops after the first sentence still has the rule. Context, caveats, and elaboration come after, never before.
 
+### Plain language / human-readable
+
+Durable text leads with a statement a **non-specialist can read** — the load-bearing fact in plain words, not in domain shorthand. The plain-language statement comes **first**; the precise or technical form is the elaboration or a pointer, never the lede.
+
+Jargon and acronyms are **glossed-or-deferred**. A technical term that is the clearest word is defined in plain language at first use; otherwise it is replaced with plain words or pushed to a `technical details → <pointer>` tail. No bare acronyms, no CS/math notation (`O(1)`, `Lost-in-the-Middle`) left standing unexplained in reader-facing durable text.
+
+This is a **structure** rule — how to build the artifact so a non-specialist can read it, a sibling of `### Fact-first / BLUF`. It is not the read-back review act (`## Human-facing text legibility` in `workflow/pm-comms.md` — read your draft, rewrite if unclear) and not the live-chat rule (`## How to talk to the PM` there — no jargon without a gloss in PM chat). The three never state the same rule.
+
 ### Current-state-only
 
 The live artifact states **what is true now**. No "Supersedes…", no "corrects-the-earlier-wording", no process-narrative of how the text got here. The story of a change is process — it lives in git, not in the artifact. A reader of the live doc reads the current truth without wading through its history.

@@ -194,6 +194,43 @@ else
 fi
 
 # ----------------------------------------------------------------------
+# plain-language-rule (with non-vacuity)
+# The `### Plain language` rule is a structural authoring rule for durable text
+# (lead with a non-specialist statement, gloss-or-defer jargon). It must name the
+# legibility sibling for the single-home split (referenced, not restated), and the
+# WORKFLOW kernel one-liner must now carry the plain-language axis.
+# ----------------------------------------------------------------------
+plerrs=""
+if [ -f "$DS" ]; then
+    grep -q '### Plain language' "$DS"            || plerrs="$plerrs\n  - doc-style.md is missing the '### Plain language' anchor"
+    grep -qi 'non-specialist' "$DS"               || plerrs="$plerrs\n  - doc-style.md plain-language rule does not lead with a non-specialist statement"
+    grep -qi 'glossed-or-deferred' "$DS"          || plerrs="$plerrs\n  - doc-style.md plain-language rule is missing the gloss-or-defer rule for jargon/acronyms"
+    # Names the legibility sibling for the single-home split (referenced by name).
+    grep -qF 'Human-facing text legibility' "$DS" || plerrs="$plerrs\n  - doc-style.md plain-language rule does not name the legibility sibling for the single-home split"
+else
+    plerrs="$plerrs\n  - workflow/doc-style.md does not exist"
+fi
+# The WORKFLOW kernel one-liner now carries the plain-language axis.
+grep -q 'reader-first: plain-language' "$WF" || plerrs="$plerrs\n  - WORKFLOW.md durable-text kernel one-liner does not carry the plain-language axis"
+
+if [ -z "$plerrs" ]; then
+    pass "plain-language-rule: doc-style.md carries '### Plain language' (non-specialist lede + gloss-or-defer), names the legibility sibling, and the WORKFLOW kernel lists the plain-language axis"
+else
+    fail "plain-language-rule: the plain-language axis is not wired:$(printf '%b' "$plerrs")"
+fi
+
+# Non-vacuity: strip the `### Plain language` anchor from a scratch copy and assert
+# the anchor check trips. Proves the test is live, not vacuous.
+if [ -f "$DS" ]; then
+    sed '/^### Plain language/d' "$DS" > "$SCRATCH/pl-stripped.md"
+    if grep -q '### Plain language' "$SCRATCH/pl-stripped.md"; then
+        fail "plain-language-nonvacuous: stripping the '### Plain language' anchor did NOT remove it — the anchor check is vacuous"
+    else
+        pass "plain-language-nonvacuous: removing the '### Plain language' anchor trips the presence check (test is live)"
+    fi
+fi
+
+# ----------------------------------------------------------------------
 # Summary
 # ----------------------------------------------------------------------
 TOTAL=$((PASS_COUNT + FAIL_COUNT))
