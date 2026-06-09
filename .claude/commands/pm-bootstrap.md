@@ -297,7 +297,7 @@ Same UI note and initial commit rules as greenfield apply.
 
 ## Product map generation procedure
 
-Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product-map.md` — the PM-facing, contract-centric map of what the application does. It is **generated, never hand-filled**: every run rebuilds it from the source files (`.ai-pm/contracts/`, `docs/features/`, `.ai-pm/reviews/`, git). `docs/product-map.md` lives at the docs root, so links are `features/<topic>_plan.md` and `../.ai-pm/...`.
+Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product-map.md` — the PM-facing, contract-centric map of what the application does, **and the self-contained durable feature ledger** (the single standing inventory of "what features exist"). It is **generated, never hand-filled**: every run rebuilds it from `.ai-pm/contracts/` (the durable contract registry) + **git history** (merge commits / feature evidence for each feature's name + date). It deliberately does **not** source from `docs/features/*_plan.md` or `.ai-pm/reviews/*` — under the O(1) distillation model those per-feature evidence files evaporate to git once a feature merges, so the map must be independent of them (it is the ledger that survives their evaporation). `docs/product-map.md` lives at the docs root; the only links it emits are the per-contract heading links to `../.ai-pm/contracts/<name>.md` (the durable contract files) — a feature is identified by **name + date only**, never linked.
 
 > **This procedure writes only `docs/product-map.md`; it never creates or edits the authored `docs/product.md`.** The authored front door is owned by `pm-architect`; this generated map and that authored funnel are separate files that never share a writer.
 
@@ -311,10 +311,10 @@ Used by bootstrap (all modes) and by `/pm-plan` to regenerate `docs/product-map.
    - **Lead with the product-language value lines as a markdown bullet list, before any table** (bullets render on separate lines in every renderer; two adjacent plain lines would collapse into one paragraph on GitHub):
      - `- **User value:**` one line taken from the contract's `## User value` section (the human, product-language promise — **not** the technical first `Must work` item).
      - `- **Out of scope:**` a compact projection of the contract's `## Out of scope` bullets — join them into a short single line (keep up to the first couple of bullets if the list is long). **Omit this bullet entirely** when the contract has no `## Out of scope` content (empty or absent section) — do not emit an empty `Out of scope:` bullet.
-   - Then the build-history table under a plain `Built by:` label line (**pure markdown, no HTML** — no `<details>`): the features that built or changed the contract, read from its **Built/changed by** list. `Done` = `git log --follow --diff-filter=A --format="%Y-%m-%d" -- .ai-pm/reviews/<topic>_review.md` (else `—`); `Review` = `[R](../.ai-pm/reviews/<topic>_review.md)` if it exists, else `—`.
-3. **Infrastructure bucket** — a final `## Infrastructure (no user-facing contract)` section listing every `*_plan.md` in `docs/features/` not referenced by any contract's Built/changed by list (backend / infra features). It has no contract, so it carries **no** `User value` / `Out of scope` lines and **no** `Built by:` label — just its existing plain table.
-4. Sort contracts alphabetically within a component; sort feature rows by `Done` (newest last).
-5. **One feature, many contracts — render once.** A single feature can appear in several contracts' `Built/changed by` lists (it built or changed all of them). Render that feature's row **fully once** under the first contract (alphabetical order) where it appears; under every subsequent contract, render the feature as a single marked line `↑ same work` instead of a repeated full row, so the PM sees the shared work without duplicate Done/Review columns.
+   - Then the build-history table under a plain `Built by:` label line (**pure markdown, no HTML** — no `<details>`): a `| Feature | Added |` ledger of the features that built or changed the contract, read from its **Built/changed by** list. Each feature is a **plain name (no link)** + its `Added` date. The date is the feature's landing date from **git history** — the merge commit that landed the feature (e.g. `git log --diff-filter=A --format="%Y-%m-%d" -1 -- <a path the feature added>`, or the merge-commit date for the feature topic); fall back to `—` when git yields no date. **No `Done` / `Review` column and no `features/*_plan.md` or `.ai-pm/reviews/*` link** — those targets evaporate to git, so the ledger names the feature + date only; the durable "why/what" is the `User value` / `Out of scope` prose above, not a link.
+3. **Infrastructure bucket** — a final `## Infrastructure (no user-facing contract)` section listing every feature **not referenced by any contract's Built/changed by list** (backend / infra features), read from git history (the merged feature topics). It has no contract, so it carries **no** `User value` / `Out of scope` lines and **no** `Built by:` label — just a plain `| Feature | Added |` table of name + date (no link), same shape as the per-contract ledger. The feature name + date **is** the durable ledger entry for an infra feature; the full record lives in git history.
+4. Sort contracts alphabetically within a component; sort feature rows by `Added` (newest last).
+5. **One feature, many contracts — render once.** A single feature can appear in several contracts' `Built/changed by` lists (it built or changed all of them). Render that feature's row **fully once** under the first contract (alphabetical order) where it appears; under every subsequent contract, render the feature as a single marked line `↑ same work` instead of a repeated full row, so the PM sees the shared work without a duplicate `Added` column.
 
 ### Status legend
 
@@ -342,15 +342,15 @@ Do **not** print a generator-mechanics header ("Source of truth = contracts. Gen
 
 Built by:
 
-| Feature | Done | Review |
-|---|---|---|
-| [topic](features/topic_plan.md) | 2025-10-15 | [R](../.ai-pm/reviews/topic_review.md) |
+| Feature | Added |
+|---|---|
+| topic | 2025-10-15 |
 
 ## Infrastructure (no user-facing contract)
 
-| Feature | Done | Review |
-|---|---|---|
-| [build-pipeline](features/build-pipeline_plan.md) | 2025-09-02 | [R](../.ai-pm/reviews/build-pipeline_review.md) |
+| Feature | Added |
+|---|---|
+| build-pipeline | 2025-09-02 |
 ```
 
 ### Worked example
@@ -371,10 +371,10 @@ Two contracts (`dimmer-control`, `scene-recall`) live under a "Lighting" compone
 
 Built by:
 
-| Feature | Done | Review |
-|---|---|---|
-| [dimmer-mvp](features/dimmer-mvp_plan.md) | 2025-09-10 | [R](../.ai-pm/reviews/dimmer-mvp_review.md) |
-| [scene-engine](features/scene-engine_plan.md) | 2025-10-15 | [R](../.ai-pm/reviews/scene-engine_review.md) |
+| Feature | Added |
+|---|---|
+| dimmer-mvp | 2025-09-10 |
+| scene-engine | 2025-10-15 |
 
 ### [scene-recall](../.ai-pm/contracts/scene-recall.md) — live
 
@@ -383,15 +383,15 @@ Built by:
 
 Built by:
 
-| Feature | Done | Review |
-|---|---|---|
-| [scene-engine](features/scene-engine_plan.md) — ↑ same work |  |  |
+| Feature | Added |
+|---|---|
+| scene-engine — ↑ same work |  |
 
 ## Infrastructure (no user-facing contract)
 
-| Feature | Done | Review |
-|---|---|---|
-| [bus-failover](features/bus-failover_plan.md) | 2025-09-02 | [R](../.ai-pm/reviews/bus-failover_review.md) |
+| Feature | Added |
+|---|---|
+| bus-failover | 2025-09-02 |
 ```
 
 ---

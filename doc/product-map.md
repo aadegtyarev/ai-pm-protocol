@@ -1,8 +1,8 @@
 # Product map — what the protocol guarantees, by contract
 
-> **GENERATED** from `.ai-pm/contracts/` + `doc/features/` + `.ai-pm/reviews/` + git — do not hand-edit.
+> **GENERATED** from `.ai-pm/contracts/` + git history — do not hand-edit.
 
-> Status: **live** — contract in force. The protocol's product is its enforced behavioral guarantees; the primary consumer is the LLM/agent, alongside the PM. Each contract below leads with its value; the features that built or strengthened it are listed under `Built by:`.
+> Status: **live** — contract in force. The protocol's product is its enforced behavioral guarantees; the primary consumer is the LLM/agent, alongside the PM. Each contract below leads with its value; the features that built or strengthened it are listed under `Built by:` as a name + date ledger (the durable "why/what" lives in the value prose above; per-feature plan/review evidence has evaporated to git).
 
 ## cross-model-review
 
@@ -16,11 +16,11 @@ A model reviewing its own work shares its own blind spots — it tends to miss e
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [cross-model-review](features/cross-model-review_plan.md) | 2026-06-06 | [review](../.ai-pm/reviews/cross-model-review_review.md) |
-| [review-typology-framework](features/review-typology-framework_plan.md) | 2026-06-05 | [review](../.ai-pm/reviews/review-typology-framework_review.md) |
-| [review-engine-selection](features/review-engine-selection_plan.md) | 2026-06-05 | [review](../.ai-pm/reviews/review-engine-selection_review.md) |
+| Feature | Added |
+|---|---|
+| cross-model-review | 2026-06-06 |
+| review-typology-framework | 2026-06-05 |
+| review-engine-selection | 2026-06-05 |
 
 ## cross-session-enforcement
 
@@ -34,12 +34,12 @@ Prose rules in a workflow document only hold while a session remembers to read t
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [protocol-integrity-and-stack-literacy](features/protocol-integrity-and-stack-literacy_plan.md) | 2026-05-30 |  |
-| [protocol-builtins-realignment](features/protocol-builtins-realignment_plan.md) | 2026-06-02 |  |
-| [bootstrap-write-loss-guards](features/bootstrap-write-loss-guards_plan.md) | 2026-06-06 |  |
-| [deny-review-orchestrator](features/deny-review-orchestrator_plan.md) | 2026-06-05 | [review](../.ai-pm/reviews/deny-review-orchestrator_review.md) |
+| Feature | Added |
+|---|---|
+| protocol-integrity-and-stack-literacy | 2026-05-30 |
+| protocol-builtins-realignment | 2026-06-02 |
+| bootstrap-write-loss-guards | 2026-06-06 |
+| deny-review-orchestrator | 2026-06-05 |
 
 ## decision-authority
 
@@ -54,12 +54,12 @@ A protocol that asks the PM about *everything* is exhausting; one that decides *
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [automode](features/automode_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/automode_review.md) |
-| [automode-procedural-gates](features/automode-procedural-gates_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/automode-procedural-gates_review.md) |
-| [pm-decision-via-askuserquestion](features/pm-decision-via-askuserquestion_plan.md) | 2026-06-03 | [review](../.ai-pm/reviews/pm-decision-via-askuserquestion_review.md) |
-| [pm-product-advocate](features/pm-product-advocate_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/pm-product-advocate_review.md) |
+| Feature | Added |
+|---|---|
+| automode | 2026-06-04 |
+| automode-procedural-gates | 2026-06-04 |
+| pm-decision-via-askuserquestion | 2026-06-03 |
+| pm-product-advocate | 2026-06-04 |
 
 ## disciplined-pipeline
 
@@ -73,12 +73,12 @@ Whoever drives a change — an AI agent or the PM behind it — gets a single, p
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [template-v2](features/template-v2_plan.md) | 2026-05-28 |  |
-| [integrate-consultancy](features/integrate-consultancy_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/integrate-consultancy_review.md) |
-| [review-stamp-gate](features/review-stamp-gate_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/review-stamp-gate_review.md) |
-| [optimize-without-losing-rigor](features/optimize-without-losing-rigor_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/optimize-without-losing-rigor_review.md) |
+| Feature | Added |
+|---|---|
+| template-v2 | 2026-05-28 |
+| integrate-consultancy | 2026-05-30 |
+| review-stamp-gate | 2026-06-04 |
+| optimize-without-losing-rigor | 2026-05-30 |
 
 ## documentation-discipline
 
@@ -92,13 +92,13 @@ Documentation that is written once and never updated is worse than none — it l
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [template-v2](features/template-v2_plan.md) | 2026-05-28 |  |
-| [architect-owns-architecture-md](features/architect-owns-architecture-md_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/architect-owns-architecture-md_review.md) |
-| [legacy-reader-role-split](features/legacy-reader-role-split_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/legacy-reader-role-split_review.md) |
-| [threat-model-ownership-and-lifecycle](features/threat-model-ownership-and-lifecycle_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/threat-model-ownership-and-lifecycle_review.md) |
-| [doc-migration-on-template-bump](features/doc-migration-on-template-bump_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/doc-migration-on-template-bump_review.md) |
+| Feature | Added |
+|---|---|
+| template-v2 | 2026-05-28 |
+| architect-owns-architecture-md | 2026-05-30 |
+| legacy-reader-role-split | 2026-06-04 |
+| threat-model-ownership-and-lifecycle | 2026-06-04 |
+| doc-migration-on-template-bump | 2026-06-04 |
 
 ## dual-harness-from-one-source
 
@@ -112,13 +112,13 @@ The protocol's guarantees should not be tied to one AI coding tool. This guarant
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [opencode-harness-support](features/opencode-harness-support_plan.md) | 2026-06-07 |  |
-| [harness-neutral-prose](features/harness-neutral-prose_plan.md) | 2026-06-07 |  |
-| [opencode-orchestrator-primary](features/opencode-orchestrator-primary_plan.md) | 2026-06-07 |  |
-| [per-operation-effort-tiering](features/per-operation-effort-tiering_plan.md) | 2026-06-07 |  |
-| [opencode-compact-reviewer](features/opencode-compact-reviewer_plan.md) | 2026-06-08 | [review](../.ai-pm/reviews/opencode-compact-reviewer_review.md) |
+| Feature | Added |
+|---|---|
+| opencode-harness-support | 2026-06-07 |
+| harness-neutral-prose | 2026-06-07 |
+| opencode-orchestrator-primary | 2026-06-07 |
+| per-operation-effort-tiering | 2026-06-07 |
+| opencode-compact-reviewer | 2026-06-08 |
 
 ## plan-fidelity
 
@@ -131,11 +131,11 @@ When the PM approves a plan, they are approving a promise: this is what will be 
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [integrate-consultancy](features/integrate-consultancy_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/integrate-consultancy_review.md) |
-| [protocol-integrity-and-stack-literacy](features/protocol-integrity-and-stack-literacy_plan.md) | 2026-05-30 |  |
-| [optimize-without-losing-rigor](features/optimize-without-losing-rigor_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/optimize-without-losing-rigor_review.md) |
+| Feature | Added |
+|---|---|
+| integrate-consultancy | 2026-05-30 |
+| protocol-integrity-and-stack-literacy | 2026-05-30 |
+| optimize-without-losing-rigor | 2026-05-30 |
 
 ## product-readiness-gate
 
@@ -149,10 +149,10 @@ The orchestrator both elicits product detail from the PM and pushes toward codin
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [pm-product-advocate](features/pm-product-advocate_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/pm-product-advocate_review.md) |
-| [integrate-consultancy](features/integrate-consultancy_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/integrate-consultancy_review.md) |
+| Feature | Added |
+|---|---|
+| pm-product-advocate | 2026-06-04 |
+| integrate-consultancy | 2026-05-30 |
 
 ## project-boundary
 
@@ -166,12 +166,12 @@ An AI agent loose on the filesystem — reading sibling repos, editing productio
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [protocol-integrity-and-stack-literacy](features/protocol-integrity-and-stack-literacy_plan.md) | 2026-05-30 |  |
-| [protocol-builtins-realignment](features/protocol-builtins-realignment_plan.md) | 2026-06-02 |  |
-| [orchestrator-read-discipline](features/orchestrator-read-discipline_plan.md) | 2026-06-05 | [review](../.ai-pm/reviews/orchestrator-read-discipline_review.md) |
-| [agent-reporting-discipline](features/agent-reporting-discipline_plan.md) | 2026-06-06 | [review](../.ai-pm/reviews/agent-reporting-discipline_review.md) |
+| Feature | Added |
+|---|---|
+| protocol-integrity-and-stack-literacy | 2026-05-30 |
+| protocol-builtins-realignment | 2026-06-02 |
+| orchestrator-read-discipline | 2026-06-05 |
+| agent-reporting-discipline | 2026-06-06 |
 
 ## regression-protection
 
@@ -184,65 +184,64 @@ The most dangerous failure in fast development is the silent regression — a ne
 
 Built by:
 
-| Feature | Added | Review |
-|---|---|---|
-| [integrate-consultancy](features/integrate-consultancy_plan.md) | 2026-05-30 | [review](../.ai-pm/reviews/integrate-consultancy_review.md) |
-| [contract-two-layer-token-lint](features/contract-two-layer-token-lint_plan.md) | 2026-06-03 | [review](../.ai-pm/reviews/contract-two-layer-token-lint_review.md) |
-| [nfr-operational-limits-prompt](features/nfr-operational-limits-prompt_plan.md) | 2026-06-04 | [review](../.ai-pm/reviews/nfr-operational-limits-prompt_review.md) |
-| [contract-centric-product-map](features/contract-centric-product-map_plan.md) | 2026-06-02 |  |
+| Feature | Added |
+|---|---|
+| integrate-consultancy | 2026-05-30 |
+| contract-two-layer-token-lint | 2026-06-03 |
+| nfr-operational-limits-prompt | 2026-06-04 |
+| contract-centric-product-map | 2026-06-02 |
 
 ## Infrastructure (no user-facing contract)
 
-Protocol-internal features (48) that strengthen the system but are not linked to a specific contract above.
+Protocol-internal features (48) that strengthen the system but are not linked to a specific contract above. The feature name + date is the ledger entry; the full record lives in git history.
 
 | Feature | Added |
 |---|---|
-| [agent-handoff-durability](features/agent-handoff-durability_plan.md) | 2026-06-06 |
-| [ai-minimums-linter-wiring](features/ai-minimums-linter-wiring_plan.md) | 2026-06-05 |
-| [architecture-doc-coherence](features/architecture-doc-coherence_plan.md) | 2026-06-02 |
-| [audit-fixup-hooks-quoted-form](features/audit-fixup-hooks-quoted-form_plan.md) | 2026-05-30 |
-| [audit-fixup-self-docs-architecture](features/audit-fixup-self-docs-architecture_plan.md) | 2026-05-30 |
-| [audit-fixup-self-stack-notes](features/audit-fixup-self-stack-notes_plan.md) | 2026-05-30 |
-| [audit-scope-menu](features/audit-scope-menu_plan.md) | 2026-06-05 |
-| [behavioral-contract-and-human-journeys](features/behavioral-contract-and-human-journeys_plan.md) | 2026-06-03 |
-| [bootstrap-populated-journeys](features/bootstrap-populated-journeys_plan.md) | 2026-06-04 |
-| [changelog-backfill](features/changelog-backfill_plan.md) | 2026-05-30 |
-| [changeset-hygiene](features/changeset-hygiene_plan.md) | 2026-06-05 |
-| [comment-restraint](features/comment-restraint_plan.md) | 2026-06-06 |
-| [context-leanness](features/context-leanness_plan.md) | 2026-06-07 |
-| [diagnostic-flow-discipline](features/diagnostic-flow-discipline_plan.md) | 2026-06-05 |
-| [diagnostic-probe-mode](features/diagnostic-probe-mode_plan.md) | 2026-06-02 |
-| [doc-frugality](features/doc-frugality_plan.md) | 2026-06-09 |
-| [documentation-flavor](features/documentation-flavor_plan.md) | 2026-06-04 |
-| [english-canonical-artifacts](features/english-canonical-artifacts_plan.md) | 2026-06-03 |
-| [extract-migrations-reference](features/extract-migrations-reference_plan.md) | 2026-06-03 |
-| [integration-risk-spike-gate](features/integration-risk-spike-gate_plan.md) | 2026-06-06 |
-| [invariants-index](features/invariants-index_plan.md) | 2026-06-04 |
-| [markdown-blank-line-sweep](features/markdown-blank-line-sweep_plan.md) | 2026-06-03 |
-| [on-hardware-blast-radius-preflight](features/on-hardware-blast-radius-preflight_plan.md) | 2026-06-04 |
-| [opencode-compact-reviewer](features/opencode-compact-reviewer_plan.md) | 2026-06-08 |
-| [opencode-orchestrator-primary](features/opencode-orchestrator-primary_plan.md) | 2026-06-07 |
-| [orchestrator-anti-corner-cutting](features/orchestrator-anti-corner-cutting_plan.md) | 2026-06-08 |
-| [per-operation-effort-tiering](features/per-operation-effort-tiering_plan.md) | 2026-06-07 |
-| [product-map-migration-detection](features/product-map-migration-detection_plan.md) | 2026-06-02 |
-| [product-map-value-first](features/product-map-value-first_plan.md) | 2026-06-03 |
-| [product-md-front-door](features/product-md-front-door_plan.md) | 2026-06-02 |
-| [protocol-process-flavor](features/protocol-process-flavor_plan.md) | 2026-06-04 |
-| [readme-currency](features/readme-currency_plan.md) | 2026-06-05 |
-| [readme-front-gate](features/readme-front-gate_plan.md) | 2026-06-03 |
-| [readme-rewrite](features/readme-rewrite_plan.md) | 2026-06-04 |
-| [readme-template-canonical-shape](features/readme-template-canonical-shape_plan.md) | 2026-06-05 |
-| [readme-workflow-split](features/readme-workflow-split_plan.md) | 2026-05-30 |
-| [route-reminder-coverage-and-prprep-model](features/route-reminder-coverage-and-prprep-model_plan.md) | 2026-06-03 |
-| [seam-completeness](features/seam-completeness_plan.md) | 2026-06-06 |
-| [semgrep-pre-review-linter](features/semgrep-pre-review-linter_plan.md) | 2026-06-06 |
-| [severity-triage-deployment-context](features/severity-triage-deployment-context_plan.md) | 2026-06-06 |
-| [stack-idioms-library](features/stack-idioms-library_plan.md) | 2026-06-06 |
-| [state-archive-home](features/state-archive-home_plan.md) | 2026-06-06 |
-| [state-model-section](features/state-model-section_plan.md) | 2026-06-05 |
-| [taxonomy-drift-sweep](features/taxonomy-drift-sweep_plan.md) | 2026-06-04 |
-| [template-dev-artifacts-inert](features/template-dev-artifacts-inert_plan.md) | 2026-06-06 |
-| [test-wiring-parity](features/test-wiring-parity_plan.md) | 2026-06-05 |
-| [workflow-extract-to-refs](features/workflow-extract-to-refs_plan.md) | 2026-06-05 |
-| [workflow-progressive-disclosure](features/workflow-progressive-disclosure_plan.md) | 2026-06-05 |
-
+| agent-handoff-durability | 2026-06-06 |
+| ai-minimums-linter-wiring | 2026-06-05 |
+| architecture-doc-coherence | 2026-06-02 |
+| audit-fixup-hooks-quoted-form | 2026-05-30 |
+| audit-fixup-self-docs-architecture | 2026-05-30 |
+| audit-fixup-self-stack-notes | 2026-05-30 |
+| audit-scope-menu | 2026-06-05 |
+| behavioral-contract-and-human-journeys | 2026-06-03 |
+| bootstrap-populated-journeys | 2026-06-04 |
+| changelog-backfill | 2026-05-30 |
+| changeset-hygiene | 2026-06-05 |
+| comment-restraint | 2026-06-06 |
+| context-leanness | 2026-06-07 |
+| diagnostic-flow-discipline | 2026-06-05 |
+| diagnostic-probe-mode | 2026-06-02 |
+| doc-frugality | 2026-06-09 |
+| documentation-flavor | 2026-06-04 |
+| english-canonical-artifacts | 2026-06-03 |
+| extract-migrations-reference | 2026-06-03 |
+| integration-risk-spike-gate | 2026-06-06 |
+| invariants-index | 2026-06-04 |
+| markdown-blank-line-sweep | 2026-06-03 |
+| on-hardware-blast-radius-preflight | 2026-06-04 |
+| opencode-compact-reviewer | 2026-06-08 |
+| opencode-orchestrator-primary | 2026-06-07 |
+| orchestrator-anti-corner-cutting | 2026-06-08 |
+| per-operation-effort-tiering | 2026-06-07 |
+| product-map-migration-detection | 2026-06-02 |
+| product-map-value-first | 2026-06-03 |
+| product-md-front-door | 2026-06-02 |
+| protocol-process-flavor | 2026-06-04 |
+| readme-currency | 2026-06-05 |
+| readme-front-gate | 2026-06-03 |
+| readme-rewrite | 2026-06-04 |
+| readme-template-canonical-shape | 2026-06-05 |
+| readme-workflow-split | 2026-05-30 |
+| route-reminder-coverage-and-prprep-model | 2026-06-03 |
+| seam-completeness | 2026-06-06 |
+| semgrep-pre-review-linter | 2026-06-06 |
+| severity-triage-deployment-context | 2026-06-06 |
+| stack-idioms-library | 2026-06-06 |
+| state-archive-home | 2026-06-06 |
+| state-model-section | 2026-06-05 |
+| taxonomy-drift-sweep | 2026-06-04 |
+| template-dev-artifacts-inert | 2026-06-06 |
+| test-wiring-parity | 2026-06-05 |
+| workflow-extract-to-refs | 2026-06-05 |
+| workflow-progressive-disclosure | 2026-06-05 |
