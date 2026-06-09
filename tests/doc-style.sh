@@ -60,13 +60,15 @@ TMPL="$ROOT/doc/_templates/CLAUDE.md.tmpl"
 ARCH="$ROOT/src/agents/pm-architect.body.md"
 STACK="$ROOT/src/agents/pm-stack-researcher.body.md"
 CODER="$ROOT/src/agents/pm-coder.body.md"
+CR="$ROOT/src/manifests/opencode/harness_local/body/code-review.body.md"
+PLANCHK="$ROOT/src/agents/pm-plan-checker.body.md"
 
 PASS_COUNT=0
 FAIL_COUNT=0
 pass() { echo "PASS: $1"; PASS_COUNT=$((PASS_COUNT + 1)); }
 fail() { echo "FAIL: $1"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 
-for f in "$WF" "$PMC" "$TMPL" "$ARCH" "$STACK" "$CODER"; do
+for f in "$WF" "$PMC" "$TMPL" "$ARCH" "$STACK" "$CODER" "$CR" "$PLANCHK"; do
     [ -f "$f" ] || { echo "FAIL: required file missing at $f" >&2; exit 1; }
 done
 
@@ -228,6 +230,73 @@ if [ -f "$DS" ]; then
     else
         pass "plain-language-nonvacuous: removing the '### Plain language' anchor trips the presence check (test is live)"
     fi
+fi
+
+# ----------------------------------------------------------------------
+# code-review-frugality-aspect (Slice B, scenario 5; with non-vacuity)
+# The compact reviewer body must list doc-frugality + comment-restraint as a
+# GATED review aspect (over-commenting, what-not-why, trivial docstrings, inline
+# rule-IDs, doc-bloat / buried-lede / inline-provenance) BEYOND the pre-existing
+# "comments that now contradict the code" check, and must REFERENCE the rules in
+# workflow/doc-style.md by name (realize-don't-redefine). This completes the
+# half-coverage the Slice A review flagged on comment-restraint-first-class.
+# ----------------------------------------------------------------------
+craerrs=""
+grep -qi 'comment-restraint' "$CR"          || craerrs="$craerrs\n  - code-review body does not list comment-restraint as a review aspect"
+grep -qi 'doc-frugality' "$CR"              || craerrs="$craerrs\n  - code-review body does not list doc-frugality as a review aspect"
+grep -qF 'workflow/doc-style.md' "$CR"      || craerrs="$craerrs\n  - code-review body does not reference workflow/doc-style.md by name (realize-don't-redefine)"
+grep -qi 'trivial docstring' "$CR"          || craerrs="$craerrs\n  - code-review body does not flag trivial docstrings"
+grep -qi 'inline rule-ID' "$CR"             || craerrs="$craerrs\n  - code-review body does not flag inline rule-ID citations"
+grep -qi 'buried-lede\|buried lede' "$CR"   || craerrs="$craerrs\n  - code-review body does not flag buried-lede (not fact-first)"
+grep -qi 'provenance' "$CR"                 || craerrs="$craerrs\n  - code-review body does not flag inline-provenance"
+
+if [ -z "$craerrs" ]; then
+    pass "code-review-frugality-aspect: the compact reviewer body lists doc-frugality + comment-restraint as a gated aspect (trivial docstrings, inline rule-IDs, buried-lede, inline-provenance) and references workflow/doc-style.md by name"
+else
+    fail "code-review-frugality-aspect: the reviewer does not gate doc-frugality:$(printf '%b' "$craerrs")"
+fi
+
+# Non-vacuity: remove the new doc-frugality sentinel sentence and assert the
+# aspect greps trip (the new text, not a pre-existing line, satisfies them).
+sed '/Doc-frugality + comment-restraint/d' "$CR" > "$SCRATCH/cr-stripped2.md"
+if grep -qi 'trivial docstring' "$SCRATCH/cr-stripped2.md"; then
+    fail "code-review-frugality-nonvacuous: removing the doc-frugality sentence left 'trivial docstring' present — the aspect check is vacuous"
+else
+    pass "code-review-frugality-nonvacuous: removing the doc-frugality sentence trips the aspect check (test is live)"
+fi
+
+# ----------------------------------------------------------------------
+# plan-checker-hardcaps (Slice B, scenario 6; with non-vacuity)
+# pm-plan-checker must carry a standing-doc hard-cap block check that references
+# `### Numbers = targets, not gates` in workflow/doc-style.md by name and names
+# the four enforceable caps (README ≤120, decision record ≤~2 screens, nav list
+# ≤7, top quality-goals ≤5) — and ONLY those four (the smells are NOT blocks).
+# ----------------------------------------------------------------------
+hcerrs=""
+grep -qi 'hard-cap' "$PLANCHK"                          || hcerrs="$hcerrs\n  - pm-plan-checker does not carry a hard-cap check"
+grep -qF '### Numbers = targets, not gates' "$PLANCHK"  || hcerrs="$hcerrs\n  - pm-plan-checker does not reference '### Numbers = targets, not gates' by name"
+grep -qF 'workflow/doc-style.md' "$PLANCHK"             || hcerrs="$hcerrs\n  - pm-plan-checker does not point at workflow/doc-style.md"
+grep -qi 'standing doc' "$PLANCHK"                      || hcerrs="$hcerrs\n  - pm-plan-checker hard-cap check does not key on a standing-doc update"
+grep -qi '120' "$PLANCHK"                               || hcerrs="$hcerrs\n  - pm-plan-checker does not name the README ≤120-char cap"
+grep -qi '2 screens\|two screens' "$PLANCHK"            || hcerrs="$hcerrs\n  - pm-plan-checker does not name the decision-record ≤~2-screen cap"
+grep -qiE '7 (entries|nav)' "$PLANCHK"                  || hcerrs="$hcerrs\n  - pm-plan-checker does not name the navigation-list ≤7 cap"
+grep -qi 'quality-goals' "$PLANCHK"                     || hcerrs="$hcerrs\n  - pm-plan-checker does not name the top quality-goals ≤5 cap"
+# The four caps are the ONLY blocks — the smells must NOT be turned into blocks.
+grep -qi 'not a plan-checker block\|auditor smell\|do NOT turn' "$PLANCHK" || hcerrs="$hcerrs\n  - pm-plan-checker does not state the smells stay targets/smells (not blocks)"
+
+if [ -z "$hcerrs" ]; then
+    pass "plan-checker-hardcaps: pm-plan-checker blocks standing-doc updates over the four enforceable hard-caps, references '### Numbers = targets, not gates' by name, and keeps the soft smells as non-blocks"
+else
+    fail "plan-checker-hardcaps: the hard-cap block is not wired:$(printf '%b' "$hcerrs")"
+fi
+
+# Non-vacuity: strip the hard-cap heading line from a scratch copy and assert the
+# check trips.
+sed '/### Standing-doc hard-cap/d' "$PLANCHK" > "$SCRATCH/pc-stripped.md"
+if grep -q '### Standing-doc hard-cap' "$SCRATCH/pc-stripped.md"; then
+    fail "plan-checker-hardcaps-nonvacuous: stripping the '### Standing-doc hard-cap' heading did NOT remove it — the check is vacuous"
+else
+    pass "plan-checker-hardcaps-nonvacuous: removing the '### Standing-doc hard-cap' heading trips the presence check (test is live)"
 fi
 
 # ----------------------------------------------------------------------
