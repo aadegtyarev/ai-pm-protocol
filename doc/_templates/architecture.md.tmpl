@@ -1,20 +1,14 @@
 <!--
-  Author this doc to `## Durable-text frugality` in `workflow/doc-style.md`
-  (`.ai-pm/tooling/workflow/doc-style.md` once the template is installed) — that
-  file is the authority; this comment only points at it, never restates it.
-  Fact-first, current-state-only, provenance = a one-line pointer.
+  Doc-style rules apply: fact-first, current-state-only, supersede-don't-edit,
+  provenance-as-pointer, plain-language. Read them in `## Durable-text frugality`
+  in `workflow/doc-style.md` (`.ai-pm/tooling/workflow/doc-style.md` once the
+  template is installed) — the authority; this comment names the rules and points
+  there, it does not restate them.
 
-  Supersede-don't-edit: a decision record states what is true NOW. When a
-  decision changes, replace it in place — the superseded record collapses to a
-  one-line tombstone (`### <title> — superseded by <new title> (YYYY-MM-DD) → <pointer>`),
-  its body removed (git keeps it). The live doc never accretes decision history;
-  carry one terse line per rejected alternative, nothing more.
-
-  Generated-vs-authored boundary: the `<!-- GENERATED:... -->` fenced regions
-  (file layout, dependency table) are derived from source and rewritten wholesale
-  on regeneration — never hand-edit inside a fence. Everything outside the fences
-  is authored judgment (what code does not express: decisions, constraints,
-  trade-offs, state model).
+  Template-local operational guidance (not a doc-style rule): the
+  `<!-- GENERATED:... -->` fenced regions (file layout, dependency table) are
+  derived from source and rewritten wholesale on regeneration — never hand-edit
+  inside a fence. Everything outside the fences is authored judgment.
 -->
 
 # Architecture
