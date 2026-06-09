@@ -127,3 +127,18 @@ When a feature is done, its **lasting facts** move into one of **four permanent 
 **Technical details** (the O(1) artifact lifecycle, the Lost-in-the-Middle / F-pattern reading evidence, the generated-vs-authored section markers, and `gen/generate.py` staying a byte-copy adapter generator) → `.ai-pm/arch/doc-frugality_arch.md` §§ 1, 2, 4, 5 and `workflow/doc-style.md`.
 
 **Source:** `doc/features/doc-frugality_plan.md` § Key design decisions; PM decision 2026-06-09 (full distillation; `state-archive-home` superseded); `workflow/doc-style.md` (Slice A deliverable — the discipline this record exemplifies).
+
+---
+
+### Product map is the self-contained durable feature ledger; generation sources from contracts + git, not evaporating files
+
+`docs/product-map.md` is the **self-contained durable inventory of what features exist** — it depends on no per-feature file. The map's `Built by:` ledgers (and the Infrastructure bucket) name each feature as **name + date only**, dropping the old hyperlinks to `features/<topic>_plan.md` and `.ai-pm/reviews/<topic>_review.md`. The only links the map keeps are the per-contract heading links to the durable contract files in `.ai-pm/contracts/`.
+
+**Why.** This is the direct corollary of the distillation model (`### Keep only what's actually used; throw the rest away` above): under the O(1) lifecycle a merged feature's plan and review evaporate to git, so any map that linked them would dangle. The review hyperlinks already dangled (review files collapsed in an earlier phase) and the plan hyperlinks were about to. The durable product story is not the link — it is the per-contract `User value` / `Out of scope` prose (for a contract-bearing feature) or, for infra, the feature name + date is itself the ledger entry. The map must survive its source files' evaporation, so the link to them had to go.
+
+**What the generator now reads.** The **Product map generation procedure** (its home is `pm-bootstrap`, referenced for the downstream by `pm-auditor` + `pm-bootstrap`) sources from `.ai-pm/contracts/` (the durable registry — contract value prose + each contract's Built/changed-by feature names) + **git history** (the merge commit / feature evidence that supplies each feature's `Added` date). It no longer reads `docs/features/*_plan.md` or `.ai-pm/reviews/*` (evaporated). The generated form stays **idempotent / overwrite-from-source**; the top-of-file `> **GENERATED** from …` line names the new source set (`.ai-pm/contracts/` + git history). The map is one of the four `### Graduation targets` homes' rendered companion — a contract's durable home is `.ai-pm/contracts/`, and this map is its PM-facing projection, never a separate durable store.
+
+- rejected keeping the plan/review links "in case the files come back": they evaporate by design — a link to a git-only path is a dangling link, not a convenience.
+- rejected a separate persisted feature-ledger file: the map already is the ledger; a second file is the pile-up the distillation model removes.
+
+**Source:** SELF-MIGRATION doc-frugality (the O(1) feature-evidence-evaporation phase); PM decision 2026-06-09. The generation-procedure edit lands in `src/commands/pm-bootstrap.body.md` `## Product map generation procedure` (`pm-auditor`'s read-and-compare re-derivation references the same source set by name).

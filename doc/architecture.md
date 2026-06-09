@@ -147,6 +147,10 @@ A conditional `## State model` section (states×transitions table + triggers) gi
 
 A finished feature's lasting facts move into one of four permanent homes; the working notes are thrown away (git keeps the bytes) — the distillation-engine doc model. → `doc/decisions/migrations-and-docs.md`
 
+### Product map is the self-contained durable feature ledger; generation sources from contracts + git, not evaporating files
+
+`docs/product-map.md` is the standing inventory of "what features exist" and no longer links the per-feature plan/review files that evaporate to git; it is generated from contracts + git history. → `doc/decisions/migrations-and-docs.md`
+
 **Safety, security & diagnostics** — full bodies in `doc/decisions/safety-and-diagnostics.md`:
 
 ### Blast-radius preflight is soft prose, single-sourced, referenced from Step 5.5 and Step A.5
