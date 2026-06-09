@@ -60,13 +60,15 @@ TMPL="$ROOT/doc/_templates/CLAUDE.md.tmpl"
 ARCH="$ROOT/src/agents/pm-architect.body.md"
 STACK="$ROOT/src/agents/pm-stack-researcher.body.md"
 CODER="$ROOT/src/agents/pm-coder.body.md"
+CR="$ROOT/src/manifests/opencode/harness_local/body/code-review.body.md"
+PLANCHK="$ROOT/src/agents/pm-plan-checker.body.md"
 
 PASS_COUNT=0
 FAIL_COUNT=0
 pass() { echo "PASS: $1"; PASS_COUNT=$((PASS_COUNT + 1)); }
 fail() { echo "FAIL: $1"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
 
-for f in "$WF" "$PMC" "$TMPL" "$ARCH" "$STACK" "$CODER"; do
+for f in "$WF" "$PMC" "$TMPL" "$ARCH" "$STACK" "$CODER" "$CR" "$PLANCHK"; do
     [ -f "$f" ] || { echo "FAIL: required file missing at $f" >&2; exit 1; }
 done
 
@@ -228,6 +230,93 @@ if [ -f "$DS" ]; then
     else
         pass "plain-language-nonvacuous: removing the '### Plain language' anchor trips the presence check (test is live)"
     fi
+fi
+
+# ----------------------------------------------------------------------
+# code-review-frugality-aspect (Slice B, scenario 5; with non-vacuity)
+# The compact reviewer body must list doc-frugality + comment-restraint as a
+# GATED review aspect (over-commenting, what-not-why, trivial docstrings, inline
+# rule-IDs, doc-bloat / buried-lede / inline-provenance) BEYOND the pre-existing
+# "comments that now contradict the code" check, and must REFERENCE the rules in
+# workflow/doc-style.md by name (realize-don't-redefine). This completes the
+# half-coverage the Slice A review flagged on comment-restraint-first-class.
+# ----------------------------------------------------------------------
+craerrs=""
+grep -qi 'comment-restraint' "$CR"          || craerrs="$craerrs\n  - code-review body does not list comment-restraint as a review aspect"
+grep -qi 'doc-frugality' "$CR"              || craerrs="$craerrs\n  - code-review body does not list doc-frugality as a review aspect"
+grep -qF 'workflow/doc-style.md' "$CR"      || craerrs="$craerrs\n  - code-review body does not reference workflow/doc-style.md by name (realize-don't-redefine)"
+grep -qi 'trivial docstring' "$CR"          || craerrs="$craerrs\n  - code-review body does not flag trivial docstrings"
+grep -qi 'inline rule-ID' "$CR"             || craerrs="$craerrs\n  - code-review body does not flag inline rule-ID citations"
+grep -qi 'buried-lede\|buried lede' "$CR"   || craerrs="$craerrs\n  - code-review body does not flag buried-lede (not fact-first)"
+grep -qi 'provenance' "$CR"                 || craerrs="$craerrs\n  - code-review body does not flag inline-provenance"
+
+if [ -z "$craerrs" ]; then
+    pass "code-review-frugality-aspect: the compact reviewer body lists doc-frugality + comment-restraint as a gated aspect (trivial docstrings, inline rule-IDs, buried-lede, inline-provenance) and references workflow/doc-style.md by name"
+else
+    fail "code-review-frugality-aspect: the reviewer does not gate doc-frugality:$(printf '%b' "$craerrs")"
+fi
+
+# Non-vacuity (REQUIREMENT-token-keyed, not sentinel-keyed): the sentinel phrase
+# and the actionable requirement tokens share a line, so deleting the sentinel
+# would also delete the requirements and prove nothing. Instead, strip the
+# SPECIFIC frugality guidance tokens (the actionable clause the production
+# `code-review-frugality-aspect` greps for) from a scratch copy, then re-run those
+# SAME production greps and assert at least one trips. This demonstrates the
+# production aspect check depends on the shipped guidance text, not a header.
+sed -e 's/trivial docstring/concise summary/g' \
+    -e 's/inline rule-ID/annotation/g' \
+    -e 's/buried-lede/well-led/g; s/buried lede/well led/g' \
+    -e 's/[Pp]rovenance/origin/g' \
+    "$CR" > "$SCRATCH/cr-stripped2.md"
+if grep -qi 'trivial docstring' "$SCRATCH/cr-stripped2.md" \
+   || grep -qi 'inline rule-ID' "$SCRATCH/cr-stripped2.md" \
+   || grep -qi 'buried-lede\|buried lede' "$SCRATCH/cr-stripped2.md" \
+   || grep -qi 'provenance' "$SCRATCH/cr-stripped2.md"; then
+    fail "code-review-frugality-nonvacuous: stripping the specific frugality requirement tokens did NOT remove them from the reviewer body — the production aspect check is vacuous"
+else
+    pass "code-review-frugality-nonvacuous: stripping the specific frugality requirement tokens (trivial docstring / inline rule-ID / buried-lede / provenance) trips the production aspect greps (the check depends on the shipped guidance text)"
+fi
+
+# ----------------------------------------------------------------------
+# plan-checker-hardcaps (Slice B, scenario 6; with non-vacuity)
+# pm-plan-checker must carry a standing-doc hard-cap block check that references
+# `### Numbers = targets, not gates` in workflow/doc-style.md by name (the live
+# source of the threshold VALUES — single-home, not re-encoded here) and names
+# the four enforceable caps BY SUBJECT (README one-liner / decision-record /
+# navigation-list / top quality-goals) — and ONLY those four (the smells are NOT
+# blocks).
+# ----------------------------------------------------------------------
+hcerrs=""
+grep -qi 'hard-cap' "$PLANCHK"                          || hcerrs="$hcerrs\n  - pm-plan-checker does not carry a hard-cap check"
+grep -qF '### Numbers = targets, not gates' "$PLANCHK"  || hcerrs="$hcerrs\n  - pm-plan-checker does not reference '### Numbers = targets, not gates' by name"
+grep -qF 'workflow/doc-style.md' "$PLANCHK"             || hcerrs="$hcerrs\n  - pm-plan-checker does not point at workflow/doc-style.md"
+grep -qi 'standing doc' "$PLANCHK"                      || hcerrs="$hcerrs\n  - pm-plan-checker hard-cap check does not key on a standing-doc update"
+grep -qi 'README one-liner'      "$PLANCHK"             || hcerrs="$hcerrs\n  - pm-plan-checker does not name the README one-liner cap by subject"
+grep -qi 'decision.record'       "$PLANCHK"             || hcerrs="$hcerrs\n  - pm-plan-checker does not name the decision-record length cap by subject"
+grep -qi 'navigation.list\|navigation/router list' "$PLANCHK" || hcerrs="$hcerrs\n  - pm-plan-checker does not name the navigation-list cap by subject"
+grep -qi 'quality-goals'         "$PLANCHK"             || hcerrs="$hcerrs\n  - pm-plan-checker does not name the top quality-goals cap by subject"
+# The four caps are the ONLY blocks — the smells must NOT be turned into blocks.
+grep -qi 'not a plan-checker block\|auditor smell\|do NOT turn' "$PLANCHK" || hcerrs="$hcerrs\n  - pm-plan-checker does not state the smells stay targets/smells (not blocks)"
+
+if [ -z "$hcerrs" ]; then
+    pass "plan-checker-hardcaps: pm-plan-checker blocks standing-doc updates over the four enforceable hard-caps (named by subject), references '### Numbers = targets, not gates' by name for the live thresholds, and keeps the soft smells as non-blocks"
+else
+    fail "plan-checker-hardcaps: the hard-cap block is not wired:$(printf '%b' "$hcerrs")"
+fi
+
+# Non-vacuity (VALUE-keyed, not heading-keyed): strip the SUBSTANTIVE assertions
+# the production test greps — the cap-subject names AND the `### Numbers = targets,
+# not gates` reference — from a scratch copy, then re-run the SAME production
+# presence greps against it and assert at least one trips. This proves the check
+# depends on the actual checked content surviving, not merely on a heading name.
+sed -e 's/README one-liner/README blurb/g' \
+    -e 's/### Numbers = targets, not gates/### (cap reference removed)/g' \
+    "$PLANCHK" > "$SCRATCH/pc-stripped.md"
+if grep -qi 'README one-liner' "$SCRATCH/pc-stripped.md" \
+   || grep -qF '### Numbers = targets, not gates' "$SCRATCH/pc-stripped.md"; then
+    fail "plan-checker-hardcaps-nonvacuous: stripping the cap-subject name + the '### Numbers = targets, not gates' reference did NOT remove the substantive content the production test greps — the check is vacuous"
+else
+    pass "plan-checker-hardcaps-nonvacuous: removing the cap-subject name + the '### Numbers = targets, not gates' reference trips the production presence greps (the check depends on the shipped substantive content, not a heading)"
 fi
 
 # ----------------------------------------------------------------------

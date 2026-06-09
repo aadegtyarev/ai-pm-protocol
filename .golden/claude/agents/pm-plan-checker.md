@@ -40,6 +40,17 @@ Every scenario in the plan's **Scenarios** section must be implemented and have 
 
 **Diff-noise structural note (non-blocking).** Beside the feature-scope-expansion note above, surface **hunk-level cosmetic noise** — whitespace-only edits, reformatting of untouched lines, reordering, opportunistic micro-optimization hunks not traceable to a plan scenario — as a **note (product)** (structural), the same shape and rationale as the wire-token structural note below: a structural observation so the orchestrator/PM can prune the hunk or consciously keep it. **This is structural, not prose-policing, and never a hard block.** **Necessary incidental changes are NOT noise and are NOT flagged** — a call-site update a rename forces, an import the new code needs, the line a real edit sits on serve the plan and stay; the rule targets hunks that **don't serve the plan**, not all adjacent edits (the same "categorical, not strip-everything" boundary the wire-token note uses).
 
+### Standing-doc hard-cap (blocking)
+
+When the plan under review **updates a standing doc** — `docs/architecture.md` (or a decision record in it), the README, a navigation/router list, or a top quality-goals list — verify the update against the **enforceable hard-cap set** defined in `### Numbers = targets, not gates` in `workflow/doc-style.md`. Apply the thresholds **as defined there** (read the section on demand for the live values — do not re-encode them here, so they cannot drift). The four caps named by subject are the **only** gate-able numbers:
+
+- the README one-liner length cap
+- the decision-record length cap
+- the navigation-list length cap
+- the top quality-goals count cap
+
+An update that pushes one of these four over the cap defined in `### Numbers = targets, not gates` → **blocking** (reproduce the cap and the measured value in the verdict). **Every other frugality number is an authoring target / auditor smell, not a plan-checker block** — do NOT turn the soft smells (section length, comment density, file sprawl) into blocks here; those surface at authoring (review note) and audit, per the same rule. This is a presence-of-violation check against four named caps, not prose-policing.
+
 ### Interaction scenario coverage
 
 For each scenario in the plan's **Interaction scenarios** section: a test must exist that sets up the concurrent or post-condition state described. Happy-path test without the concurrent condition does not count → **blocking**.
