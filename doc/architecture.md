@@ -80,7 +80,7 @@ Every feature plan that mentions a categorical concept (type, mode, role, state,
 
 ### Execution State as the single source of progress
 
-One file — `.ai-pm/state/current.md` (per downstream project) — holds the active task's Status / Done / Remaining / Touched files / Next step / Validation. Every pm-coder run reads it first and writes it last. /pm-plan initializes it. Completed tasks are archived to `.ai-pm/state/archive/`. The intent is that any future session — same model, different model, same agent, different agent — can resume from this file alone, without scrolling chat history. **Source:** `doc/features/integrate-consultancy_plan.md` § "Scenarios"; `doc/_templates/state.md.tmpl`.
+One file — `.ai-pm/state/current.md` (per downstream project) — holds the active task's Status / Done / Remaining / Touched files / Next step / Validation. Every pm-coder run reads it first and writes it last. /pm-plan initializes it. On finish, the state resets to idle; the feature's lasting facts have already graduated into the living reference (the four permanent homes — see `### Keep only what's actually used; throw the rest away`) and the transient dossier evaporates to git, so there is no curated archive to keep. The intent is that any future session — same model, different model, same agent, different agent — can resume from this file alone, without scrolling chat history. **Source:** `doc/features/integrate-consultancy_plan.md` § "Scenarios"; `doc/_templates/state.md.tmpl`.
 
 ### Product Contracts as the product-side complement to stack-notes
 
@@ -526,7 +526,7 @@ Real top-level paths in this repo (cross-checked against `ls` and `git ls-tree -
 | `doc/protocol-vs-builtins-analysis.md` | The realign-around-built-ins analysis the realignment decision cites. |
 | `doc/architecture.md` | This document. |
 
-**In downstream projects only** (not present in this repo): `.ai-pm/state/current.md` and `.ai-pm/state/archive/` hold the live and archived Execution States; `.ai-pm/contracts/<feature>.md` files hold one Product Contract per user-facing feature; `.ai-pm/reviews/<topic>_advocate.md` / `bootstrap_advocate.md` hold the `pm-product-advocate` product-readiness gap reports + the orchestrator-owned `## Resolutions` trail.
+**In downstream projects only** (not present in this repo): `.ai-pm/state/current.md` holds the live Execution State and `.ai-pm/features/<topic>.md` holds the in-flight transient dossier (no archive dir — see `### Keep only what's actually used; throw the rest away`); `.ai-pm/contracts/<feature>.md` files hold one Product Contract per user-facing feature; `.ai-pm/reviews/<topic>_advocate.md` / `bootstrap_advocate.md` hold the `pm-product-advocate` product-readiness gap reports + the orchestrator-owned `## Resolutions` trail.
 
 **Note on adapter trees vs source:** `.claude/` and `.opencode/` are **generated** from `src/` + `gen/`; they are committed (shipped pre-built so downstream needs no build) but are not the authored source — edits go to `src/` + the per-harness manifest and are regenerated, and the `single-source-diff-clean` guard fails on a hand-edit of a generated file.
 
