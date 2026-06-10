@@ -1,6 +1,6 @@
 # ai-pm-protocol
 
-A way to build software by describing what you want. You are the product manager: you say *what* to build and *why*, approve the plan, and decide what ships — and you never read code. A small set of AI roles plans the change, builds it, reviews it independently, and ships it.
+A way to build software by describing what you want. You are the operator: you say *what* to build and *why*, approve the plan, and decide what ships — and you never read code. A small set of AI roles plans the change, builds it, reviews it independently, and ships it.
 
 It runs inside an AI coding harness — Claude Code and OpenCode, both live-verified — and **develops itself under its own protocol** — this repository is its own first project.
 

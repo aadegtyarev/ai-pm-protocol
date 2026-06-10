@@ -2,7 +2,7 @@
   "_doc": "The shared enforcement registry — ONE authored copy of every guard, read by every platform's thin shim. A rule carries INTENT + CLASS + which neutral act it watches + the PREDICATE that decides + any DATA params. The predicate names a function in the shared engine (adapter/engine.js); the engine holds the logic, this file holds the rules and their data. A platform adapter normalises its harness input to {act, path, command, content, spawnTarget, actor} and asks the engine to evaluate; the engine returns allow | deny | ask | inject. A platform that cannot realise a class (e.g. OpenCode has no 'ask' return) FALLS BACK to persona for that rule — recorded in `fallback`, never silently dropped. Adding a platform = write its input-normaliser + map the three return classes; touch nothing here.",
   "classes": {
     "deny": "block the tool call",
-    "ask": "block and ask the PM to confirm; a platform with no ask-return falls back to persona",
+    "ask": "block and ask the Operator to confirm; a platform with no ask-return falls back to persona",
     "inject": "do not block; add a context note to the turn"
   },
   "role_deny_set": {

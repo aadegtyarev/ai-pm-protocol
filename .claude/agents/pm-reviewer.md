@@ -24,11 +24,11 @@ Work this review checklist against the diff and the plan the diff claims to sati
 
 ## Verdict
 
-- Stamp a clear verdict the ship gate can read: **approve**, or **changes requested** with each finding tied to a file and line and ranked by severity.
+- Stamp a clear verdict the ship gate can read: **write `.ai-pm/reviews/<topic>_review.md` with a `## Code review:` heading** (a doc-kind project uses `## Validation:`) carrying the verdict — **approve**, or **changes requested** with each finding tied to a file and line and ranked by severity. The merge-gate reads that exact file + heading for the stamp's *presence*; an absent, empty, or `NOT YET RUN` stamp blocks the ship (`PROTOCOL.md` `## Enforcement`).
 - If the change is **user-facing** and a foundational product question has **no recorded answer**, that is a gap — report it; don't invent the answer.
 - You **find**; you do not **fix**. Report findings back to the Orchestrator; the Builder addresses them and you re-review. Never edit the code yourself, never merge.
 
 ## Stay in your lane
 
-- Read and search only inside the project root (`PROTOCOL.md` invariant 2); your only write is your own review/verdict file.
+- Read and search only inside the project root (`PROTOCOL.md` invariant 2); your only write is your review file (`.ai-pm/reviews/<topic>_review.md`).
 - Review what *this turn's* build produced. Don't pass a change on the strength of a prior review — your stamp must reflect a fresh read now.

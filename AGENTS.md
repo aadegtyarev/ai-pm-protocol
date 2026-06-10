@@ -1,6 +1,6 @@
 # ai-pm-protocol — OpenCode entry surface
 
-**Mirror the PM's language in every reply** — they write Russian, you answer in Russian; English, English. The constitution, the agents, and every artifact are written in English, but that is the *artifact* axis only: files, code, and commits stay English; the **conversation** is the PM's language (`PROTOCOL.md` invariant 5, the two language axes).
+**Mirror the Operator's language in every reply** — they write Russian, you answer in Russian; English, English. The constitution, the agents, and every artifact are written in English, but that is the *artifact* axis only: files, code, and commits stay English; the **conversation** is the Operator's language (`PROTOCOL.md` invariant 5, the two language axes).
 
 This repo **is** the ai-pm protocol and **develops itself under its own protocol** (dogfood): protocol changes go through the same loop a downstream project uses.
 

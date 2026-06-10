@@ -17,15 +17,17 @@
     "opencode": { "deny": true, "ask": false, "inject": "always-on" }
   },
   "models": {
-    "_doc": "Per-platform model policy for the project config's role `model` field (ai-pm.config.json). ZERO-CONFIG by default — works with no setup. An allowlist (deny by default): a model is usable for a role only if in `allow`, so the list never lags the model space. `session` = the orchestrator's model. `auto` = a different in-allow model for independent blind spots IF the platform offers one out of the box, ELSE it falls back to `session` (never an error). A config pin must be in `allow`. Names are environment-dependent — that is why this lives in the adapter, not the neutral config. Cross-model beyond the built-in default is opt-in: extend `allow`.",
+    "_doc": "Per-platform model policy for the project config's role `model` field (ai-pm.config.json). ZERO-CONFIG by default — works with no setup. `session` = the orchestrator's model. `auto` = a different model for independent blind spots IF the platform offers one out of the box, ELSE it falls back to `session` (never an error). Names are environment-dependent — that is why this lives in the adapter, not the neutral config. This block is also the home of the **list-available-models** contract point (architecture.md `## Extension points`): per platform, HOW setup learns which models the environment offers — `discover` below.",
     "claude": {
       "allow": ["opus", "sonnet"],
-      "auto": "the allow-listed model opposite the session's (opus<->sonnet) — always available, so cross-model review works zero-config"
+      "auto": "the allow-listed model opposite the session's (opus<->sonnet) — always available, so cross-model review works zero-config",
+      "discover": "the known fixed pair above (`allow`) — no enumeration call; the model space on Claude IS this pair, so the allowlist is meaningful and gates a pin."
     },
     "opencode": {
       "allow": [],
       "auto": "session",
-      "_note": "Empty allow by default ⇒ one session model for everything (zero-config; OpenCode has no guaranteed second review-grade model). To OPT IN to cross-model review, add approved provider/model ids to `allow` and set `auto` to one of them (it may be a different provider/class than the session)."
+      "discover": "run-a-shell-command `opencode models` and parse the `provider/model` ids it prints (one per line). If the command is absent or errors (older opencode, sandbox), fall back to a guided dialog where the Operator types/confirms the id — never invent one.",
+      "_note": "ZERO-CONFIG ⇒ `auto`/`session`/absent ⇒ one session model everywhere: same-model review, no cross-model independence (a pin equal to the session model gives none either — state that honestly to the Operator). On OpenCode the ENVIRONMENT is the authority, not a static list: what `opencode models` reports (or the pin names) is what is usable, so `allow: []` is NOT a hard gate — it is an explicit 'no baked-in environment ids in the shared core' marker (env ids live only in a project's own ai-pm.config.json). To OPT IN to cross-model review, set `roles.reviewer.model` to a per-platform pin `{ \"opencode\": \"provider/model\" }` in the project's own config; the install step bakes it into the assembled reviewer (adapter/opencode/install-agents.mjs). A pin is honoured as-is."
     }
   }
 }

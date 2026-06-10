@@ -18,6 +18,14 @@
       "init": "Node >= 18, no install"
     },
     {
+      "id": "install-model",
+      "checks": "OpenCode install bake — a concrete reviewer-model pin lands in the assembled frontmatter; auto/session/absent emit no model line",
+      "config": null,
+      "run": "node adapter/install-model.test.mjs",
+      "beat": "build",
+      "init": "Node >= 18, no install"
+    },
+    {
       "id": "neutral-prose",
       "checks": "the core (PROTOCOL.md, agents, architecture.md) names no bare platform primitive",
       "config": null,

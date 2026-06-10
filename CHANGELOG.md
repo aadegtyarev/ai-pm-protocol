@@ -13,6 +13,27 @@
 
 ---
 
+## [3.1.0] — 2026-06-10
+
+**The `setup` procedure, realized (Slice A — the "brain").** `setup` was a one-line promise; it is now a neutral, orchestrator-driven procedure: **discover the environment's available models → ask the Operator (structured-question) → write `ai-pm.config.json`**. The protocol asks the environment at config time instead of pre-knowing anyone's models, so it stays agnostic to a downstream's providers (DeepSeek, Claude, Qwen, …). Invoked manually for now; the auto/command triggers are Slice B (deferred — see the backlog).
+
+### Added
+
+- **The `setup` procedure** — single home is the orchestrator's `## Setup`: discover → dialog → write config. A neutral **"list available models"** contract point realized per adapter (Claude = the fixed opus/sonnet pair; OpenCode = `opencode models`, with an honest guided-dialog fallback that never invents an id).
+- **`adapter/install-model.test.mjs`** — 11 build-beat checks proving the reviewer model-pin bake (pin → a `model:` line; `auto`/`session`/absent → none).
+
+### Fixed
+
+- **OpenCode reviewer model-pin is now applied.** `adapter/opencode/install-agents.mjs` bakes `model:` into the assembled reviewer frontmatter for a concrete pin and emits none for `auto`/`session` — previously a configured cross-model pin was silently ignored (the documented opt-in was dead code). Zero-config OpenCode review is same-model, now stated plainly.
+- **Core-neutrality leak removed** — the neutral orchestrator body no longer hard-codes the Claude mechanism (`opus`↔`sonnet` / "at the spawn"); it states the contract, and each adapter supplies the mechanism (Claude resolves at spawn, OpenCode bakes at install).
+- **D4 model-authority truth aligned** in `PROTOCOL.md` and `ai-pm.config.json`: on OpenCode the environment (`opencode models`) is the model authority, not a static allowlist gate — single home in `tool-map.json` `models`.
+
+### Changed
+
+- **The human role is renamed `PM` → `Operator`** across the durable artifacts (constitution, roles, adapter docs, templates). Past CHANGELOG entries are left intact (history, not current truth).
+
+---
+
 ## [3.0.0] — 2026-06-10
 
 **Ground-up redesign to a minimal, environment-agnostic core.** The protocol's structural surface had grown past what a person can hold in their head (a 991-line / 17-file constitution, 8 personas at 1219 lines, plus commands, templates, a 508-line hook set, a 749-line plugin, and a 349-line generator). This release replaces all of it with **one neutral core + one thin adapter per platform**: a single `PROTOCOL.md` constitution, **3 roles** (Builder / independent Reviewer / Orchestrator — the one load-bearing split, builder ≠ reviewer, is kept; the other five personas become checklists), a **5-beat loop** (`understand → plan → build → review → ship`), and a **data-adapter** where the deny *rules* are one shared list and each platform supplies only a thin shim. Both **Claude Code and OpenCode are first-class**, each just an adapter over the same core — adding a platform is adapter-only work with zero core edits. This is a breaking change: the old `WORKFLOW.md` + `workflow/*.md`, the 8 `pm-*` agents, the `/pm-*` commands, the generator, and the migration catalogue are all removed. A downstream project on the old template needs a one-time, file-level move to the new layout (tracked as a backlog item; the old surface is recoverable from git history). **Migration required for existing downstream projects.**

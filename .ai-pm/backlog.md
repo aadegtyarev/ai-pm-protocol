@@ -419,3 +419,11 @@ The minimal model's `.ai-pm/` working area is `state/`, `backlog.md`, `plans/`, 
 ## deepseek-v4-flash as the OpenCode default cross-model reviewer — 2026-06-10 (idea)
 
 Cross-model independence needs the Reviewer on a *different* model than the maker, not a *weaker* one. If `deepseek-v4-flash` is review-grade (distinct enough from `deepseek-v4-pro` to catch its blind spots), it could be the OpenCode `reviewer.model` default via `tool-map.json` `models` allow/auto. Validate review quality before defaulting; opt-in until then.
+
+## Slice B of the setup procedure — triggers (deferred; Slice A = the brain ships first) — 2026-06-10
+
+The "always & everywhere" wiring for the realized `setup` procedure (Slice A builds the brain: discover → dialog → write config). Operator's clarified trigger model (NOT an eager first-session auto-run):
+- **Lazy/reactive:** before the orchestrator acts on a work request, it checks for `ai-pm.config.json`; if absent it does NOT silently proceed — it says "тут пусто, давай настроимся" and runs setup first. The empty-project case is just this check firing on the first real request, not a separate session-start hook.
+- **Explicit:** a command / slash-command to (re)run setup on an existing project anytime.
+- **Cross-platform:** both adapters (Claude skill/slash + hook-or-procedure detection; OpenCode command + detection). A new neutral contract point "invoke setup" + "detect missing config".
+Keep it agnostic and thin; reuse the Slice A brain (don't duplicate the dialog).

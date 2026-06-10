@@ -36,7 +36,7 @@ Every guarded action — a tool call (read / write / bash / spawn) or a submitte
         │
         ▼
  shim maps the verdict to the platform's mechanism
-   deny → block · ask → confirm with the PM · inject → add context · allow → run
+   deny → block · ask → confirm with the Operator · inject → add context · allow → run
 ```
 
 The shim is the only platform-specific code; the engine and the rules are shared, read at runtime by **both** shims. That is why the two platforms cannot drift — there is exactly one rule list and one predicate, not a translated copy per platform (the full argument: `adapter/README.md` "No regex drift").
@@ -72,6 +72,7 @@ Adding a platform = write **only** its shim (input-normaliser + verdict-mapper +
 - **Add a deny rule.** A row in `deny-rules.json` (intent · class · act · predicate); if the check is new, a predicate in `engine.mjs`; a case in `parity.test.mjs`. Both shims pick it up for free — they read the one list.
 - **Swap a role.** Bind a different agent in `ai-pm.config.json` `roles` — any agent that honours the seat's contract (`PROTOCOL.md` `## Role contracts`), zero core edit.
 - **Add a quality tool.** Drop its config in `quality/` and a row in `quality/tools.json` (what it checks · the command · the beat). No core edit (`PROTOCOL.md` `## Quality tools`).
+- **List available models.** A neutral contract point setup uses to put real model choices before the Operator (the orchestrator's `## Setup`). Each adapter realises it: Claude returns its known model pair, OpenCode discovers the environment's models — realisation noted in `tool-map.json` `models`, no environment-specific id in the core.
 
 ## Open assumptions
 
