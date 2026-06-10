@@ -1,0 +1,31 @@
+{
+  "_doc": "The neutral-noun → per-platform-concrete map. The core (PROTOCOL.md, the roles, the checklists) names every act with a neutral noun; this one table resolves each to its platform tool. A reader who needs the concrete consults this; the prose stays neutral. Single home — never copy this mapping elsewhere. Adding a platform = add a column.",
+  "map": {
+    "read-a-file":            { "claude": "Read",            "opencode": "read" },
+    "write-a-file":           { "claude": "Write",           "opencode": "write" },
+    "edit-a-file":            { "claude": "Edit",            "opencode": "edit" },
+    "run-a-shell-command":    { "claude": "Bash",            "opencode": "bash" },
+    "spawn-a-sub-agent":      { "claude": "Task",            "opencode": "task" },
+    "ask-a-structured-question": { "claude": "AskUserQuestion", "opencode": "question" },
+    "the-project-entry-file": { "claude": "CLAUDE.md",       "opencode": "AGENTS.md" },
+    "the-enforcement-layer":  { "claude": "settings.json PreToolUse hook", "opencode": "tool.execute.before plugin (throw)" },
+    "load-instructions":      { "claude": "@-import in CLAUDE.md", "opencode": "instructions[] in opencode.json" }
+  },
+  "class_support": {
+    "_doc": "Which enforcement return classes each platform realises. A rule whose class is unsupported falls back to persona (recorded per-rule in deny-rules.json `fallback`).",
+    "claude":   { "deny": true, "ask": true,  "inject": true },
+    "opencode": { "deny": true, "ask": false, "inject": "always-on" }
+  },
+  "models": {
+    "_doc": "Per-platform model policy for the project config's role `model` field (ai-pm.config.json). ZERO-CONFIG by default — works with no setup. An allowlist (deny by default): a model is usable for a role only if in `allow`, so the list never lags the model space. `session` = the orchestrator's model. `auto` = a different in-allow model for independent blind spots IF the platform offers one out of the box, ELSE it falls back to `session` (never an error). A config pin must be in `allow`. Names are environment-dependent — that is why this lives in the adapter, not the neutral config. Cross-model beyond the built-in default is opt-in: extend `allow`.",
+    "claude": {
+      "allow": ["opus", "sonnet"],
+      "auto": "the allow-listed model opposite the session's (opus<->sonnet) — always available, so cross-model review works zero-config"
+    },
+    "opencode": {
+      "allow": [],
+      "auto": "session",
+      "_note": "Empty allow by default ⇒ one session model for everything (zero-config; OpenCode has no guaranteed second review-grade model). To OPT IN to cross-model review, add approved provider/model ids to `allow` and set `auto` to one of them (it may be a different provider/class than the session)."
+    }
+  }
+}

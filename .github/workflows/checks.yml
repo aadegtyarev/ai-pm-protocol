@@ -1,0 +1,23 @@
+name: Checks
+
+# Runs the minimal core's quality checks (the single home is quality/tools.json) on
+# every PR and on pushes to main: the adapter integrity suite and the neutral-prose
+# guard. Both are zero-dependency Node, no install step.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Adapter integrity (parity, single-engine, node-spike)
+        run: node adapter/parity.test.mjs
+      - name: Neutral-prose guard (the core names no platform primitive)
+        run: node quality/neutral-prose.test.mjs

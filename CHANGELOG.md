@@ -13,6 +13,29 @@
 
 ---
 
+## [3.0.0] — 2026-06-10
+
+**Ground-up redesign to a minimal, environment-agnostic core.** The protocol's structural surface had grown past what a person can hold in their head (a 991-line / 17-file constitution, 8 personas at 1219 lines, plus commands, templates, a 508-line hook set, a 749-line plugin, and a 349-line generator). This release replaces all of it with **one neutral core + one thin adapter per platform**: a single `PROTOCOL.md` constitution, **3 roles** (Builder / independent Reviewer / Orchestrator — the one load-bearing split, builder ≠ reviewer, is kept; the other five personas become checklists), a **5-beat loop** (`understand → plan → build → review → ship`), and a **data-adapter** where the deny *rules* are one shared list and each platform supplies only a thin shim. Both **Claude Code and OpenCode are first-class**, each just an adapter over the same core — adding a platform is adapter-only work with zero core edits. This is a breaking change: the old `WORKFLOW.md` + `workflow/*.md`, the 8 `pm-*` agents, the `/pm-*` commands, the generator, and the migration catalogue are all removed. A downstream project on the old template needs a one-time, file-level move to the new layout (tracked as a backlog item; the old surface is recoverable from git history). **Migration required for existing downstream projects.**
+
+### Added
+
+- **`PROTOCOL.md`** — the single-file constitution (manifesto · 3-role model · 5-beat loop · invariants tagged `[mechanical]`/`[persona]` · role contracts · quality-tool layer · project config · honest enforcement map · core/adapter contract · PM-comms · git flow). Designed to be read in one sitting (≤300 lines).
+- **`agents/{orchestrator,builder,reviewer}.md`** — three thin role definitions: seat procedure + the role's own checklist (its single home), no copied invariants.
+- **`adapter/`** — the data-adapter: `deny-rules.json` (one shared rule list), `tool-map.json` (per-platform tool + model policy), `engine.mjs` (one shared `evaluate()`), per-platform shims (`claude/`, `opencode/`), `INSTALL.md`, and parity/smoke tests.
+- **`ai-pm.config.json`** — the one home for a project's choices (mode · roles→agent binding, swappable · per-role model · platform · kind); the core depends on no specific agent.
+- **`architecture.md`** (engineer mental model), **`templates/`** (downstream scaffold collapsed 11 files → 3), **`quality/`** (stack-agnostic tool registry: parity + neutral-prose checks).
+- **OpenCode adapter** — built and parity-proven (50/50): an own-export plugin entry over the shared engine, an agent assembler mirroring the Claude one. A single live deny-capture remains pending an interactive session (documented honestly in `adapter/INSTALL.md`; not claimed as activated).
+
+### Removed
+
+- `WORKFLOW.md` and all `workflow/*.md`; the 8 `pm-*` agents and the `/pm-*` commands; the generator (`gen/`, `src/manifests/`) and its `.golden/` byte-equivalence snapshots; `MIGRATIONS.md`; the old `tests/` suite and `doc/` dev-history. All recoverable from git history.
+
+### Changed
+
+- The Orchestrator is the one git owner: it commits only reviewed work and holds the ship gate; merge and ship stay manual in every autonomy mode. The merge gate now reads a single review stamp (`.ai-pm/reviews/<topic>_review.md`, `## Code review:` heading).
+
+---
+
 ## [2.36.0] — 2026-06-05
 
 Relicenses the template from **AGPL-3.0 → MIT** (`Copyright (c) 2026 Alexander Degtyarev`). The `LICENSE` file now carries the standard MIT text; the `README.md` `## Лицензия` line is rewritten to describe MIT accurately (permissive — free including commercial use, no copyleft, modifications need not be returned), dropping the former AGPL copyleft claim; the `doc/architecture.md` module-map `LICENSE` cell reads `MIT.`. A repo-wide sweep confirms no AGPL/Affero reference remains; the downstream `README.md.tmpl` keeps its neutral `<license>` placeholder. Downstream projects pick up the new license on the next `git submodule update --remote`. No code or structural change — **no migration**.
