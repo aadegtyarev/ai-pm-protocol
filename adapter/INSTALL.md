@@ -41,34 +41,29 @@ The two spawnable roles are assembled into Claude agent files by **`node adapter
 
 ## OpenCode
 
-OpenCode auto-loads **every** file in `.opencode/plugin/` as a plugin, and a non-function export there crashes the load. So the adapter's importable files must stay **out** of that directory. Install drops one tiny entry — `opencode/plugin-entry.mjs` — into `.opencode/plugin/`; it imports the real plugin from the adapter tree (where `engine.mjs` / `normalise.mjs` sit unscanned) and re-exposes it as its own export:
+**OpenCode loads plugins from `.opencode/plugins/` and agents from `.opencode/agents/` — PLURAL.** Dogfooded on opencode 1.17.0: the singular forms (`.opencode/plugin/`, `.opencode/agent/`) are **not** loaded, so nothing in them takes effect.
 
-```
-.opencode/plugin/ai-pm.mjs                 ← the entry (the ONLY file here)
-.ai-pm/tooling/adapter/opencode/plugin.mjs ← the real plugin (imports engine + normalise)
-.ai-pm/tooling/adapter/engine.mjs          ← shared, never in the plugin dir
-```
+### Enforce a deny (the plugin)
 
-OpenCode auto-loads `.opencode/plugin/`, so the entry needs no registration in `opencode.json`.
+Install drops one entry — `opencode/plugin-entry.mjs` — into `.opencode/plugins/`. It must **DEFINE** the plugin function inline, NOT import-and-re-expose it: opencode 1.17 does not register `tool.execute.before` off an imported/re-exported binding (verified live — a write into `.ai-pm/tooling/` sailed through an own-export entry, and is blocked by an inline-defined one). So the thin wrapper — resolve root, resolve the actor, call `decide`, throw on deny — is **inline in the entry**; only the rule logic (`decide` + the engine) is imported from the adapter tree, which sits outside the scanned plugin dir. The rules stay single-sourced. No registration in `opencode.json` is needed.
 
-### Load instructions (the orchestrator session)
+### Load instructions + the orchestrator personality
 
-The orchestrator **is** the session. `opencode.json` `instructions` loads the constitution + the orchestrator's procedure — the OpenCode analogue of the Claude `@`-import (OpenCode does not parse `@`-references inside an instruction file):
+UNLIKE Claude (where the orchestrator IS the session, held by `CLAUDE.md`), an OpenCode session runs as a **primary agent** — so the orchestrator is its own primary agent: `default_agent` points at it, and the shared constitution loads via `instructions`:
 
 ```json
 {
-  "instructions": ["PROTOCOL.md", "agents/orchestrator.md"],
+  "default_agent": "ai-pm",
+  "instructions": ["PROTOCOL.md"],
   "permission": { "question": "allow" },
   "agent": { "build": { "disable": true }, "plan": { "disable": true } }
 }
 ```
 
-The generic `build`/`plan` primaries are disabled so none can fill the orchestrator seat (invariant 1); `AGENTS.md` (repo root) is OpenCode's always-on surface and points at the same constitution. The Builder and Reviewer are spawned (below).
+The generic `build`/`plan` primaries are disabled so none can fill the orchestrator seat (invariant 1); `AGENTS.md` (repo root) is OpenCode's always-on surface and points at the same constitution.
 
-### Spawn a sub-agent (the Builder and Reviewer)
+### Spawn a sub-agent (and assemble the orchestrator)
 
-The two spawnable roles are assembled into OpenCode agent files by **`node adapter/opencode/install-agents.mjs`** — the mirror of the Claude assembler. It reads each neutral role body (`agents/<role>.md`) + the OpenCode frontmatter (`adapter/opencode/agents/<role>.fm`) and writes `.opencode/agent/<agentId>.md`, taking the **agent id from `ai-pm.config.json` `roles`** (so `builder` → `pm-builder`, `reviewer` → `pm-reviewer`; on OpenCode the filename *is* the agent id, so the frontmatter carries no `name` key). Concatenation, not a generator — the neutral body stays the single source, shared with the Claude adapter. Re-run it whenever a role body, its frontmatter, or the config binding changes.
+`node adapter/opencode/install-agents.mjs` assembles the three role agents into `.opencode/agents/`: each neutral role body (`agents/<role>.md`) + its OpenCode frontmatter (`adapter/opencode/agents/<role>.fm`) → `.opencode/agents/<agentId>.md` (agent id from `ai-pm.config.json` `roles`: orchestrator → `ai-pm` with `mode: primary`; builder → `pm-builder`, reviewer → `pm-reviewer` with `mode: subagent`). On OpenCode the filename *is* the agent id, so the frontmatter carries no `name` key. Concatenation, not a generator — the neutral body stays the single source, shared with the Claude adapter. Re-run it whenever a role body, its frontmatter, or the config binding changes.
 
-**Own export, not a re-export — dogfooded on opencode 1.17.0.** A re-export (`export { AiPmEnforcement } from "..."`) LOADS without error but its `tool.execute.before` hook **never fires** — verified live (a write into `.ai-pm/tooling/`, which the engine must deny, sailed through under a re-export entry). The entry therefore imports the impl and re-exposes it as a fresh own export (`import { AiPmEnforcement as impl } from "..."; export const AiPmEnforcement = impl;`), which does register and fire (the same write triggers the deny). Transitive imports from outside the plugin dir resolve fine — that part of the original assumption held.
-
-**Still pending (a clean live confirmation):** the own-export's enforcement was inferred from behaviour (a deny-triggering call sends opencode into an LLM retry-loop that times out the headless `opencode run`, where a clean allow completes immediately) rather than from a captured deny message — `opencode run` is flaky at surfacing a plugin throw headlessly. Confirm with a single captured deny in an interactive session before treating OpenCode as activated. The fallback, if the own export ever regresses, is a self-contained bundled plugin (one file, but it reintroduces a second engine copy the parity guard must then cover).
+**Live-verified on opencode 1.17.0:** the session runs as `ai-pm` (the personality loads) and a write into `.ai-pm/tooling/` is mechanically blocked by the plugin (the engine's self-patch deny). The three bugs the live dogfood caught — singular vs plural dirs, the missing primary orchestrator agent, and the inline-vs-imported plugin function — are fixed here.

@@ -2,7 +2,7 @@
 
 A way to build software by describing what you want. You are the product manager: you say *what* to build and *why*, approve the plan, and decide what ships — and you never read code. A small set of AI roles plans the change, builds it, reviews it independently, and ships it.
 
-It runs inside an AI coding harness (Claude Code today; OpenCode is in progress) and **develops itself under its own protocol** — this repository is its own first project.
+It runs inside an AI coding harness — Claude Code and OpenCode, both live-verified — and **develops itself under its own protocol** — this repository is its own first project.
 
 ## How it works
 
@@ -28,7 +28,7 @@ Part of that adapter is a real **enforcement layer** — a deny layer that mecha
 
 ## Install
 
-Status: **Claude Code** is the active, proven harness. The **OpenCode** adapter is built and parity-proven against it (`adapter/parity.test.mjs`, 50/50); the own-export plugin's live deny is pending a single interactive capture (`adapter/INSTALL.md ## OpenCode`).
+Status: both **Claude Code** and **OpenCode** are live-verified — on each, the session loads as the orchestrator and the deny layer mechanically blocks a guarded write. Parity 50/50 (`adapter/parity.test.mjs`). Per-platform wiring: `adapter/INSTALL.md`.
 
 The protocol is consumed as a git submodule; the active platform's adapter is then wired — the deny hooks, the role agents, and the `PROTOCOL.md` import. The concrete, per-platform wiring lives in **[`adapter/INSTALL.md`](adapter/INSTALL.md)** — the single home for where each file lands and how each platform is hooked up. After wiring, start a fresh session so the harness loads the protocol.
 
@@ -42,7 +42,7 @@ adapter/           the only platform-specific code:
   deny-rules.json    every guard, as data
   tool-map.json      neutral act -> each platform's concrete tool
   claude/            the Claude shim, hooks, and agent assembler
-  opencode/          the OpenCode shim + agent assembler (live deny pending)
+  opencode/          the OpenCode shim, plugin entry, and agent assembler
   INSTALL.md         where each file lands, per platform
 architecture.md    the engineer's mental model — how the pieces fit
 quality/           what "green" means here (the parity + neutral-prose checks)

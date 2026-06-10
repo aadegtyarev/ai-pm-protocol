@@ -6,8 +6,7 @@
 //
 // Several predicates port hard-won, defect-fixed logic from the previous
 // OpenCode plugin (the slice-15 quote-masking + cp/mv redirect fixes). The
-// rationale is kept terse here; the long form lives in git history (the
-// retired .opencode/plugin/ai-pm-enforcement.js).
+// rationale is kept terse here; the long form lives in git history.
 
 import fs from "node:fs";
 import path from "node:path";

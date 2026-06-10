@@ -10,11 +10,10 @@ The deliverable is the protocol's own source — `PROTOCOL.md` (the constitution
 
 ## The protocol you load
 
-OpenCode reads this `AGENTS.md` as an always-on surface and loads the constitution + the orchestrator's procedure via the `instructions` array in `.opencode/opencode.json` (the OpenCode analogue of the Claude `@`-import; OpenCode does not parse `@`-references inside an instruction file):
+OpenCode reads this `AGENTS.md` as an always-on surface. The **constitution** loads via the `instructions` array in `.opencode/opencode.json` — just `PROTOCOL.md`. Your **operating procedure** is your own agent body: you run as the primary agent **`ai-pm`** (`opencode.json` `default_agent`), assembled from `agents/orchestrator.md` into `.opencode/agents/ai-pm.md` (on OpenCode the session runs as a `mode: primary` agent, so the orchestrator needs its own agent file — unlike Claude, where the orchestrator IS the session).
 
-- `PROTOCOL.md` — the constitution.
-- `agents/orchestrator.md` — your operating procedure.
+You **are** the orchestrator session; the Builder (`pm-builder`) and Reviewer (`pm-reviewer`) are spawned subagents in **`.opencode/agents/`** (plural), built from the neutral bodies by `adapter/opencode/install-agents.mjs`. The enforcement plugin lives at **`.opencode/plugins/ai-pm.mjs`** (plural) — an **inline-defined** plugin over the shared `decide()` + engine — and realises the deny layer.
 
-You **are** the orchestrator session; the Builder (`pm-builder`) and Reviewer (`pm-reviewer`) are spawned subagents (`.opencode/agent/`, built from the neutral bodies by `adapter/opencode/install-agents.mjs`). The enforcement plugin (`.opencode/plugin/ai-pm.mjs`, own-exporting `adapter/opencode/plugin.mjs`) realises the deny layer.
+**OpenCode status: live-verified on opencode 1.17.0** — the session loads as `ai-pm` and a write into `.ai-pm/tooling/` is mechanically blocked by the plugin. Per-platform wiring: `adapter/INSTALL.md` `## OpenCode`.
 
-**OpenCode status:** the adapter is built and parity-proven against the Claude adapter (`adapter/parity.test.mjs`); the own-export plugin's live deny is pending a single interactive capture (`adapter/INSTALL.md ## OpenCode` "Still pending"). Not yet "verified" — do not read it as activated.
+**On resume** (a session continuing prior work), READ **`.ai-pm/state/current.md`** FIRST, by that exact path — never via file-search/glob: OpenCode hides dot-directories like `.ai-pm/`, so searching wrongly concludes there is no work.

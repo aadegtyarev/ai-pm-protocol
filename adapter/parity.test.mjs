@@ -142,7 +142,7 @@ if (divergences.length) {
 // rule was re-implemented there and parity could silently drift.
 console.log("SINGLE-ENGINE (shims carry no rule logic):");
 const FORBIDDEN = ["wb-development", "systemctl", "force-with-lease", "no-verify", "реализ", "maskQuotedSpans"];
-const SHIMS = ["claude/shim.mjs", "opencode/normalise.mjs", "opencode/plugin.mjs"];
+const SHIMS = ["claude/shim.mjs", "opencode/normalise.mjs", "opencode/plugin-entry.mjs"];
 for (const rel of SHIMS) {
   const text = fs.readFileSync(path.join(HERE, rel), "utf8");
   const hit = FORBIDDEN.find((tok) => text.includes(tok));

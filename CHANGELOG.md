@@ -24,7 +24,7 @@
 - **`adapter/`** — the data-adapter: `deny-rules.json` (one shared rule list), `tool-map.json` (per-platform tool + model policy), `engine.mjs` (one shared `evaluate()`), per-platform shims (`claude/`, `opencode/`), `INSTALL.md`, and parity/smoke tests.
 - **`ai-pm.config.json`** — the one home for a project's choices (mode · roles→agent binding, swappable · per-role model · platform · kind); the core depends on no specific agent.
 - **`architecture.md`** (engineer mental model), **`templates/`** (downstream scaffold collapsed 11 files → 3), **`quality/`** (stack-agnostic tool registry: parity + neutral-prose checks).
-- **OpenCode adapter** — built and parity-proven (50/50): an own-export plugin entry over the shared engine, an agent assembler mirroring the Claude one. A single live deny-capture remains pending an interactive session (documented honestly in `adapter/INSTALL.md`; not claimed as activated).
+- **OpenCode adapter** — live-verified on opencode 1.17.0: the session loads as the `ai-pm` orchestrator (a primary agent — opencode runs the session as a primary, unlike Claude's `CLAUDE.md`) and the deny layer mechanically blocks a write into `.ai-pm/tooling/`. A direct-inline plugin entry over the shared engine, loaded from `.opencode/plugins/` (opencode registers a `tool.execute.before` hook only off an inline-defined function, not a re-exported one, and loads agents/plugins from the plural dirs).
 
 ### Removed
 
