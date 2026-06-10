@@ -1,27 +1,26 @@
 # Execution State
 
-> Resume pointer — lean by design (a pointer, **not** a log). On resume READ THIS FIRST, by this exact path. Deferred work lives in `.ai-pm/backlog.md`; full history in the commit log + CHANGELOG. Keep this file short.
+> Resume pointer — READ FIRST, by this exact path. Deferred detail: `.ai-pm/backlog.md`. History: commits + CHANGELOG.
 
-**Status (2026-06-11): no active feature. Working tree clean, `main` = `uni/main` = `55eac26` (4.0.1).** The repo now dogfoods the structure it gives downstream — **`docs/`** (architecture, contracts, decisions) + **`src/`** (adapter, agents, quality, modules, templates) + a root of entries (PROTOCOL.md, README, CHANGELOG, LICENSE, AGENTS.md, CLAUDE.md) + project config (`ai-pm.config.json`). **NEXT: the post-restructure queue — see `.ai-pm/backlog.md`.**
+**Status (2026-06-11, END OF SESSION — STOPPED by the Operator, resume tomorrow). `main` = `c89a5b0` (4.0.2).** The autonomous post-restructure queue was running; stopped mid-flight.
 
-## Active direction — the protocol as a product-creation engine
+## ⚠️ IN-FLIGHT — resume HERE first (do not lose the WIP)
+**`PROTOCOL.md` instructions-only rewrite — BUILT but UNREVIEWED — committed on local branch `feature/protocol-de-water` (`cc239d8`).** It is NOT pushed (the merge-gate blocks an unstamped feature push) and NOT on `main` (main's `PROTOCOL.md` is still the watery original). The prior de-water pass was LOST uncommitted — this one is committed on the branch so it survives.
+**Resume:** `git checkout feature/protocol-de-water` → respawn a FRESH Reviewer against the diff (verify NO instruction/rule lost + readability) → ship. (3854→3241 words; cut preamble + manifesto rhetoric + section-intro prose; broke inline pseudo-lists + crammed walls into real Markdown lists; Builder claims every invariant/contract/beat/enforcement-row/config-field survives; parity 55 + neutral-prose green.)
 
-Compass: **`docs/decisions/direction.md`** (the four pillars + the architecture & **mechanism principles** — read it; minimal-shape rationale in `docs/decisions/minimal-core.md`). The protocol is a development *engine*; products on it are arbitrary. Everything grows as **side-tools / config / modules — NEVER core bloat** (`PROTOCOL.md` one-sitting), under the whole-surface no-dup guard.
+## The principle the Operator hammered (the lens for the whole queue)
+**`PROTOCOL.md` and EVERY doc are INSTRUCTIONS, human-readable — NOT prose.** Cut water/rhetoric; real Markdown lists, short blocks, no walls. And: **every failure the Operator catches by hand must become a protocol mechanism that catches it** — acceptance test: *it fires WITHOUT the Operator's vigilance.* Right now the Operator is the workhorse catching the readability/quality sins; the queue exists to end that.
 
-**The constructor is real:** capabilities are **toggleable modules** — per-module fragments (`src/modules/<id>/<role>.md`) composed into **assembled** role agents (floor body + enabled fragments), catalogued in `src/modules/registry.json`, offered by `setup`. Two guards: **assemble UP from a floor** (the overall floor — independent review · honesty · merge-stamp · Operator merges — never a toggle; malformed/unknown ⇒ fail-safe ON) and **defaults over toggles**. The acceptance test for the whole direction (in the compass): **a mechanism counts only if it fires WITHOUT the Operator's vigilance** — until then the Operator is the workhorse, which is the failure to fix.
+## Queue for tomorrow, IN ORDER (detail in `.ai-pm/backlog.md`)
+1. **Finish the `PROTOCOL.md` rewrite** — review + ship the WIP above.
+2. **Systemic readability sweep** — `src/agents/{orchestrator,builder,reviewer}.md`, `docs/architecture.md`, `src/adapter/INSTALL.md` have the SAME disease (water, walls, broken lists — Operator: "orchestrator.md нечитаемо, стыдно"). Same instructions-only/readable treatment, each its own reviewed change.
+3. **Doc + code-quality MECHANISMS** (so the protocol catches it, not the Operator): **eslint** (JS — meaningful names, no `ab`/`bc`, readable functions) + **markdownlint** (broken Markdown / walls) as build-beat tools; fold a **doc-quality dimension into the Reviewer** (brevity · structure · human-readability · format tidiness — NOT a new role; Operator's preference) + sharpen its code dimension; comment-discipline (invariant 6 on code) + de-bloat the over-commented adapters. *Proportionate — catch real cruft, don't strangle with style.*
+4. **`audit` realized** — a proactive health-check the protocol runs itself.
+5. **`research`** — a doing side-tool (not a module).
+6. **Resume product-advocate** (`.ai-pm/plans/product-advocate.md`).
+7. **`install.mjs`** (unified installer) — enables a real-downstream rollout. The Operator wants the protocol installed into `/home/adegtyarev/Develop/Hobby/ad-md-editor/`; this session CAN'T (out-of-root — the deny boundary blocks it, correct behaviour). Needs the unified installer, or a session rooted in that project.
 
-Pillar status:
-- **Configurable rigor — SHIPPED (3.3.0).** `profile: full|lite|solo`; floor never cuttable; fail-safe to `full`.
-- **The module constructor + threat-model — COMPLETE (3.4.0/3.4.1).** Constructor infra + the real threat enumeration with the `depth` toggle; deepens the always-on Reviewer security floor (`[persona]`).
-- **Product-advocate — PAUSED, plan ready** (`.ai-pm/plans/product-advocate.md`): a module that fires the uncomfortable product questions at plan time (toggle by kind · recorded-skip · honesty-floor · depth light↔rich). Resume after the queue.
-- **Product discovery / research, relentless discipline** — queued (below).
+## Direction (compass: `docs/decisions/direction.md`)
+The protocol as a product-creation engine; four pillars, all as side-tools/config/modules, never core bloat. The constructor is real (modules = fragments → assembled agents, `src/modules/registry.json`, two guards: assemble-up-from-a-floor + defaults-over-toggles). Shipped this session: **3.0.0 → 4.0.2** (minimal core · setup live-verified on opencode · configurable rigor · module constructor + threat-model · the `docs/`+`src/` restructure + retention discipline · `/pm-setup`).
 
-## Post-restructure queue (the NEXT work — details in `.ai-pm/backlog.md`)
-`pm-setup` command rename (namespace, don't mimic a built-in) · **code-quality** (eslint + comment-discipline per invariant 6 + sharpen the Reviewer's code dimension — the adapter code is over-commented / has weak names) · **`audit` realized** as a proactive health-check the protocol runs itself · **research** as a doing side-tool (not a module) · resume product-advocate. All under the acceptance test above (the protocol should catch these, not the Operator).
-
-## Shipped to `uni/main`
-3.0.0 → 4.0.1 across this session (minimal core · setup feature live-verified on opencode · configurable rigor · the module constructor + threat-model · the docs/+src/ restructure + retention discipline). Full log: CHANGELOG.
-
-**Conventions:** conversation = Russian; artifacts/commits = English; the human role is the **Operator**. Decision authority = `interactive` (`ai-pm.config.json` `mode`); merge/ship manual (Operator authorizes — granted blanket for the mechanical restructure). THIS repo: `kind: software`, `profile: full`, `threat-model` enabled (`rich`). Gates in `src/quality/tools.json`.
-
-**Remotes:** `uni` (`aadegtyarev/ai-pm-protocol-uni`) is the live fork — local `main` tracks it. `origin` (public) `main` is OLD (pre-redesign); public sync deferred. **Local branch cleanup pending:** `backup-2026-06-10` + stale `feature/opencode-harness-support--*` slices.
+**Conventions:** Russian chat; English artifacts; the human is the **Operator**; `interactive` mode (merge/ship manual). THIS repo: `kind: software`, `profile: full`, `threat-model: rich`. Gates: `src/quality/tools.json`. **Remotes:** `uni` (`aadegtyarev/ai-pm-protocol-uni`) is the live fork — local `main` tracks it; public `origin` is OLD. **Branches pending cleanup:** `backup-2026-06-10` + stale `feature/opencode-harness-support--*` — but KEEP `feature/protocol-de-water` until its WIP ships.

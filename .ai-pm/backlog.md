@@ -455,3 +455,22 @@ Theme (the session's deepest finding): every quality/structure/product gap so fa
 3. **`audit` realized — proactive.** `audit` is only NAMED as a side-tool. Realize it as a health-check the protocol RUNS ITSELF (on a cadence / pre-ship), so it catches accumulation (the graveyard), code-quality drift, and duplication WITHOUT the Operator noticing. This is the most direct "make the protocol пахать".
 4. **`research` as a doing side-tool (NOT a module).** Modules shape *thinking* (checklists); research *does* work (investigate → synthesize an artifact). Market/competitor/user/feature-landing research, producing a COMPACT decision-base in `docs/decisions/` (with the retention discipline — research artifacts must stay compact + human-readable, not pile up). Pairs with the product-advocate: the advocate ASKS "who's the user?", research ANSWERS with evidence.
 5. **Resume product-advocate** (`.ai-pm/plans/product-advocate.md`) — on the now-clean `src/`/`docs/` structure (the plan's `modules/` paths → `src/modules/`).
+
+## Readability is systemic — the prose artifacts are unreadable (Operator, 2026-06-11, end of session)
+
+The deepest quality finding of the session, caught entirely by the Operator's manual reading (the protocol did NOT catch it): **PROTOCOL.md and the agent/doc prose are water + broken Markdown + crammed walls — unreadable.** The Operator's verdict: **the protocol IS INSTRUCTIONS, not prose** — every doc human-readable (dense in words, but real Markdown lists / short blocks / no walls).
+
+- **PROTOCOL.md** — instructions-only rewrite BUILT, committed UNREVIEWED on the protocol-de-water branch (cc239d8). Review + ship it first (see state/current.md).
+- **Same disease, untreated:** src/agents/{orchestrator,builder,reviewer}.md (Operator: "orchestrator.md unreadable, shameful"), docs/architecture.md, src/adapter/INSTALL.md. Each: cut water, fix inline pseudo-lists -> real lists, break walls. Each its own reviewed change.
+
+## Doc + code-quality MECHANISMS — so the protocol catches the above, not the Operator — 2026-06-11
+
+Acceptance test: a mechanism counts only if it fires WITHOUT the Operator's vigilance. Build (proportionate):
+- eslint (build-beat): meaningful names (no ab/bc), readable functions, sane config — the protocol lints its own JS.
+- markdownlint (build-beat): broken Markdown / inline pseudo-lists / walls.
+- Reviewer doc-quality dimension (fold into src/agents/reviewer.md, NOT a new role): brevity, structure, human-readability, format tidiness; + sharpen the code dimension.
+- Comment-discipline: enforce invariant 6 on CODE (local why, not what; the adapter .mjs over-comment + duplicate INSTALL.md) + a de-bloat pass.
+
+## install.mjs for the ad-md-editor rollout — 2026-06-11
+
+The Operator asked to roll the protocol into ad-md-editor; this session can't (out-of-root, the deny boundary blocks it, correctly). The manual downstream install is fiddly (the bootstrap gap). The unified install.mjs makes the rollout one command AND dogfoods install on a REAL downstream (the strongest test we lack). ad-md-editor = the first real downstream polygon.
