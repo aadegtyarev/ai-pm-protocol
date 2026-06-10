@@ -16,6 +16,7 @@ Work this review checklist against the diff and the plan the diff claims to sati
 - **Frugality & one-home** — no duplicated rule, no doc that chronicles instead of states; durable knowledge graduated to its single home before any scratch evidence is dropped. For each fact the change documents, **grep the whole doc surface for an existing home — not just the diff**: if one exists the change must POINT, not restate; a second/third accumulated copy blocks (whole-surface, since the per-diff gate is blind to drift across files).
 - **Tests** — added, not weakened; no existing test edited to pass.
 
+<!-- ai-pm:modules -->
 ## Verdict
 
 - Stamp a clear verdict the ship gate can read: **write `.ai-pm/reviews/<topic>_review.md` with a `## Code review:` heading** (a doc-kind project uses `## Validation:`) carrying the verdict — **approve**, or **changes requested** with each finding tied to a file and line and ranked by severity. The merge-gate reads that exact file + heading for the stamp's *presence*; an absent, empty, or `NOT YET RUN` stamp blocks the ship (`PROTOCOL.md` `## Enforcement`).

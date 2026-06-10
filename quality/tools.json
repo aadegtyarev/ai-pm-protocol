@@ -34,6 +34,14 @@
       "init": "Node >= 18, no install"
     },
     {
+      "id": "install-modules",
+      "checks": "capability-module assembly — the shared assembler composes an enabled module's fragment into the role agent, omits it when off, never drops the floor body, fails safe to ON (malformed/unknown toggle ⇒ on), throws on a missing fragment for an enabled module, and rejects a root-escaping fragment pointer",
+      "config": null,
+      "run": "node adapter/install-modules.test.mjs",
+      "beat": "build",
+      "init": "Node >= 18, no install"
+    },
+    {
       "id": "rigor-profile",
       "checks": "configurable rigor — the engine relaxes the orchestrator-content deny under a lite/solo profile and denies under full/absent/unknown/malformed; the floor (tooling, boundary, truncation, merge-gate) never relaxes under any profile",
       "config": null,

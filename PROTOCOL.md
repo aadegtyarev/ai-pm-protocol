@@ -95,6 +95,8 @@ A project's checks — linters, formatters, type-checkers, test runners, a secur
 
 The template ships only the **shape** — the registry format and one or two example rows. A project brings its own configs for its own stack. Adding a tool = drop its config in `quality/` and add a registry row; **no core edit**. This is the one home for "what does *green* mean here", folding what used to be scattered across stack-notes, the project-kind validation, and per-linter features.
 
+The same registry-driven extension runs on the **role-content** axis: a project's enabled **capability modules** — toggleable, per-`kind`-defaulted bundles of role-checklist depth (threat-modelling, product discovery, …) catalogued in `modules.json`, composed into the role agents at assembly, `[persona]` prose that sharpens a role's reasoning and blocks nothing mechanically, an absent/unrecognised toggle resolving **on** (fail-safe to more rigor) — with the mechanism homed in `architecture.md` `## Capability modules` + the registry, the core only naming the axis.
+
 ## Enforcement
 
 The honest floor. A platform's deny layer can **block a tool call** (and, on some platforms, **ask** the Operator first). It **cannot force a positive act** (cannot make the Orchestrator spawn a reviewer) and **cannot read the Orchestrator's reasoning**. That single fact splits every protection into **deniable** vs **persona-only** — and this protocol labels each one honestly. Where it says `[mechanical]`, a deny rule in the adapter data backs it; where it says `[persona]`, only this prose does.

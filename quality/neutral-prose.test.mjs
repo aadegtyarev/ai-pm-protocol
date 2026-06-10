@@ -26,8 +26,22 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CORE = path.resolve(HERE, ".."); // the core root (repo root)
 
 // The core surface this check guards: the constitution, the role agents, the
-// architecture model. The adapter (which legitimately names platform tools) is
-// out of scope by construction.
+// architecture model, and the capability-module FRAGMENTS (modules/<id>/<role>.md —
+// core prose composed INTO the role agents, so subject to the same neutrality). The
+// adapter (which legitimately names platform tools) is out of scope by construction.
+function moduleFragments() {
+  const dir = path.join(CORE, "modules");
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  for (const id of fs.readdirSync(dir)) {
+    const sub = path.join(dir, id);
+    if (!fs.statSync(sub).isDirectory()) continue;
+    for (const f of fs.readdirSync(sub)) {
+      if (f.endsWith(".md")) out.push(path.join("modules", id, f));
+    }
+  }
+  return out;
+}
 const surface = [
   "PROTOCOL.md",
   "architecture.md",
@@ -35,6 +49,7 @@ const surface = [
     .readdirSync(path.join(CORE, "agents"))
     .filter((f) => f.endsWith(".md"))
     .map((f) => path.join("agents", f)),
+  ...moduleFragments(),
 ];
 
 // Tool nouns that are also ordinary English verbs/nouns — a leak ONLY when used

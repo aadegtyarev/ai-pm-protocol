@@ -18,6 +18,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadRegistry, composeBody } from "../modules.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const ROLES = ["orchestrator", "builder", "reviewer"];
@@ -41,12 +42,16 @@ export function resolveModelPin(model) {
 // agentId→path map written, so a test can read the result without re-deriving it.
 export function install(outDir, config) {
   fs.mkdirSync(outDir, { recursive: true });
+  const registry = loadRegistry(ROOT);
   const written = {};
   for (const role of ROLES) {
     const agentId = config.roles?.[role]?.agent;
     if (!agentId) throw new Error(`ai-pm.config.json roles.${role}.agent is missing`);
     const fm = fs.readFileSync(path.join(ROOT, "adapter", "opencode", "agents", `${role}.fm`), "utf8").trim();
-    const body = fs.readFileSync(path.join(ROOT, "agents", `${role}.md`), "utf8").trimStart();
+    // FLOOR body + the enabled capability modules' fragments, composed at the marker
+    // by the SHARED assembler (one home with the Claude shim; never copied here).
+    const floor = fs.readFileSync(path.join(ROOT, "agents", `${role}.md`), "utf8").trimStart();
+    const body = composeBody(ROOT, floor, role, registry, config);
     const modelPin = resolveModelPin(config.roles?.[role]?.model);
     const modelLine = modelPin ? `model: ${modelPin}\n` : "";
     const out = `---\n${fm}\n${modelLine}---\n\n${body}`;

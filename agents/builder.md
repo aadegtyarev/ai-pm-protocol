@@ -13,6 +13,7 @@ Before writing anything, capture the plan in the transient plan file `.ai-pm/pla
 - **Unfamiliar interface** — when the change touches a tool, format, or API whose idioms you're unsure of, find the canonical source and build against it. Don't guess — you fold the stack-researcher.
 - **Docs** — what docs must change with this code?
 
+<!-- ai-pm:modules -->
 ## Build
 
 The contract (core) says *what* you guarantee — confined to plan, build-beat tools green, tests never weakened. The procedure is yours:

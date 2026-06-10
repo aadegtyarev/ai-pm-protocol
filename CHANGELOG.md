@@ -13,6 +13,23 @@
 
 ---
 
+## [3.4.0] — 2026-06-10
+
+**The capability-module constructor + threat-model (pillar 2), Slice 1 — infrastructure + skeleton.** The protocol becomes a *constructor*: capabilities are toggleable modules a project assembles, not a fixed monolith. (Rich threat-enumeration content is Slice 2.)
+
+### Added
+
+- **A capability-module mechanism.** A module's prompt content lives as per-module fragments (`modules/<id>/<role>.md`); **role agents are now assembled from a floor body + the enabled modules' fragments** (a `<!-- ai-pm:modules -->` marker filled in registry order) + frontmatter — generated, not hand-edited, so the floor is the one home of always-on text and each fragment the one home of its text (no drift). A registry **`modules.json`** catalogs the kit (toggle · per-`kind` defaults · targets); `setup` reads it to offer the kit as part of its dialog (defaults over toggles — never a wizard). The shared assembler is `adapter/modules.mjs` (imported by both `install-agents.mjs`, like the engine is shared by both deny shims).
+- **`threat-model` — the first module** (skeleton this slice; it deepens the always-on Reviewer security floor, never replaces it). `[persona]` prompt content — sharpens reasoning, blocks nothing. This repo (`software`/`full`) enables it at `rich`.
+- **`adapter/install-modules.test.mjs`** (36) — proves compose-enabled / omit-disabled / floor-always-present / fail-safe-to-ON / missing-fragment-throws / root-escape-rejected. `quality/neutral-prose.test.mjs` now scans `modules/<id>/*.md`.
+
+### Changed
+
+- **The assembler is built threat-aware (its own threat model):** a malformed/unknown module toggle **fails safe to ON** (only explicit `false` disables); a fragment pointer that escapes root is rejected (invariant 2); a missing fragment for an enabled module is a **hard error** (never a silent drop of a security section). A bad config can only turn *more* rigor on.
+- **The floor holds (same two guards as configurable rigor):** assemble UP from a floor — the overall floor (independent review, honesty, merge-gate, stay-in-root) is never a module-toggle; defaults over toggles. `PROTOCOL.md` +1 clause (modules = an extension axis); the mechanism is homed in `architecture.md` `## Capability modules`.
+
+---
+
 ## [3.3.0] — 2026-06-10
 
 **Configurable rigor — the speed↔trust tradeoff becomes the project's choice.** First pillar of the product-engine direction (`.ai-pm/design/direction-product-engine.md`): the protocol is a development *engine*, and a project now picks how much ceremony it pays — without ever cutting the value.
