@@ -13,6 +13,21 @@
 
 ---
 
+## [3.2.2] — 2026-06-10
+
+**Documentation de-duplication + a root-cause guard.** A manifesto-rule-1 audit found duplication that had crept in across the setup-feature slices — and one copy had already begun to rot.
+
+### Fixed
+
+- **De-duplicated the adapter prose (no fact lost — each verified intact in its one home):** the model policy now lives only in `adapter/tool-map.json` `models` (`PROTOCOL.md` and `ai-pm.config.json` `_roles` point to it; the stale `NEVER Haiku` blacklist — which contradicted the home's `allow: ["opus","sonnet"]` allowlist — is dropped); the OpenCode dogfood-verification narrative lives only in this CHANGELOG (`adapter/INSTALL.md` keeps one status line per platform, not six); the shared apply-config mechanism lives in `tool-map.json`/`architecture.md` (each INSTALL.md section states only its per-platform delta); `tool-map.json` `models._note` trimmed from an essay to policy + a cross-link. `adapter/INSTALL.md` −18% words; `PROTOCOL.md` held at 180.
+- `architecture.md`'s stale "OpenCode live deny is pending" superseded — it is live-verified (a write into `.ai-pm/tooling/` is mechanically blocked).
+
+### Changed
+
+- **Root-cause guard in the Reviewer's checklist** (`agents/reviewer.md`): the review gate checked each change in isolation against its plan, so a fact accumulating into multiple homes across slices slipped through (the same shape as the earlier inject-class miss — change-in-isolation vs a whole-system property). The single-home check is now a **whole-surface** check: grep the doc surface for an existing home; point, don't restate; an accumulated copy blocks.
+
+---
+
 ## [3.2.1] — 2026-06-10
 
 **Setup applies the config it writes; full `/setup` live-verified end-to-end.** Fixes a gap where a cross-model reviewer pin chosen during `/setup` was written to `ai-pm.config.json` but never took effect — the model is baked into the deployed agent only at install time, and `## Setup` never re-assembled after writing. Now setup applies what it writes.

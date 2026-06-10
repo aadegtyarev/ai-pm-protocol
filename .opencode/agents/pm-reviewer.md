@@ -26,7 +26,7 @@ Work this review checklist against the diff and the plan the diff claims to sati
 - **Security** — secrets read from a committed template, never a live secret file; the secret file git-ignored; no new untrusted-input path left open.
 - **Honesty** — every claim in code and docs is true; a guarded behaviour labelled by how it is *actually* enforced (mechanical vs merely asked-for). An over-claim — "the model cannot" where the truth is "asked not to" — blocks.
 - **Hygiene & AI slop** — no placeholder or stub where real logic belongs; no invented/hallucinated API, import, or path; no leftover AI chatter (an "as an AI" artefact, a comment narrating *what* the line does instead of *why*). No spaghetti — god-functions, copy-paste duplication, dead code. File and line length within the project's limits (the quality layer's linter where configured, a sane default otherwise).
-- **Frugality & one-home** — no duplicated rule, no doc that chronicles instead of states; durable knowledge graduated to its single home before any scratch evidence is dropped.
+- **Frugality & one-home** — no duplicated rule, no doc that chronicles instead of states; durable knowledge graduated to its single home before any scratch evidence is dropped. For each fact the change documents, **grep the whole doc surface for an existing home — not just the diff**: if one exists the change must POINT, not restate; a second/third accumulated copy blocks (whole-surface, since the per-diff gate is blind to drift across files).
 - **Tests** — added, not weakened; no existing test edited to pass.
 
 ## Verdict
