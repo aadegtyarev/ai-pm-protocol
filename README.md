@@ -32,6 +32,12 @@ Status: both **Claude Code** and **OpenCode** are live-verified — on each, the
 
 The protocol is consumed as a git submodule; the active platform's adapter is then wired — the deny hooks, the role agents, and the `PROTOCOL.md` import. The concrete, per-platform wiring lives in **[`adapter/INSTALL.md`](adapter/INSTALL.md)** — the single home for where each file lands and how each platform is hooked up. After wiring, start a fresh session so the harness loads the protocol.
 
+## Configure
+
+Once wired, run **`setup`** to configure the project — platform, mode, roles, and models. It is a plain-language dialog: it discovers the models your environment actually offers and asks you to pick, then writes `ai-pm.config.json`. You need not run it by hand — on a fresh, unconfigured project the orchestrator offers setup on your first work request (an offer you may decline to proceed on safe defaults).
+
+Re-run it anytime — the `/setup` command, or just ask to reconfigure — when you change models or switch platform. It reads the current config, shows what changes, rewrites it, and re-applies so the new models take effect. The full procedure lives in **[`agents/orchestrator.md`](agents/orchestrator.md)** `## Setup` (`PROTOCOL.md` `## The loop` frames it; `adapter/INSTALL.md` has the per-platform command).
+
 ## Layout
 
 ```

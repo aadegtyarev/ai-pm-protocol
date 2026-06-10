@@ -13,6 +13,21 @@
 
 ---
 
+## [3.2.1] — 2026-06-10
+
+**Setup applies the config it writes; full `/setup` live-verified end-to-end.** Fixes a gap where a cross-model reviewer pin chosen during `/setup` was written to `ai-pm.config.json` but never took effect — the model is baked into the deployed agent only at install time, and `## Setup` never re-assembled after writing. Now setup applies what it writes.
+
+### Fixed
+
+- **`## Setup` re-assembles the agents after writing the config** (new apply step), so a chosen reviewer model actually takes effect; idempotent for zero-config (no pin ⇒ no model line ⇒ byte-identical agents). A neutral `apply-config` contract point (`architecture.md`, `adapter/tool-map.json`) realised per adapter; `adapter/INSTALL.md` corrects the install/setup order note (setup applies after writing, so order no longer silently drops a pin).
+- **Honesty:** the `adapter/INSTALL.md` "unit-proven only" caveat on the OpenCode config-write + pin-bake is dropped — the **full `/setup` is now live-verified end-to-end on opencode 1.17.x** (dialog → config write → apply/re-assemble → reviewer model-pin bake of `deepseek/deepseek-v4-flash`; reconfigure shown with a was/now diff).
+
+### Added
+
+- **`README.md` `## Configure`** — a short onboarding section: first-time configuration (discover models → dialog → write config; auto-offered on a fresh project's first work request) and on-demand reconfiguration (re-run `/setup` when models or platform change). Points at the single homes, no restated detail.
+
+---
+
 ## [3.2.0] — 2026-06-10
 
 **Setup triggers (Slice B) + the OpenCode `inject` class realized.** The shipped `## Setup` procedure now fires without the Operator hunting for it: **lazily** (a work request to an unconfigured project gets a short "run setup, or proceed on defaults?" offer — not a block) and **explicitly** (a `/setup` command on both platforms). Building the lazy nudge surfaced — and this release fixes — a pre-existing gap: the **`inject` enforcement class was never realized on OpenCode** (its plugin wired only `tool.execute.before`/deny), so the nudge *and* the older `change-route-reminder` never reached the model. Now realized via OpenCode's `chat.message` hook. **Live-verified on opencode 1.17.x** (the orchestrator offered setup instead of editing an unconfigured project; `/setup` discovered the environment + 9 models + ran the dialog).
