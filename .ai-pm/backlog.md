@@ -431,3 +431,11 @@ Keep it agnostic and thin; reuse the Slice A brain (don't duplicate the dialog).
 ## fixup: misleading test-case name in adapter/parity.test.mjs (Slice B review, non-blocking) — 2026-06-10
 
 The Slice B review (approve) flagged that the parity case named `no-config:non-change-prompt-allows` actually runs against the CONFIGURED root (`CFG`), not an unconfigured one. Behavior is correct (a non-change-verb prompt always allows), only the NAME misleads. Rename it for clarity in a fixup (or fold into the next touch of that test). Cosmetic — no coverage/correctness impact.
+
+## Reviewer-checklist gap: verify an enforcement CLASS is REALIZED by the adapter, not just DECIDED by the engine — 2026-06-10 (learned the hard way)
+
+The OpenCode `inject` class shipped unrealized (the plugin wired only `tool.execute.before`); the parity test passed because it asserts the ENGINE DECISION (returns "inject"), never that the ADAPTER APPLIES it. The bug surfaced only in a live run. Lesson for the Reviewer's checklist: for any change touching an enforcement class on a platform, confirm the adapter has a live mechanism that REALIZES the verdict (a hook that denies/injects/asks), and that a test drives that mechanism's side-effect — not just the engine's decision. Generalizes the "green tests, broken runtime" guard to the adapter-application layer. (The fix added `adapter/opencode-inject.test.mjs` as the pattern: drive the deployed plugin hook, assert the side-effect.)
+
+## Deployed-plugin hand-copy drift: `.opencode/plugins/ai-pm.mjs` duplicates `adapter/opencode/plugin-entry.mjs` — 2026-06-10
+
+OpenCode registers hooks only off an INLINE-defined plugin function (not a re-export), so the deployed plugin must inline the hook bodies — it cannot be a thin shim importing them. Result: the deployed `.opencode/plugins/ai-pm.mjs` and the source `adapter/opencode/plugin-entry.mjs` carry duplicated hook logic (diverging only by import paths), kept in sync BY HAND. A real drift risk (invariant 6). Consider an `install-plugin.mjs` that GENERATES the deployed copy from the source (rewriting the import path), so the two cannot drift — mirroring how `install-agents.mjs`/`install-commands.mjs` generate their deployed artifacts.

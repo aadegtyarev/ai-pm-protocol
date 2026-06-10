@@ -2,15 +2,16 @@
 
 > Resume pointer — lean by design (a pointer, **not** a log). On resume READ THIS FIRST, by this exact path. Deferred work lives in `.ai-pm/backlog.md`; full history in the commit log + CHANGELOG. Keep this file short.
 
-**Status (2026-06-10): no active feature. Working tree clean, `main` = `uni/main` = `a6af179`.**
+**Status (2026-06-10): no active feature. Working tree clean, `main` = `uni/main` = `bf563e9`.**
 
-The minimal environment-agnostic redesign is fully SHIPPED to `uni/main`:
+Shipped to `uni/main`, newest first:
 
-- **#1 `50f5ffb` — 3.0.0 minimal core.** One `PROTOCOL.md` + 3 roles (Orchestrator / Builder / Reviewer) + the 5-beat loop (understand → plan → build → review → ship) + data-adapter enforcement (`adapter/engine.mjs` + `deny-rules.json` + `tool-map.json`, per-platform shims). The old 8-persona surface is archived to git history.
-- **#2 `a6af179` — opencode-live-fix.** OpenCode adapter **live-verified on opencode 1.17.0** (session runs as primary `ai-pm`; a write into `.ai-pm/tooling/` is mechanically blocked); plural `.opencode/{agents,plugins}/`; inline-defined plugin. Plus the protocol resume-state-path fix — this file's path is now named in `PROTOCOL.md`, `agents/orchestrator.md`, and `AGENTS.md`. Cross-model reviewed (sonnet) → approve; stamp `.ai-pm/reviews/opencode-live-fix_review.md`.
+- **#4 `bf563e9` — 3.2.0 setup triggers (Slice B) + OpenCode `inject` class realized.** Lazy offer on an unconfigured project (not a block) + an explicit `/setup` command on both platforms. Fixed a pre-existing gap the live run exposed: the `inject` class was never realized on OpenCode (plugin wired only `tool.execute.before`); now via the `chat.message` hook. **Live-verified on opencode 1.17.x** (orchestrator offered setup instead of editing; `/setup` discovered env + 9 models + dialog). Honest residual: config-write + model-pin bake are unit-proven, not yet fully live-run end-to-end.
+- **#3 `ea6a2a1` — 3.1.0 setup procedure (Slice A brain).** `setup` = a neutral orchestrator procedure: discover models → structured-question dialog → write `ai-pm.config.json`. OpenCode reviewer model-pin baked at install. Renamed the human role **PM → Operator** across the protocol.
+- **#1 `50f5ffb` / #2 `a6af179`** — 3.0.0 minimal env-agnostic core + the opencode-live-fix (see CHANGELOG / earlier history).
 
-**Conventions:** conversation = Russian; artifacts/commits = English. Decision authority = **autonomous** (procedural gates announce-and-proceed; product forks → PM; merge/ship stay manual). Quality gates: `node adapter/parity.test.mjs` (50/50) + `node quality/neutral-prose.test.mjs`.
+**Conventions:** conversation = Russian; artifacts/commits = English; the human role is the **Operator**. Decision authority = **`interactive`** (`ai-pm.config.json` `mode`) — surface forks to the Operator; merge/ship always manual (Operator authorizes each). Quality gates live in `quality/tools.json` (parity 55, neutral-prose, install-commands, install-model, opencode-inject).
 
 **Remotes:** `uni` (`aadegtyarev/ai-pm-protocol-uni`) is the live fork — local `main` tracks it. `origin` (public `aadegtyarev/ai-pm-protocol`) `main` is OLD (pre-redesign); a public sync is a deferred decision (backlog).
 
-**Local branch cleanup pending:** `backup-2026-06-10` (safety net from the git-untangle — deletable once trusted) + the stale `feature/opencode-harness-support--*` slice branches (superseded by #1).
+**Local branch cleanup pending:** `backup-2026-06-10` (safety net from the earlier git-untangle — deletable once trusted) + stale `feature/opencode-harness-support--*` slice branches (superseded by #1).
