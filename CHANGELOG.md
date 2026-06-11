@@ -13,6 +13,14 @@
 
 ---
 
+## [4.0.4] — 2026-06-11
+
+### Changed
+
+- **Readability sweep across the agent + adapter docs** — the same instructions-only treatment that landed on `PROTOCOL.md` (4.0.3), now applied to `src/agents/orchestrator.md` (full rewrite — prose walls → real Markdown lists), `src/agents/builder.md` + `src/agents/reviewer.md` (light pass), `docs/architecture.md`, and `src/adapter/INSTALL.md` (dense paragraphs → bullets). Each file was its own independently-reviewed change. Every directive, exact path, identifier, load-bearing token (the `<!-- ai-pm:modules -->` markers, the review-stamp contract), ASCII diagram, and concrete adapter command/version-fact is preserved unchanged — the cuts were pure water, not facts. Non-functional: no rule changes, gates green throughout (parity 55/0, neutral-prose pass). (Operator-driven readability pass.)
+
+---
+
 ## [4.0.3] — 2026-06-11
 
 ### Changed
