@@ -13,6 +13,14 @@
 
 ---
 
+## [4.0.3] — 2026-06-11
+
+### Changed
+
+- **`PROTOCOL.md` rewritten instructions-only** — the constitution is de-watered to dense directives and real Markdown lists; preamble, manifesto rhetoric, and section-intro prose are cut (3854 → ~3250 words, −16%). Every invariant, role contract, beat, enforcement row, config field, and core/adapter table row is preserved unchanged in meaning (independently reviewed; one clause dropped in the cut was caught and restored). Non-functional: no rule changes, gates green (parity 55/0, neutral-prose pass). (Operator-driven readability pass.)
+
+---
+
 ## [4.0.2] — 2026-06-11
 
 ### Changed
