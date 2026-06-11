@@ -14,6 +14,14 @@
 
 ---
 
+## [4.5.0] — 2026-06-11
+
+### Added
+
+- **Unified installer** (`src/adapter/install.mjs`): `node src/adapter/install.mjs <target> [--platform claude|opencode]` installs the protocol into a target project in one command — vendors the shared adapter, lays down the core + doc templates (never clobbering a project's real docs), writes a default `ai-pm.config.json`, and wires the active platform (agents · commands · plugin · hooks/imports) by reusing the existing install scripts. Idempotent (a re-run is byte-identical), fail-closed on platform resolution, stays inside the target root, no shell interpolation. Realises the new `one-command-install` contract. Also adds `src/templates/tools.json` — the quality-registry SHAPE a downstream starts from.
+
+---
+
 ## [4.4.0] — 2026-06-11
 
 ### Changed

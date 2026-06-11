@@ -17,8 +17,13 @@
 // copy — is what keeps the two from drifting (the manifesto's "two copies rot",
 // applied to the enforcement layer itself). install-plugin.test.mjs is the guard.
 //
-// Run from the repo root: node src/adapter/opencode/install-plugin.mjs [outPath]
+// Run from the repo root: node src/adapter/opencode/install-plugin.mjs [outPath] [--root <dir>]
 //   outPath defaults to .opencode/plugins/ai-pm.mjs (pass a temp path to dry-run).
+//   --root sets the TARGET root whose adapter layout is resolved (the rewrite). It
+//   defaults to this script's self-located repo root; the unified installer passes
+//   the downstream target so the deployed plugin keeps the tooling-submodule path
+//   even though the script itself runs from the vendored copy. Backward-compatible:
+//   omit it and the dev/this-repo behaviour is unchanged.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -88,8 +93,10 @@ export function install(outPath, root = ROOT, layout) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const outPath = process.argv[2]
-    ? path.resolve(process.argv[2])
-    : path.join(ROOT, ".opencode", "plugins", "ai-pm.mjs");
-  install(outPath);
+  const args = process.argv.slice(2);
+  const rootIdx = args.indexOf("--root");
+  const root = rootIdx >= 0 ? path.resolve(args[rootIdx + 1]) : ROOT;
+  const outArg = args.find((a, i) => !a.startsWith("--") && (rootIdx < 0 || i !== rootIdx + 1));
+  const outPath = outArg ? path.resolve(outArg) : path.join(root, ".opencode", "plugins", "ai-pm.mjs");
+  install(outPath, root);
 }

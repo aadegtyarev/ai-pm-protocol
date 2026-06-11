@@ -16,4 +16,5 @@ These are the *promises*, not the mechanism. Where a rule is enforced lives in i
 | `decision-authority` | product forks resolve at the right human-involvement level; merge and ship always need the Operator's explicit authorization |
 | `documentation-discipline` | every project carries a maintained doc set with one owner per doc; the protocol dogfoods it |
 | `dual-harness-from-one-source` | the protocol runs on Claude Code and OpenCode from one neutral core; both adapters faithful |
+| `one-command-install` | one command installs the protocol into a project — vendors the adapter, wires the platform, lays down the structure, idempotently |
 | `automated-quality-tooling` | every project gets stack-appropriate automated quality tools (linters, type-checkers, SAST) wired and tuned at setup, run every loop |

@@ -2,6 +2,23 @@
 
 The single home for **where each file lands and how each platform is wired**. The adapter is one shared core (`engine.mjs`, `deny-rules.json`, `tool-map.json`) plus the two platform shims; install ships the whole `src/adapter/` tree to one place the project can reach, then wires the active platform to its shim.
 
+## The one command
+
+```sh
+node src/adapter/install.mjs <target-dir> [--platform claude|opencode]
+```
+
+`install.mjs` does the **whole** procedure below in one idempotent pass — vendor the adapter, lay down the core + doc templates, wire the active platform — so a downstream is adopted by one command, not a hand-followed checklist. It:
+
+- **vendors** the shared adapter and the neutral bodies the assembler reads (`src/agents/`, `src/modules/`) into `<target>/.ai-pm/tooling/src/` (the convention below);
+- **lays down** the core (`PROTOCOL.md`, the role agents, the `src/modules/` fragments, the quality-registry SHAPE — the template rows, not this repo's own) and the doc templates (`contracts.md`, `architecture.md`, `README.md`) into the target's `docs/`, **only where the target has no such doc** (never clobbers a real one);
+- **wires** the active platform by running its assembly scripts (the `## Claude Code` / `## OpenCode` sections) against the target and merging its load-instruction surface (the `CLAUDE.md` import + `.claude/settings.json` hooks for Claude; `opencode.json` + `AGENTS.md` + the generated plugin for OpenCode), de-duped so a re-run never duplicates a hook or an import;
+- writes a minimal default `ai-pm.config.json` where absent (a real project then runs `/pm-setup`), and prints a summary + the next step.
+
+Platform resolution: the `--platform` flag, else the target's `ai-pm.config.json` `platform`, else a clear error — never a silent guess. The guarantee it realises is `docs/contracts/one-command-install.md`; the test is `src/adapter/install.test.mjs`.
+
+The rest of this file is the **underlying detail** — what each wiring step does, the single home for each. The installer automates exactly these; reach for a manual step only to understand or to wire one platform by hand.
+
 Convention used below: the adapter ships inside the protocol's tooling submodule at `.ai-pm/tooling/src/adapter/`. A project that vendors the adapter elsewhere rewrites the one path in each wiring step — nothing else changes.
 
 ## Claude Code

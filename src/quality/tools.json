@@ -58,6 +58,14 @@
       "init": "Node >= 18, no install"
     },
     {
+      "id": "install",
+      "checks": "the unified installer — installs into a temp target inside the root, vendors the adapter, wires both platforms (hooks/agents/commands/plugin), lands the doc templates and the quality SHAPE (not this repo's rows), resolves the platform (flag/config/error), never clobbers a real doc, and a second run is byte-identical (idempotent)",
+      "config": null,
+      "run": "node src/adapter/install.test.mjs",
+      "beat": "build",
+      "init": "Node >= 18, no install"
+    },
+    {
       "id": "run-quality",
       "checks": "the whole-set quality runner itself — filters by beat, fails closed on a malformed registry, no-op-safe when empty/absent",
       "config": null,
