@@ -22,6 +22,10 @@ The whole protocol is one short constitution you can read in one sitting: **[`PR
 
 **You decide product, not code.** The orchestrator leads with user impact, frames decisions as trade-offs, asks one question at a time, and never shows you code.
 
+**Speed↔quality dial.** Two modes, both first-class: **prototype mode** cuts ceremony and accepts conscious tech debt (tracked in backlog, not hidden) so you verify the hypothesis fast; **quality mode** commits to no rewrites — full research before code, independent deep review. You pick the position; the floor — working code, independent review — holds in both. This is the differentiator from "ceremony or chaos": a protocol that is also a dial, not a fixed cost.
+
+**Who it is for.** From a non-technical product person (PM, founder, domain expert) to a technical lead — the protocol serves the whole spectrum as one product. Scenarios adjust the output detail (show or hide the diff), question depth, and how much the AI auto-decides, without separate modes or config toggles.
+
 ## Platform-neutral by design
 
 The protocol is **one neutral core + one thin adapter per platform**. The core (`PROTOCOL.md`, the `src/agents/` roles, `docs/architecture.md`) names only abstract acts — *read a file*, *spawn a sub-agent*, *deny a write outside the project*. Each platform (Claude Code, OpenCode, the next one) is a thin **adapter** (`src/adapter/`) that maps those acts to its concrete tools. Adding a platform is its adapter and **zero edits to the core**.
@@ -42,7 +46,7 @@ Re-run it anytime — the `/pm-setup` command, or just ask to reconfigure — wh
 
 ## Define the product
 
-Right after setup, the orchestrator helps you write the **product brief** — about five plain-language questions on who this is for and why. It is a quick dialog, not a form, and it never invents an answer for you. You need not start it by hand: on a configured project with no brief, the orchestrator offers it on your first feature request (an offer you may decline). The brief lives in `docs/product.md` and every feature grounds in it; revisit it whenever the product shifts. The procedure is **[`src/agents/orchestrator.md`](src/agents/orchestrator.md)** `## Product discovery`.
+Right after setup, the orchestrator runs **genuine product discovery** — a dialog that gathers the product's real story (who it is for, the problem in their words, the concrete zero-to-working journey, the competition researched first, who runs and funds it) and concludes with the honest case against — able to end on "we built the wrong thing." It never invents an answer for you. You need not start it by hand: on a configured project with no brief, the orchestrator offers it on your first feature request (an offer you may decline). The brief lives in `docs/product.md` and every feature grounds in it; revisit it whenever the product shifts. The procedure is **[`src/agents/orchestrator.md`](src/agents/orchestrator.md)** `## Product discovery`.
 
 ## Layout
 

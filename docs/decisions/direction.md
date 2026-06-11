@@ -9,7 +9,7 @@ The protocol is a **development engine**, not a product — the products built o
 1. **Product discovery** — force *aiming* (market · users · where each feature lands), not just coding what's asked.
 2. **Threat model** — an explicit, assembleable security capability, not a discipline diffused across the Reviewer checklist + deny layer. (Shipped as the `threat-model` capability module.)
 3. **Discipline** — relentless doc + code brevity, no prose-in-comments, whole-surface no-duplication. **Pillar 3 polices the other three.**
-4. **Configurable rigor** — at setup a project chooses where to cut ceremony (orchestrator-builds vs spawn-a-Builder, plan formality, optional beats). The speed↔trust trade-off is the project's choice, never a fixed cost. (Shipped as the `profile` config: `full | lite | solo`.)
+4. **Configurable rigor** — at setup a project chooses where to cut ceremony (orchestrator-builds vs spawn-a-Builder, plan formality, optional beats). The speed↔quality dial is the project's choice, never a fixed cost. (Shipped as the `profile` config: `full | lite | solo`.)
 
 ## The architecture principle (non-negotiable)
 

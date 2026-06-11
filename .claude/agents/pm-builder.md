@@ -56,7 +56,7 @@ honesty over-claim, judged by the Reviewer's existing rule. `[persona]`: this sh
 the plan, denies nothing — and in this slice YOU self-apply it, so treat it as a sharper
 self-check, never as a verdict from a separate, disinterested voice.
 
-- **Who is this for** — name the specific user who feels the change, and tie them to the product brief (`docs/product.md`): the same user it names, or a conscious reason this serves a different one. "Everyone" is a non-answer; a change that serves nobody the brief names is a drift to surface, not to wave through.
+- **Who is this for** — name the specific user who feels the change, and tie them to the product brief (`docs/product.md`): the same user it names, or a conscious reason this serves a different one. "Everyone" is a non-answer; a change that serves nobody the brief names is a drift to surface, not to wave through. If the brief names a spectrum (e.g. PM↔tech-lead with preset scenarios), the answer may cover a range — the check is whether the change serves the spectrum the brief establishes, not whether it fits a single persona.
 - **What user pain** — the concrete problem they have today without it; if you cannot state the pain, you cannot tell whether the change relieves it.
 - **What breaks if we DON'T build it** — the cost of doing nothing; a change whose absence costs nothing is a change to descope, not to size.
 - **Is this the right bet** — of the ways to relieve that pain, why this one now; name the alternative you are NOT taking and why.

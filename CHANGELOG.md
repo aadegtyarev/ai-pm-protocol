@@ -14,6 +14,14 @@
 
 ---
 
+## [4.7.1] — 2026-06-11
+
+### Fixed
+
+- **Product-values alignment sweep** — three mismatches between the established product brief and the project prose: (1) terminology: "speed↔trust tradeoff" → "speed↔quality dial" in `PROTOCOL.md`, `ai-pm.config.json`, and `docs/decisions/direction.md` (the differentiator is the user-facing quality outcome, not the internal-process trust signal); (2) README public face: added the speed↔quality dial (prototype mode / quality mode / guaranteed floor) and the customer-spectrum (PM↔tech-lead) to "How it works", and replaced "about five plain-language questions" with an accurate description of genuine discovery (gather-first, zero-to-working story, competition researched first, case-against at end); (3) product-advocate builder module: added spectrum guidance to the "Who is this for" checklist item so a Builder working against a spectrum brief can correctly answer with a range, rather than a forced single-persona pick.
+
+---
+
 ## [4.7.0] — 2026-06-11
 
 ### Added
