@@ -28,7 +28,7 @@ Before writing anything, capture the plan in the transient plan file `.ai-pm/pla
 - **Behaviour** — what user-visible behaviour changes, and what stays the same?
 - **Scope** — the smallest change that satisfies it, and what is explicitly out of scope?
 - **Structural choice** — does this raise a new axis of extension, or several plausible homes for the logic? If so, name 1–2 options + a recommendation and hand the call up to the Orchestrator for the Operator. Never pick a direction silently — you fold the architect, but the call is the Operator's.
-- **Product questions** (user-facing only) — who is the user; the success / empty / error state; what happens on bad input; the irreversible step? Each gets a recorded answer or a conscious descope.
+- **Product questions** (user-facing only) — does this serve the product and user the brief names (`docs/product.md`, the project-level ground — check against it, don't restate it)? Then this feature's own: the success / empty / error state; what happens on bad input; the irreversible step? Each gets a recorded answer or a conscious descope.
 - **Security surface** — any auth, secrets, untrusted input, or network boundary touched? Name the threat and the mitigation.
 - **Unfamiliar interface** — when the change touches a tool, format, or API whose idioms you're unsure of, find the canonical source and build against it. Don't guess — you fold the stack-researcher.
 - **Docs** — what docs must change with this code?
@@ -66,7 +66,7 @@ honesty over-claim, judged by the Reviewer's existing rule. `[persona]`: this sh
 the plan, denies nothing — and in this slice YOU self-apply it, so treat it as a sharper
 self-check, never as a verdict from a separate, disinterested voice.
 
-- **Who is this for** — name the specific user who feels the change; "everyone" is a non-answer, narrow it to who actually hits this path.
+- **Who is this for** — name the specific user who feels the change, and tie them to the product brief (`docs/product.md`): the same user it names, or a conscious reason this serves a different one. "Everyone" is a non-answer; a change that serves nobody the brief names is a drift to surface, not to wave through.
 - **What user pain** — the concrete problem they have today without it; if you cannot state the pain, you cannot tell whether the change relieves it.
 - **What breaks if we DON'T build it** — the cost of doing nothing; a change whose absence costs nothing is a change to descope, not to size.
 - **Is this the right bet** — of the ways to relieve that pain, why this one now; name the alternative you are NOT taking and why.

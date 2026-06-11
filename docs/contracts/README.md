@@ -12,6 +12,7 @@ These are the *promises*, not the mechanism. Where a rule is enforced lives in i
 | `cross-session-enforcement` | the load-bearing rules hold mechanically across fresh/forgetful sessions — a named deny-list, not a blanket block |
 | `project-boundary` | agents stay inside the project root; repo-owned files change only through git |
 | `regression-protection` | a recorded promise cannot be silently broken or weakened — a violation blocks the PR |
+| `product-foundation` | a project defines its product and its users in a durable brief before it builds features; every feature grounds in that brief |
 | `product-readiness-gate` | a user-facing feature cannot reach code while a foundational product question is unanswered |
 | `decision-authority` | product forks resolve at the right human-involvement level; merge and ship always need the Operator's explicit authorization |
 | `documentation-discipline` | every project carries a maintained doc set with one owner per doc; the protocol dogfoods it |

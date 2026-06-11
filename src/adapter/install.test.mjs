@@ -67,6 +67,7 @@ function testPlatform(platform, assertWiring) {
     // doc templates landed
     check(`[${platform}] contracts template landed`, fs.existsSync(path.join(target, "docs", "contracts.md")));
     check(`[${platform}] architecture template landed`, fs.existsSync(path.join(target, "docs", "architecture.md")));
+    check(`[${platform}] product brief template landed`, fs.existsSync(path.join(target, "docs", "product.md")));
 
     // 3. config present
     check(`[${platform}] config written with the resolved platform`, JSON.parse(fs.readFileSync(path.join(target, "ai-pm.config.json"), "utf8")).platform === platform);

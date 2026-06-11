@@ -14,6 +14,14 @@
 
 ---
 
+## [4.7.0] — 2026-06-11
+
+### Added
+
+- **Product-discovery foundation — the onboarding flow is now product-first.** Before, onboarding was mechanics-first (install → setup → build features) with no step establishing *what product, and for whom* — features got built in a vacuum. Now the flow is **install → setup → product discovery → loop**. New: the `product-foundation` contract (a project defines its product + users — a durable brief — through **genuine** discovery run from the user up, posing real forks and the case against and able to conclude "we built the wrong thing", before features; every feature grounds in it); the brief template `src/templates/product.md` (the idea · the customer · the problem · the concrete **zero-to-working story**: discovery/onboarding · continuity/recovery · competition/incumbent · viability · and — at the end — the case-against — grounded in the established discovery frameworks (Working Backwards, Lean Canvas, Cagan, Torres): customer/problem first, competition named, never invented; gathered prejudice-free as a gap-detector, the hard conclusions at the end; the Operator answers); the `orchestrator.md ## Product discovery` procedure (gather-first/conclude-last, gap-detector not judge: anchor on the idea and reason around it, walk the concrete zero-to-working story, ask the customer openly (a spectrum, not a forced fork), research the competition first then ask to correct, weigh the case-against only at the end; a different kind of inquiry each round through the structured-question tool; offered at onboarding, lazily on the first feature to a brief-less project, or explicitly); a lazy-trigger mechanism mirroring the setup nudge (a `no-product-brief-discover` inject + engine predicate, a three-stage ladder: no-config → no-brief → route-reminder). The loop now grounds every feature in `docs/product.md` (the Understand beat, the Builder plan, the product-advocate questions check *against* the brief). The installer lays the brief template down.
+
+---
+
 ## [4.6.0] — 2026-06-11
 
 ### Added

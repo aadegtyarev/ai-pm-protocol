@@ -160,6 +160,14 @@ function fileNonEmpty(p) {
 function projectConfigured(root) {
   return fs.existsSync(path.join(path.resolve(root), "ai-pm.config.json"));
 }
+// Does the project have a product brief? True iff docs/product.md exists at the
+// project root. Same presence-only, root-relative, fs-checked read as
+// projectConfigured (a fixed literal path under the resolved root — no prompt
+// data reaches it), within invariant 2. The lazy-discovery predicate adds
+// context, never executes.
+function productBriefPresent(root) {
+  return fs.existsSync(path.join(path.resolve(root), "docs", "product.md"));
+}
 // The project's rigor profile (ai-pm.config.json `profile`). Fails SAFE to the
 // strict default "full" on absent / unreadable / malformed / unknown value — so a
 // bad value can only ever DENY more, never widen a floor (mirrors absent-mode →
@@ -266,6 +274,16 @@ const PREDICATES = {
     const pat = config.change_verbs?.pattern;
     if (!pat || !new RegExp(pat, "i").test(input.prompt || "")) return false;
     return !projectConfigured(input.root);
+  },
+  // Lazy product-discovery nudge: a work-request prompt (same change_verbs list)
+  // to a CONFIGURED project that has NO docs/product.md. Ordered after
+  // promptNeedsSetup (an UNconfigured project gets the setup nudge first) and
+  // before change-route-reminder (a configured project WITH a brief gets the
+  // route reminder). Reinforces the persona act, never forces it.
+  promptNeedsProductBrief(input, config) {
+    const pat = config.change_verbs?.pattern;
+    if (!pat || !new RegExp(pat, "i").test(input.prompt || "")) return false;
+    return projectConfigured(input.root) && !productBriefPresent(input.root);
   },
 };
 

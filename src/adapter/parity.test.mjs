@@ -148,28 +148,37 @@ if (divergences.length) {
   for (const d of divergences) console.log(`    • ${d}`);
 }
 
-// ── 1b. CONFIG-SENSITIVE INJECT: which inject fires depends on config presence ─
-// Both inject rules match a change-verb prompt; the engine returns the FIRST, and
-// no-config-run-setup is ordered ahead of change-route-reminder. So an UNCONFIGURED
-// project (no ai-pm.config.json) gets the setup nudge; a CONFIGURED one gets the
-// route reminder. Asserted by ruleId (verdict is `inject` either way) — this is the
-// only place the two injects are told apart. The ruleId distinction is engine-level
-// and platform-independent (both Claude's UserPromptSubmit and OpenCode's chat.message
-// reach the same engine), so it is asserted once via the Claude prompt path.
-console.log("CONFIG-SENSITIVE INJECT (no config ⇒ setup nudge; configured ⇒ route reminder):");
+// ── 1b. CONFIG-SENSITIVE INJECT: which inject fires depends on project state ───
+// Three inject rules match a change-verb prompt; the engine returns the FIRST, in
+// registry order: no-config-run-setup → no-product-brief-discover → change-route-
+// reminder. So the prompt walks a three-stage ladder as the project fills in:
+//   no config           ⇒ setup nudge,
+//   configured, no brief ⇒ product-discovery nudge,
+//   configured + brief   ⇒ route reminder.
+// Asserted by ruleId (verdict is `inject` at every stage) — the only place the
+// three injects are told apart. Engine-level and platform-independent (both
+// Claude's UserPromptSubmit and OpenCode's chat.message reach the same engine),
+// so asserted once via the Claude prompt path.
+console.log("CONFIG-SENSITIVE INJECT (no config ⇒ setup; configured no-brief ⇒ discovery; configured+brief ⇒ route):");
 const changePrompt = { hook_event_name: "UserPromptSubmit", prompt: "please implement the new export feature" };
 
-// Unconfigured root: a fresh tmp dir with NO ai-pm.config.json.
+// Stage 1 — unconfigured root: a fresh tmp dir with NO ai-pm.config.json.
 const NOCFG = fs.mkdtempSync(path.join(os.tmpdir(), "ai-pm-nocfg-"));
 check("no-config-run-setup:fires", claudeDecide(changePrompt, NOCFG, config).ruleId, "no-config-run-setup");
 fs.rmSync(NOCFG, { recursive: true, force: true });
 
-// Configured root: same dir once ai-pm.config.json exists ⇒ promptNeedsSetup is
-// false ⇒ change-route-reminder fires instead.
+// Stage 2 — configured but NO docs/product.md ⇒ promptNeedsSetup is false but
+// promptNeedsProductBrief is true ⇒ the discovery nudge fires.
 const CFG = fs.mkdtempSync(path.join(os.tmpdir(), "ai-pm-cfg-"));
 fs.writeFileSync(path.join(CFG, "ai-pm.config.json"), "{}");
-check("change-route-reminder:fires-when-configured", claudeDecide(changePrompt, CFG, config).ruleId, "change-route-reminder");
-// A non-change prompt on an unconfigured root ⇒ neither inject fires (allow).
+check("no-product-brief-discover:fires-when-configured-no-brief", claudeDecide(changePrompt, CFG, config).ruleId, "no-product-brief-discover");
+
+// Stage 3 — configured AND docs/product.md present ⇒ both setup and brief
+// predicates are false ⇒ change-route-reminder fires.
+fs.mkdirSync(path.join(CFG, "docs"));
+fs.writeFileSync(path.join(CFG, "docs", "product.md"), "brief");
+check("change-route-reminder:fires-when-configured-with-brief", claudeDecide(changePrompt, CFG, config).ruleId, "change-route-reminder");
+// A non-change prompt on a configured root ⇒ no inject fires (allow).
 check("no-config:non-change-prompt-allows",
   claudeDecide({ hook_event_name: "UserPromptSubmit", prompt: "good morning" }, CFG, config).verdict, "allow");
 fs.rmSync(CFG, { recursive: true, force: true });

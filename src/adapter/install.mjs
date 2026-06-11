@@ -113,6 +113,7 @@ function layDownCore(target) {
   copyIfAbsent(path.join(SOURCE, "src", "templates", "tools.json"), path.join(target, "src", "quality", "tools.json"));
 
   // Doc templates → the target's docs/, only where the project has no such doc.
+  copyIfAbsent(path.join(SOURCE, "src", "templates", "product.md"), path.join(target, "docs", "product.md"));
   copyIfAbsent(path.join(SOURCE, "src", "templates", "contracts.md"), path.join(target, "docs", "contracts.md"));
   copyIfAbsent(path.join(SOURCE, "src", "templates", "architecture.md"), path.join(target, "docs", "architecture.md"));
   copyIfAbsent(path.join(SOURCE, "src", "templates", "README.md"), path.join(target, "docs", "README.md"));
